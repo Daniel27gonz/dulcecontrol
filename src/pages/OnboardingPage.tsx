@@ -1,9 +1,10 @@
-import { useState } from 'react';
+import { useState, forwardRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
 import { ChevronRight, Calculator, TrendingUp, Sparkles, Check } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useApp } from '@/context/AppContext';
+import { useAuth } from '@/context/AuthContext';
 
 const CURRENCIES = [
   { code: 'MXN', symbol: '$', name: 'Peso Mexicano' },
@@ -36,12 +37,12 @@ const ONBOARDING_STEPS = [
   },
 ];
 
-export default function OnboardingPage() {
+const OnboardingPage = forwardRef<HTMLDivElement>((_, ref) => {
   const navigate = useNavigate();
   const { updateSettings } = useApp();
+  const { user } = useAuth();
   const [currentStep, setCurrentStep] = useState(0);
   const [selectedCurrency, setSelectedCurrency] = useState<typeof CURRENCIES[0] | null>(null);
-
   const totalSteps = ONBOARDING_STEPS.length + 1; // +1 for currency selection
   const isLastStep = currentStep === totalSteps - 1;
 
@@ -51,6 +52,7 @@ export default function OnboardingPage() {
         currency: selectedCurrency.code,
         currencySymbol: selectedCurrency.symbol,
         hasCompletedOnboarding: true,
+        userName: user?.name,
       });
       navigate('/dashboard');
     } else if (currentStep < totalSteps - 1) {
@@ -68,7 +70,7 @@ export default function OnboardingPage() {
   };
 
   return (
-    <div className="min-h-screen flex flex-col bg-background p-6 safe-bottom">
+    <div ref={ref} className="min-h-screen flex flex-col bg-background p-6 safe-bottom">
       {/* Progress bar */}
       <div className="flex gap-1.5 mb-8">
         {Array.from({ length: totalSteps }).map((_, i) => (
@@ -188,4 +190,8 @@ export default function OnboardingPage() {
       </div>
     </div>
   );
-}
+});
+
+OnboardingPage.displayName = 'OnboardingPage';
+
+export default OnboardingPage;

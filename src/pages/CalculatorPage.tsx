@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, forwardRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
 import { ArrowLeft, Plus, Trash2, ChevronRight, Check, Sparkles } from 'lucide-react';
@@ -22,7 +22,7 @@ const UNITS = ['g', 'kg', 'ml', 'L', 'unidad', 'cucharada', 'taza'];
 
 const STEPS = ['info', 'ingredients', 'costs', 'margin', 'result'];
 
-export default function CalculatorPage() {
+const CalculatorPage = forwardRef<HTMLDivElement>((_, ref) => {
   const navigate = useNavigate();
   const { settings, addRecipe, calculateRecipeCost } = useApp();
   const [currentStep, setCurrentStep] = useState(0);
@@ -117,7 +117,7 @@ export default function CalculatorPage() {
   };
 
   return (
-    <div className="min-h-screen bg-background pb-24">
+    <div ref={ref} className="min-h-screen bg-background pb-24">
       {/* Header */}
       <div className="sticky top-0 z-30 bg-background/95 backdrop-blur-lg border-b border-border p-4 safe-top">
         <div className="flex items-center gap-4">
@@ -508,4 +508,8 @@ export default function CalculatorPage() {
       <BottomNav />
     </div>
   );
-}
+});
+
+CalculatorPage.displayName = 'CalculatorPage';
+
+export default CalculatorPage;
