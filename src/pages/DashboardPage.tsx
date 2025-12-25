@@ -1,4 +1,3 @@
-import { forwardRef } from 'react';
 import { motion } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
 import { Plus, ClipboardList, TrendingUp, ChefHat, DollarSign, Package, LogOut } from 'lucide-react';
@@ -8,7 +7,7 @@ import { useApp } from '@/context/AppContext';
 import { useAuth } from '@/context/AuthContext';
 import { BottomNav } from '@/components/BottomNav';
 
-const DashboardPage = forwardRef<HTMLDivElement>((_, ref) => {
+export default function DashboardPage() {
   const navigate = useNavigate();
   const { recipes, orders, settings, calculateRecipeCost, getNetProfit } = useApp();
   const { user, logout } = useAuth();
@@ -37,7 +36,7 @@ const DashboardPage = forwardRef<HTMLDivElement>((_, ref) => {
   };
 
   return (
-    <div ref={ref} className="min-h-screen bg-background pb-24">
+    <div className="min-h-screen bg-background pb-24">
       {/* Header */}
       <div className="bg-gradient-to-br from-caramel/20 to-accent/20 p-6 pt-10 safe-top">
         <motion.div
@@ -204,8 +203,4 @@ const DashboardPage = forwardRef<HTMLDivElement>((_, ref) => {
       <BottomNav />
     </div>
   );
-});
-
-DashboardPage.displayName = 'DashboardPage';
-
-export default DashboardPage;
+}

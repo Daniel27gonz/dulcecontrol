@@ -1,15 +1,14 @@
-import { forwardRef } from 'react';
+import { useState } from 'react';
 import { TrendingUp, TrendingDown, Plus, Trash2 } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { useApp, Transaction } from '@/context/AppContext';
 import { BottomNav } from '@/components/BottomNav';
-import { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useToast } from '@/hooks/use-toast';
 
-const FinancesPage = forwardRef<HTMLDivElement>((_, ref) => {
+export default function FinancesPage() {
   const { settings, transactions, addTransaction, deleteTransaction, getTotalIncome, getTotalExpenses, getNetProfit } = useApp();
   const { toast } = useToast();
   const income = getTotalIncome();
@@ -53,7 +52,7 @@ const FinancesPage = forwardRef<HTMLDivElement>((_, ref) => {
   };
 
   return (
-    <div ref={ref} className="min-h-screen bg-background pb-24">
+    <div className="min-h-screen bg-background pb-24">
       <div className="sticky top-0 z-30 bg-background/95 backdrop-blur-lg border-b border-border p-4 pt-10 safe-top">
         <div className="flex items-center justify-between">
           <h1 className="text-2xl font-bold">Finanzas</h1>
@@ -232,8 +231,4 @@ const FinancesPage = forwardRef<HTMLDivElement>((_, ref) => {
       <BottomNav />
     </div>
   );
-});
-
-FinancesPage.displayName = 'FinancesPage';
-
-export default FinancesPage;
+}
