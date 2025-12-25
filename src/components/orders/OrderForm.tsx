@@ -1,5 +1,5 @@
-import { useState } from 'react';
-import { useApp } from '@/context/AppContext';
+import { useState, useEffect } from 'react';
+import { Order, useApp } from '@/context/AppContext';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -23,7 +23,7 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from '@/components/ui/popover';
-import { CalendarIcon, Plus } from 'lucide-react';
+import { CalendarIcon, Plus, Pencil } from 'lucide-react';
 import { format } from 'date-fns';
 import { es } from 'date-fns/locale';
 import { cn } from '@/lib/utils';
@@ -36,8 +36,14 @@ const ORDER_STATUSES = [
   { value: 'cancelled', label: 'Cancelado', color: 'bg-red-500' },
 ] as const;
 
-export function OrderForm() {
-  const { recipes, addOrder, calculateRecipeCost, settings } = useApp();
+interface OrderFormProps {
+  order?: Order;
+  trigger?: React.ReactNode;
+  onClose?: () => void;
+}
+
+export function OrderForm({ order, trigger, onClose }: OrderFormProps) {
+  const { recipes, addOrder, updateOrder, calculateRecipeCost, settings } = useApp();
   const [open, setOpen] = useState(false);
   const [clientName, setClientName] = useState('');
   const [selectedRecipeId, setSelectedRecipeId] = useState('');
@@ -45,6 +51,20 @@ export function OrderForm() {
   const [status, setStatus] = useState<'pending' | 'in_progress' | 'completed' | 'cancelled'>('pending');
   const [deliveryDate, setDeliveryDate] = useState<Date>();
   const [customPrice, setCustomPrice] = useState<string>('');
+
+  const isEditing = !!order;
+
+  // Load order data when editing
+  useEffect(() => {
+    if (order && open) {
+      setClientName(order.clientName);
+      setSelectedRecipeId(order.recipeId);
+      setQuantity(order.quantity);
+      setStatus(order.status);
+      setDeliveryDate(new Date(order.deliveryDate));
+      setCustomPrice(order.totalPrice.toString());
+    }
+  }, [order, open]);
 
   const selectedRecipe = recipes.find(r => r.id === selectedRecipeId);
   const recipeCost = selectedRecipe ? calculateRecipeCost(selectedRecipe) : null;
@@ -58,6 +78,14 @@ export function OrderForm() {
     setStatus('pending');
     setDeliveryDate(undefined);
     setCustomPrice('');
+  };
+
+  const handleOpenChange = (newOpen: boolean) => {
+    setOpen(newOpen);
+    if (!newOpen) {
+      resetForm();
+      onClose?.();
+    }
   };
 
   const handleSubmit = (e: React.FormEvent) => {
@@ -90,38 +118,64 @@ export function OrderForm() {
       return;
     }
 
-    const newOrder = {
-      id: crypto.randomUUID(),
-      clientName: clientName.trim(),
-      recipeId: selectedRecipeId,
-      recipeName: selectedRecipe?.name || '',
-      quantity,
-      totalPrice: finalPrice,
-      status,
-      deliveryDate: deliveryDate.toISOString(),
-      createdAt: new Date().toISOString(),
-    };
+    if (isEditing) {
+      // Update existing order
+      updateOrder(order.id, {
+        clientName: clientName.trim(),
+        recipeId: selectedRecipeId,
+        recipeName: selectedRecipe?.name || '',
+        quantity,
+        totalPrice: finalPrice,
+        status,
+        deliveryDate: deliveryDate.toISOString(),
+      });
+      toast({
+        title: '¡Pedido actualizado!',
+        description: `Pedido de ${clientName} actualizado correctamente`,
+      });
+    } else {
+      // Create new order
+      const newOrder = {
+        id: crypto.randomUUID(),
+        clientName: clientName.trim(),
+        recipeId: selectedRecipeId,
+        recipeName: selectedRecipe?.name || '',
+        quantity,
+        totalPrice: finalPrice,
+        status,
+        deliveryDate: deliveryDate.toISOString(),
+        createdAt: new Date().toISOString(),
+      };
 
-    addOrder(newOrder);
-    toast({
-      title: '¡Pedido creado!',
-      description: `Pedido para ${clientName} agregado correctamente`,
-    });
+      addOrder(newOrder);
+      toast({
+        title: '¡Pedido creado!',
+        description: `Pedido para ${clientName} agregado correctamente`,
+      });
+    }
+
     resetForm();
     setOpen(false);
+    onClose?.();
   };
 
+  const defaultTrigger = (
+    <Button className="w-full" size="lg">
+      <Plus className="w-5 h-5 mr-2" />
+      Nuevo Pedido
+    </Button>
+  );
+
   return (
-    <Dialog open={open} onOpenChange={setOpen}>
+    <Dialog open={open} onOpenChange={handleOpenChange}>
       <DialogTrigger asChild>
-        <Button className="w-full" size="lg">
-          <Plus className="w-5 h-5 mr-2" />
-          Nuevo Pedido
-        </Button>
+        {trigger || defaultTrigger}
       </DialogTrigger>
       <DialogContent className="max-w-md max-h-[90vh] overflow-y-auto">
         <DialogHeader>
-          <DialogTitle className="text-xl">Crear Nuevo Pedido</DialogTitle>
+          <DialogTitle className="text-xl">
+            {isEditing ? 'Editar Pedido' : 'Crear Nuevo Pedido'}
+          </DialogTitle>
         </DialogHeader>
 
         <form onSubmit={handleSubmit} className="space-y-4 mt-4">
@@ -199,7 +253,7 @@ export function OrderForm() {
 
           {/* Custom Price */}
           <div className="space-y-2">
-            <Label htmlFor="customPrice">Precio Final (opcional)</Label>
+            <Label htmlFor="customPrice">Precio Final {isEditing ? '*' : '(opcional)'}</Label>
             <Input
               id="customPrice"
               type="number"
@@ -209,9 +263,11 @@ export function OrderForm() {
               value={customPrice}
               onChange={(e) => setCustomPrice(e.target.value)}
             />
-            <p className="text-xs text-muted-foreground">
-              Deja vacío para usar el precio sugerido
-            </p>
+            {!isEditing && (
+              <p className="text-xs text-muted-foreground">
+                Deja vacío para usar el precio sugerido
+              </p>
+            )}
           </div>
 
           {/* Status */}
@@ -265,7 +321,7 @@ export function OrderForm() {
 
           {/* Submit Button */}
           <Button type="submit" className="w-full" size="lg" disabled={recipes.length === 0}>
-            Crear Pedido
+            {isEditing ? 'Guardar Cambios' : 'Crear Pedido'}
           </Button>
         </form>
       </DialogContent>
