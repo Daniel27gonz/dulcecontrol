@@ -1,21 +1,15 @@
 import { motion } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
-import { Plus, ClipboardList, TrendingUp, ChefHat, DollarSign, Package, LogOut } from 'lucide-react';
+import { Plus, ClipboardList, TrendingUp, ChefHat, DollarSign, Package } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { useApp } from '@/context/AppContext';
 import { BottomNav } from '@/components/BottomNav';
-import { toast } from 'sonner';
+import { AppHeader } from '@/components/AppHeader';
 
 export default function DashboardPage() {
   const navigate = useNavigate();
-  const { recipes, orders, settings, calculateRecipeCost, getNetProfit, logout, user } = useApp();
-
-  const handleLogout = () => {
-    logout();
-    toast.success('Sesión cerrada correctamente');
-    navigate('/');
-  };
+  const { recipes, orders, settings, calculateRecipeCost, getNetProfit } = useApp();
 
   const totalProfit = getNetProfit();
   const pendingOrders = orders.filter((o) => o.status === 'pending' || o.status === 'in_progress').length;
@@ -37,30 +31,7 @@ export default function DashboardPage() {
 
   return (
     <div className="min-h-screen bg-background pb-24">
-      {/* Header */}
-      <div className="bg-gradient-to-br from-caramel/20 to-accent/20 p-6 pt-10 safe-top">
-        <motion.div
-          initial={{ opacity: 0, y: -20 }}
-          animate={{ opacity: 1, y: 0 }}
-          className="flex items-start justify-between"
-        >
-          <div className="space-y-1">
-            <p className="text-muted-foreground">¡Hola! 👋</p>
-            <h1 className="text-2xl font-bold text-foreground">
-              {user?.name || settings.userName || 'Bienvenido'}
-            </h1>
-          </div>
-          <Button
-            onClick={handleLogout}
-            variant="ghost"
-            size="sm"
-            className="text-muted-foreground hover:text-destructive"
-          >
-            <LogOut className="w-4 h-4 mr-1" />
-            Salir
-          </Button>
-        </motion.div>
-      </div>
+      <AppHeader title="Dashboard" showGreeting />
 
       <motion.div
         variants={containerVariants}
