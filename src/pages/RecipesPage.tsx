@@ -5,6 +5,7 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { useApp } from '@/context/AppContext';
 import { BottomNav } from '@/components/BottomNav';
+import { AppHeader } from '@/components/AppHeader';
 
 export default function RecipesPage() {
   const navigate = useNavigate();
@@ -12,11 +13,13 @@ export default function RecipesPage() {
 
   return (
     <div className="min-h-screen bg-background pb-24">
-      <div className="p-4 pt-10 safe-top">
-        <div className="flex items-center justify-between mb-6">
-          <h1 className="text-2xl font-bold">Mis Recetas</h1>
-          <Button onClick={() => navigate('/calculator')} size="icon-sm" variant="warm">
-            <Plus className="w-5 h-5" />
+      <AppHeader title="Mis Recetas" />
+
+      <div className="p-4">
+        <div className="flex items-center justify-end mb-4">
+          <Button onClick={() => navigate('/calculator')} size="sm" variant="warm">
+            <Plus className="w-4 h-4 mr-1" />
+            Nueva receta
           </Button>
         </div>
 

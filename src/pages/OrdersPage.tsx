@@ -1,14 +1,16 @@
 import { Card, CardContent } from '@/components/ui/card';
 import { useApp } from '@/context/AppContext';
 import { BottomNav } from '@/components/BottomNav';
+import { AppHeader } from '@/components/AppHeader';
 
 export default function OrdersPage() {
   const { orders } = useApp();
 
   return (
     <div className="min-h-screen bg-background pb-24">
-      <div className="p-4 pt-10 safe-top">
-        <h1 className="text-2xl font-bold mb-6">Pedidos</h1>
+      <AppHeader title="Pedidos" />
+
+      <div className="p-4">
         {orders.length === 0 ? (
           <Card className="border-dashed">
             <CardContent className="p-8 text-center">
