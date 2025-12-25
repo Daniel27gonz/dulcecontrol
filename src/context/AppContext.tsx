@@ -1,6 +1,14 @@
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 
 // Types
+export interface User {
+  id: string;
+  name: string;
+  email: string;
+  password: string; // In production, this would be hashed
+  createdAt: string;
+}
+
 export interface Ingredient {
   id: string;
   name: string;
@@ -57,6 +65,13 @@ export interface UserSettings {
 }
 
 interface AppContextType {
+  // Auth
+  user: User | null;
+  isAuthenticated: boolean;
+  login: (email: string, password: string) => boolean;
+  register: (name: string, email: string, password: string) => boolean;
+  logout: () => void;
+  // Data
   recipes: Recipe[];
   orders: Order[];
   transactions: Transaction[];
@@ -79,6 +94,8 @@ interface AppContextType {
 const AppContext = createContext<AppContextType | undefined>(undefined);
 
 const STORAGE_KEYS = {
+  users: 'dessert_calc_users',
+  currentUser: 'dessert_calc_current_user',
   recipes: 'dessert_calc_recipes',
   orders: 'dessert_calc_orders',
   transactions: 'dessert_calc_transactions',
@@ -92,6 +109,7 @@ const defaultSettings: UserSettings = {
 };
 
 export function AppProvider({ children }: { children: ReactNode }) {
+  const [user, setUser] = useState<User | null>(null);
   const [recipes, setRecipes] = useState<Recipe[]>([]);
   const [orders, setOrders] = useState<Order[]>([]);
   const [transactions, setTransactions] = useState<Transaction[]>([]);
@@ -99,6 +117,17 @@ export function AppProvider({ children }: { children: ReactNode }) {
 
   // Load data from localStorage on mount
   useEffect(() => {
+    // Load current user session
+    const currentUserEmail = localStorage.getItem(STORAGE_KEYS.currentUser);
+    if (currentUserEmail) {
+      const users = JSON.parse(localStorage.getItem(STORAGE_KEYS.users) || '[]') as User[];
+      const foundUser = users.find(u => u.email === currentUserEmail);
+      if (foundUser) {
+        setUser(foundUser);
+        console.log('[Auth] Session restored for:', foundUser.email);
+      }
+    }
+
     const loadedRecipes = localStorage.getItem(STORAGE_KEYS.recipes);
     const loadedOrders = localStorage.getItem(STORAGE_KEYS.orders);
     const loadedTransactions = localStorage.getItem(STORAGE_KEYS.transactions);
@@ -127,6 +156,56 @@ export function AppProvider({ children }: { children: ReactNode }) {
     localStorage.setItem(STORAGE_KEYS.settings, JSON.stringify(settings));
   }, [settings]);
 
+  // Auth functions
+  const register = (name: string, email: string, password: string): boolean => {
+    const users = JSON.parse(localStorage.getItem(STORAGE_KEYS.users) || '[]') as User[];
+    
+    // Check if email already exists
+    if (users.some(u => u.email.toLowerCase() === email.toLowerCase())) {
+      console.log('[Auth] Registration failed: Email already exists');
+      return false;
+    }
+
+    const newUser: User = {
+      id: crypto.randomUUID(),
+      name,
+      email: email.toLowerCase(),
+      password, // In production, this would be hashed
+      createdAt: new Date().toISOString(),
+    };
+
+    users.push(newUser);
+    localStorage.setItem(STORAGE_KEYS.users, JSON.stringify(users));
+    localStorage.setItem(STORAGE_KEYS.currentUser, newUser.email);
+    setUser(newUser);
+    
+    console.log('[Auth] User registered successfully:', newUser.email);
+    return true;
+  };
+
+  const login = (email: string, password: string): boolean => {
+    const users = JSON.parse(localStorage.getItem(STORAGE_KEYS.users) || '[]') as User[];
+    const foundUser = users.find(
+      u => u.email.toLowerCase() === email.toLowerCase() && u.password === password
+    );
+
+    if (foundUser) {
+      localStorage.setItem(STORAGE_KEYS.currentUser, foundUser.email);
+      setUser(foundUser);
+      console.log('[Auth] Login successful:', foundUser.email);
+      return true;
+    }
+
+    console.log('[Auth] Login failed: Invalid credentials');
+    return false;
+  };
+
+  const logout = () => {
+    localStorage.removeItem(STORAGE_KEYS.currentUser);
+    setUser(null);
+    console.log('[Auth] User logged out');
+  };
+
   const addRecipe = (recipe: Recipe) => {
     setRecipes((prev) => [...prev, recipe]);
   };
@@ -143,6 +222,16 @@ export function AppProvider({ children }: { children: ReactNode }) {
 
   const addOrder = (order: Order) => {
     setOrders((prev) => [...prev, order]);
+    // Auto-add transaction for order income
+    const transaction: Transaction = {
+      id: crypto.randomUUID(),
+      type: 'income',
+      description: `Pedido: ${order.recipeName} x${order.quantity}`,
+      amount: order.totalPrice,
+      category: 'ventas',
+      date: new Date().toISOString(),
+    };
+    setTransactions((prev) => [...prev, transaction]);
   };
 
   const updateOrder = (id: string, updates: Partial<Order>) => {
@@ -208,6 +297,11 @@ export function AppProvider({ children }: { children: ReactNode }) {
   return (
     <AppContext.Provider
       value={{
+        user,
+        isAuthenticated: !!user,
+        login,
+        register,
+        logout,
         recipes,
         orders,
         transactions,

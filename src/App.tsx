@@ -7,6 +7,8 @@ import { AppProvider, useApp } from "@/context/AppContext";
 import { InstallPrompt } from "@/components/InstallPrompt";
 import WelcomePage from "./pages/WelcomePage";
 import OnboardingPage from "./pages/OnboardingPage";
+import LoginPage from "./pages/LoginPage";
+import RegisterPage from "./pages/RegisterPage";
 import DashboardPage from "./pages/DashboardPage";
 import CalculatorPage from "./pages/CalculatorPage";
 import RecipesPage from "./pages/RecipesPage";
@@ -16,18 +18,44 @@ import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
 
-function AppRoutes() {
-  const { settings } = useApp();
+// Protected Route wrapper
+function ProtectedRoute({ children }: { children: React.ReactNode }) {
+  const { isAuthenticated, settings } = useApp();
+  
+  if (!isAuthenticated) {
+    return <Navigate to="/login" replace />;
+  }
+  
+  if (!settings.hasCompletedOnboarding) {
+    return <Navigate to="/onboarding" replace />;
+  }
+  
+  return <>{children}</>;
+}
 
+// Public Route wrapper (redirects to dashboard if logged in)
+function PublicRoute({ children }: { children: React.ReactNode }) {
+  const { isAuthenticated, settings } = useApp();
+  
+  if (isAuthenticated && settings.hasCompletedOnboarding) {
+    return <Navigate to="/dashboard" replace />;
+  }
+  
+  return <>{children}</>;
+}
+
+function AppRoutes() {
   return (
     <Routes>
-      <Route path="/" element={settings.hasCompletedOnboarding ? <Navigate to="/dashboard" /> : <WelcomePage />} />
+      <Route path="/" element={<PublicRoute><WelcomePage /></PublicRoute>} />
+      <Route path="/login" element={<PublicRoute><LoginPage /></PublicRoute>} />
+      <Route path="/register" element={<PublicRoute><RegisterPage /></PublicRoute>} />
       <Route path="/onboarding" element={<OnboardingPage />} />
-      <Route path="/dashboard" element={<DashboardPage />} />
-      <Route path="/calculator" element={<CalculatorPage />} />
-      <Route path="/recipes" element={<RecipesPage />} />
-      <Route path="/orders" element={<OrdersPage />} />
-      <Route path="/finances" element={<FinancesPage />} />
+      <Route path="/dashboard" element={<ProtectedRoute><DashboardPage /></ProtectedRoute>} />
+      <Route path="/calculator" element={<ProtectedRoute><CalculatorPage /></ProtectedRoute>} />
+      <Route path="/recipes" element={<ProtectedRoute><RecipesPage /></ProtectedRoute>} />
+      <Route path="/orders" element={<ProtectedRoute><OrdersPage /></ProtectedRoute>} />
+      <Route path="/finances" element={<ProtectedRoute><FinancesPage /></ProtectedRoute>} />
       <Route path="*" element={<NotFound />} />
     </Routes>
   );

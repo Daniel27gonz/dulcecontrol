@@ -70,7 +70,7 @@ export default function WelcomePage() {
             className="flex flex-col gap-3 pt-4"
           >
             <Button
-              onClick={() => navigate('/onboarding')}
+              onClick={() => navigate('/register')}
               variant="hero"
               size="xl"
               className="w-full"
@@ -78,7 +78,7 @@ export default function WelcomePage() {
               Crear cuenta gratis
             </Button>
             <Button
-              onClick={() => navigate('/onboarding')}
+              onClick={() => navigate('/login')}
               variant="outline"
               size="lg"
               className="w-full"
