@@ -1,6 +1,6 @@
 import { motion } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
-import { Plus, ClipboardList, TrendingUp, ChefHat, DollarSign, Package } from 'lucide-react';
+import { Plus, ClipboardList, TrendingUp, ChefHat, DollarSign, Package, TrendingDown, Wallet } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { useApp } from '@/context/AppContext';
@@ -9,10 +9,15 @@ import { AppHeader } from '@/components/AppHeader';
 
 export default function DashboardPage() {
   const navigate = useNavigate();
-  const { recipes, orders, settings, calculateRecipeCost, getNetProfit } = useApp();
+  const { recipes, orders, settings, calculateRecipeCost, getTotalIncome, getTotalExpenses, getNetProfit } = useApp();
 
-  const totalProfit = getNetProfit();
-  const pendingOrders = orders.filter((o) => o.status === 'pending' || o.status === 'in_progress').length;
+  // Calculated stats from local data
+  const totalIncome = getTotalIncome();
+  const totalExpenses = getTotalExpenses();
+  const netProfit = getNetProfit();
+  const pendingOrders = orders.filter((o) => o.status === 'pending').length;
+  const inProgressOrders = orders.filter((o) => o.status === 'in_progress').length;
+  const completedOrders = orders.filter((o) => o.status === 'completed').length;
   const lastRecipe = recipes[recipes.length - 1];
   const lastRecipeCost = lastRecipe ? calculateRecipeCost(lastRecipe) : null;
 
@@ -29,6 +34,10 @@ export default function DashboardPage() {
     visible: { opacity: 1, y: 0 },
   };
 
+  const formatCurrency = (amount: number) => {
+    return `${settings.currencySymbol}${amount.toLocaleString('es-MX', { minimumFractionDigits: 2 })}`;
+  };
+
   return (
     <div className="min-h-screen bg-background pb-24">
       <AppHeader title="Dashboard" showGreeting />
@@ -39,16 +48,15 @@ export default function DashboardPage() {
         animate="visible"
         className="p-4 space-y-4"
       >
-        {/* Main Stats Card */}
-        <motion.div variants={itemVariants}>
+        {/* Main Financial Stats */}
+        <motion.div variants={itemVariants} className="grid grid-cols-1 gap-3">
+          {/* Net Profit - Hero Card */}
           <Card className="bg-gradient-to-br from-primary to-primary/80 text-primary-foreground border-0">
             <CardContent className="p-6">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-primary-foreground/80 text-sm">Ganancia Total</p>
-                  <p className="text-3xl font-bold mt-1">
-                    {settings.currencySymbol}{totalProfit.toLocaleString('es-MX', { minimumFractionDigits: 2 })}
-                  </p>
+                  <p className="text-primary-foreground/80 text-sm">Ganancia Neta</p>
+                  <p className="text-3xl font-bold mt-1">{formatCurrency(netProfit)}</p>
                 </div>
                 <div className="w-14 h-14 rounded-2xl bg-primary-foreground/20 flex items-center justify-center">
                   <TrendingUp className="w-7 h-7" />
@@ -56,30 +64,87 @@ export default function DashboardPage() {
               </div>
             </CardContent>
           </Card>
+
+          {/* Income and Expenses */}
+          <div className="grid grid-cols-2 gap-3">
+            <Card className="bg-success/10 border-success/20">
+              <CardContent className="p-4">
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 rounded-xl bg-success/20 flex items-center justify-center">
+                    <Wallet className="w-5 h-5 text-success" />
+                  </div>
+                  <div>
+                    <p className="text-lg font-bold text-success">{formatCurrency(totalIncome)}</p>
+                    <p className="text-xs text-muted-foreground">Ingresos</p>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+
+            <Card className="bg-destructive/10 border-destructive/20">
+              <CardContent className="p-4">
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 rounded-xl bg-destructive/20 flex items-center justify-center">
+                    <TrendingDown className="w-5 h-5 text-destructive" />
+                  </div>
+                  <div>
+                    <p className="text-lg font-bold text-destructive">{formatCurrency(totalExpenses)}</p>
+                    <p className="text-xs text-muted-foreground">Gastos</p>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          </div>
         </motion.div>
 
-        {/* Quick Stats */}
-        <motion.div variants={itemVariants} className="grid grid-cols-2 gap-3">
-          <Card>
-            <CardContent className="p-4 flex items-center gap-3">
-              <div className="w-11 h-11 rounded-xl bg-secondary flex items-center justify-center">
-                <ChefHat className="w-5 h-5 text-caramel" />
-              </div>
-              <div>
-                <p className="text-2xl font-bold text-foreground">{recipes.length}</p>
-                <p className="text-xs text-muted-foreground">Recetas</p>
-              </div>
-            </CardContent>
-          </Card>
+        {/* Business Stats */}
+        <motion.div variants={itemVariants}>
+          <h2 className="text-lg font-bold text-foreground mb-3">Resumen del negocio</h2>
+          <div className="grid grid-cols-2 gap-3">
+            <Card>
+              <CardContent className="p-4 flex items-center gap-3">
+                <div className="w-11 h-11 rounded-xl bg-secondary flex items-center justify-center">
+                  <ChefHat className="w-5 h-5 text-caramel" />
+                </div>
+                <div>
+                  <p className="text-2xl font-bold text-foreground">{recipes.length}</p>
+                  <p className="text-xs text-muted-foreground">Recetas</p>
+                </div>
+              </CardContent>
+            </Card>
 
+            <Card>
+              <CardContent className="p-4 flex items-center gap-3">
+                <div className="w-11 h-11 rounded-xl bg-secondary flex items-center justify-center">
+                  <Package className="w-5 h-5 text-caramel" />
+                </div>
+                <div>
+                  <p className="text-2xl font-bold text-foreground">{orders.length}</p>
+                  <p className="text-xs text-muted-foreground">Total pedidos</p>
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+        </motion.div>
+
+        {/* Order Status Summary */}
+        <motion.div variants={itemVariants}>
           <Card>
-            <CardContent className="p-4 flex items-center gap-3">
-              <div className="w-11 h-11 rounded-xl bg-secondary flex items-center justify-center">
-                <Package className="w-5 h-5 text-caramel" />
-              </div>
-              <div>
-                <p className="text-2xl font-bold text-foreground">{pendingOrders}</p>
-                <p className="text-xs text-muted-foreground">Pedidos activos</p>
+            <CardContent className="p-4">
+              <p className="text-sm font-medium text-muted-foreground mb-3">Estado de pedidos</p>
+              <div className="grid grid-cols-3 gap-2">
+                <div className="text-center p-3 rounded-lg bg-warning/10">
+                  <p className="text-2xl font-bold text-warning">{pendingOrders}</p>
+                  <p className="text-xs text-muted-foreground">Pendientes</p>
+                </div>
+                <div className="text-center p-3 rounded-lg bg-primary/10">
+                  <p className="text-2xl font-bold text-primary">{inProgressOrders}</p>
+                  <p className="text-xs text-muted-foreground">En proceso</p>
+                </div>
+                <div className="text-center p-3 rounded-lg bg-success/10">
+                  <p className="text-2xl font-bold text-success">{completedOrders}</p>
+                  <p className="text-xs text-muted-foreground">Completados</p>
+                </div>
               </div>
             </CardContent>
           </Card>
@@ -91,7 +156,7 @@ export default function DashboardPage() {
             <Card>
               <CardContent className="p-4">
                 <div className="flex items-center justify-between mb-3">
-                  <p className="text-sm font-medium text-muted-foreground">Último precio calculado</p>
+                  <p className="text-sm font-medium text-muted-foreground">Última receta</p>
                   <span className="text-xs px-2 py-1 rounded-full bg-success/20 text-success font-medium">
                     {lastRecipe.category}
                   </span>
@@ -100,15 +165,15 @@ export default function DashboardPage() {
                   <div>
                     <p className="font-bold text-foreground">{lastRecipe.name}</p>
                     <p className="text-sm text-muted-foreground">
-                      Costo: {settings.currencySymbol}{lastRecipeCost.totalCost}
+                      Costo: {formatCurrency(lastRecipeCost.totalCost)}
                     </p>
                   </div>
                   <div className="text-right">
                     <p className="text-xl font-bold text-success">
-                      {settings.currencySymbol}{lastRecipeCost.suggestedPrice}
+                      {formatCurrency(lastRecipeCost.suggestedPrice)}
                     </p>
                     <p className="text-xs text-muted-foreground">
-                      Ganancia: {settings.currencySymbol}{lastRecipeCost.profit}
+                      Ganancia: {formatCurrency(lastRecipeCost.profit)}
                     </p>
                   </div>
                 </div>
@@ -148,7 +213,7 @@ export default function DashboardPage() {
               className="w-full justify-start"
             >
               <DollarSign className="w-5 h-5" />
-              Ver ganancias
+              Ver finanzas
             </Button>
           </div>
         </motion.div>
