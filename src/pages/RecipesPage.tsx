@@ -1,14 +1,13 @@
-import { forwardRef } from 'react';
 import { motion } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
-import { Plus, Trash2, Edit2 } from 'lucide-react';
+import { Plus, Trash2 } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { useApp } from '@/context/AppContext';
 import { BottomNav } from '@/components/BottomNav';
 import { useToast } from '@/hooks/use-toast';
 
-const RecipesPage = forwardRef<HTMLDivElement>((_, ref) => {
+export default function RecipesPage() {
   const navigate = useNavigate();
   const { recipes, settings, calculateRecipeCost, deleteRecipe } = useApp();
   const { toast } = useToast();
@@ -32,7 +31,7 @@ const RecipesPage = forwardRef<HTMLDivElement>((_, ref) => {
   };
 
   return (
-    <div ref={ref} className="min-h-screen bg-background pb-24">
+    <div className="min-h-screen bg-background pb-24">
       <div className="sticky top-0 z-30 bg-background/95 backdrop-blur-lg border-b border-border p-4 pt-10 safe-top">
         <div className="flex items-center justify-between">
           <div>
@@ -128,8 +127,4 @@ const RecipesPage = forwardRef<HTMLDivElement>((_, ref) => {
       <BottomNav />
     </div>
   );
-});
-
-RecipesPage.displayName = 'RecipesPage';
-
-export default RecipesPage;
+}

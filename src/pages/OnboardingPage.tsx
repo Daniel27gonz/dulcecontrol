@@ -1,4 +1,4 @@
-import { useState, forwardRef } from 'react';
+import { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
 import { ChevronRight, Calculator, TrendingUp, Sparkles, Check } from 'lucide-react';
@@ -37,13 +37,14 @@ const ONBOARDING_STEPS = [
   },
 ];
 
-const OnboardingPage = forwardRef<HTMLDivElement>((_, ref) => {
+export default function OnboardingPage() {
   const navigate = useNavigate();
   const { updateSettings } = useApp();
   const { user } = useAuth();
   const [currentStep, setCurrentStep] = useState(0);
   const [selectedCurrency, setSelectedCurrency] = useState<typeof CURRENCIES[0] | null>(null);
-  const totalSteps = ONBOARDING_STEPS.length + 1; // +1 for currency selection
+
+  const totalSteps = ONBOARDING_STEPS.length + 1;
   const isLastStep = currentStep === totalSteps - 1;
 
   const handleNext = () => {
@@ -65,12 +66,13 @@ const OnboardingPage = forwardRef<HTMLDivElement>((_, ref) => {
       currency: 'USD',
       currencySymbol: '$',
       hasCompletedOnboarding: true,
+      userName: user?.name,
     });
     navigate('/dashboard');
   };
 
   return (
-    <div ref={ref} className="min-h-screen flex flex-col bg-background p-6 safe-bottom">
+    <div className="min-h-screen flex flex-col bg-background p-6 safe-bottom">
       {/* Progress bar */}
       <div className="flex gap-1.5 mb-8">
         {Array.from({ length: totalSteps }).map((_, i) => (
@@ -190,8 +192,4 @@ const OnboardingPage = forwardRef<HTMLDivElement>((_, ref) => {
       </div>
     </div>
   );
-});
-
-OnboardingPage.displayName = 'OnboardingPage';
-
-export default OnboardingPage;
+}

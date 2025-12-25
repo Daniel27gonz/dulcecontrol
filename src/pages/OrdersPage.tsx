@@ -1,4 +1,4 @@
-import { useState, forwardRef } from 'react';
+import { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Plus, Trash2, Edit2, Check, X, Calendar, User, Package } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
@@ -15,7 +15,7 @@ const STATUS_OPTIONS = [
   { value: 'cancelled', label: 'Cancelado', color: 'bg-red-500/20 text-red-700' },
 ];
 
-const OrdersPage = forwardRef<HTMLDivElement>((_, ref) => {
+export default function OrdersPage() {
   const { orders, recipes, addOrder, updateOrder, deleteOrder, settings, calculateRecipeCost } = useApp();
   const { toast } = useToast();
   
@@ -64,7 +64,6 @@ const OrdersPage = forwardRef<HTMLDivElement>((_, ref) => {
     const totalPrice = recipeCost.suggestedPrice * quantity;
 
     if (editingId) {
-      // Actualizar pedido existente
       updateOrder(editingId, {
         clientName,
         recipeId: selectedRecipeId,
@@ -76,7 +75,6 @@ const OrdersPage = forwardRef<HTMLDivElement>((_, ref) => {
       });
       toast({ title: 'Pedido actualizado', description: 'El pedido se ha actualizado correctamente' });
     } else {
-      // Crear nuevo pedido
       const newOrder: Order = {
         id: Date.now().toString(),
         clientName,
@@ -128,7 +126,7 @@ const OrdersPage = forwardRef<HTMLDivElement>((_, ref) => {
   };
 
   return (
-    <div ref={ref} className="min-h-screen bg-background pb-24">
+    <div className="min-h-screen bg-background pb-24">
       {/* Header */}
       <div className="sticky top-0 z-30 bg-background/95 backdrop-blur-lg border-b border-border p-4 pt-10 safe-top">
         <div className="flex items-center justify-between">
@@ -395,8 +393,4 @@ const OrdersPage = forwardRef<HTMLDivElement>((_, ref) => {
       <BottomNav />
     </div>
   );
-});
-
-OrdersPage.displayName = 'OrdersPage';
-
-export default OrdersPage;
+}
