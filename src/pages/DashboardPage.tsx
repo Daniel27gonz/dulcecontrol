@@ -9,11 +9,20 @@ import { BottomNav } from '@/components/BottomNav';
 
 export default function DashboardPage() {
   const navigate = useNavigate();
-  const { recipes, orders, settings, calculateRecipeCost, getNetProfit } = useApp();
+  const { recipes, orders, settings, calculateRecipeCost, getNetProfit, getTotalIncome } = useApp();
   const { user, logout } = useAuth();
 
-  const totalProfit = getNetProfit();
+  // Calculate total earnings from completed orders
+  const completedOrdersEarnings = orders
+    .filter((o) => o.status === 'completed')
+    .reduce((sum, order) => sum + order.totalPrice, 0);
+  
+  // Total profit includes transactions + completed orders
+  const transactionProfit = getNetProfit();
+  const totalEarnings = completedOrdersEarnings + transactionProfit;
+  
   const pendingOrders = orders.filter((o) => o.status === 'pending' || o.status === 'in_progress').length;
+  const completedOrdersCount = orders.filter((o) => o.status === 'completed').length;
   const lastRecipe = recipes[recipes.length - 1];
   const lastRecipeCost = lastRecipe ? calculateRecipeCost(lastRecipe) : null;
 
@@ -64,14 +73,20 @@ export default function DashboardPage() {
       >
         {/* Main Stats Card */}
         <motion.div variants={itemVariants}>
-          <Card className="bg-gradient-to-br from-primary to-primary/80 text-primary-foreground border-0">
-            <CardContent className="p-6">
+          <Card className="bg-gradient-to-br from-primary to-primary/80 text-primary-foreground border-0 overflow-hidden relative">
+            <div className="absolute top-0 right-0 w-32 h-32 bg-primary-foreground/10 rounded-full -translate-y-1/2 translate-x-1/2" />
+            <CardContent className="p-6 relative">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-primary-foreground/80 text-sm">Ganancia Total</p>
-                  <p className="text-3xl font-bold mt-1">
-                    {settings.currencySymbol}{totalProfit.toLocaleString('es-MX', { minimumFractionDigits: 2 })}
+                  <p className="text-primary-foreground/80 text-sm font-medium">💰 Ganancias Totales</p>
+                  <p className="text-4xl font-bold mt-1">
+                    {settings.currencySymbol}{totalEarnings.toLocaleString('es-MX', { minimumFractionDigits: 2 })}
                   </p>
+                  {completedOrdersCount > 0 && (
+                    <p className="text-primary-foreground/70 text-xs mt-1">
+                      {completedOrdersCount} pedido{completedOrdersCount !== 1 ? 's' : ''} completado{completedOrdersCount !== 1 ? 's' : ''}
+                    </p>
+                  )}
                 </div>
                 <div className="w-14 h-14 rounded-2xl bg-primary-foreground/20 flex items-center justify-center">
                   <TrendingUp className="w-7 h-7" />
