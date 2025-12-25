@@ -1,12 +1,12 @@
-import { useNavigate } from 'react-router-dom';
-import { LogOut, Download } from 'lucide-react';
+import { useNavigate, Link } from 'react-router-dom';
+import { LogOut, Download, Settings } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useApp } from '@/context/AppContext';
 import { usePWAInstall } from '@/hooks/usePWAInstall';
 import { toast } from 'sonner';
 
 interface AppHeaderProps {
-  title: string;
+  title?: string;
   showGreeting?: boolean;
 }
 
@@ -47,7 +47,7 @@ export function AppHeader({ title, showGreeting = false }: AppHeaderProps) {
           )}
         </div>
         
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-1">
           {showInstallButton && (
             <Button
               onClick={handleInstall}
@@ -60,13 +60,22 @@ export function AppHeader({ title, showGreeting = false }: AppHeaderProps) {
             </Button>
           )}
           <Button
+            asChild
+            variant="ghost"
+            size="icon"
+            className="text-muted-foreground hover:text-caramel"
+          >
+            <Link to="/settings">
+              <Settings className="w-5 h-5" />
+            </Link>
+          </Button>
+          <Button
             onClick={handleLogout}
             variant="ghost"
-            size="sm"
+            size="icon"
             className="text-muted-foreground hover:text-destructive"
           >
-            <LogOut className="w-4 h-4" />
-            <span className="hidden sm:inline ml-1">Salir</span>
+            <LogOut className="w-5 h-5" />
           </Button>
         </div>
       </div>
