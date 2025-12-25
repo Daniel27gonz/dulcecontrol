@@ -4,8 +4,12 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { AppProvider, useApp } from "@/context/AppContext";
+import { AuthProvider, useAuth } from "@/context/AuthContext";
+import { ProtectedRoute } from "@/components/ProtectedRoute";
 import { InstallPrompt } from "@/components/InstallPrompt";
 import WelcomePage from "./pages/WelcomePage";
+import LoginPage from "./pages/LoginPage";
+import RegisterPage from "./pages/RegisterPage";
 import OnboardingPage from "./pages/OnboardingPage";
 import DashboardPage from "./pages/DashboardPage";
 import CalculatorPage from "./pages/CalculatorPage";
@@ -18,16 +22,91 @@ const queryClient = new QueryClient();
 
 function AppRoutes() {
   const { settings } = useApp();
+  const { isAuthenticated, isLoading } = useAuth();
+
+  // Mostrar loading mientras se verifica la sesión
+  if (isLoading) {
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center">
+        <div className="text-center">
+          <div className="w-12 h-12 border-4 border-caramel/30 border-t-caramel rounded-full animate-spin mx-auto mb-4" />
+          <p className="text-muted-foreground">Cargando...</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <Routes>
-      <Route path="/" element={settings.hasCompletedOnboarding ? <Navigate to="/dashboard" /> : <WelcomePage />} />
-      <Route path="/onboarding" element={<OnboardingPage />} />
-      <Route path="/dashboard" element={<DashboardPage />} />
-      <Route path="/calculator" element={<CalculatorPage />} />
-      <Route path="/recipes" element={<RecipesPage />} />
-      <Route path="/orders" element={<OrdersPage />} />
-      <Route path="/finances" element={<FinancesPage />} />
+      {/* Rutas públicas */}
+      <Route 
+        path="/" 
+        element={
+          isAuthenticated 
+            ? (settings.hasCompletedOnboarding ? <Navigate to="/dashboard" /> : <Navigate to="/onboarding" />)
+            : <WelcomePage />
+        } 
+      />
+      <Route 
+        path="/login" 
+        element={isAuthenticated ? <Navigate to="/dashboard" /> : <LoginPage />} 
+      />
+      <Route 
+        path="/register" 
+        element={isAuthenticated ? <Navigate to="/dashboard" /> : <RegisterPage />} 
+      />
+
+      {/* Rutas protegidas */}
+      <Route 
+        path="/onboarding" 
+        element={
+          <ProtectedRoute>
+            <OnboardingPage />
+          </ProtectedRoute>
+        } 
+      />
+      <Route 
+        path="/dashboard" 
+        element={
+          <ProtectedRoute>
+            <DashboardPage />
+          </ProtectedRoute>
+        } 
+      />
+      <Route 
+        path="/calculator" 
+        element={
+          <ProtectedRoute>
+            <CalculatorPage />
+          </ProtectedRoute>
+        } 
+      />
+      <Route 
+        path="/recipes" 
+        element={
+          <ProtectedRoute>
+            <RecipesPage />
+          </ProtectedRoute>
+        } 
+      />
+      <Route 
+        path="/orders" 
+        element={
+          <ProtectedRoute>
+            <OrdersPage />
+          </ProtectedRoute>
+        } 
+      />
+      <Route 
+        path="/finances" 
+        element={
+          <ProtectedRoute>
+            <FinancesPage />
+          </ProtectedRoute>
+        } 
+      />
+      
+      {/* 404 */}
       <Route path="*" element={<NotFound />} />
     </Routes>
   );
@@ -36,14 +115,16 @@ function AppRoutes() {
 const App = () => (
   <QueryClientProvider client={queryClient}>
     <TooltipProvider>
-      <AppProvider>
-        <Toaster />
-        <Sonner />
-        <BrowserRouter>
-          <AppRoutes />
-          <InstallPrompt />
-        </BrowserRouter>
-      </AppProvider>
+      <AuthProvider>
+        <AppProvider>
+          <Toaster />
+          <Sonner />
+          <BrowserRouter>
+            <AppRoutes />
+            <InstallPrompt />
+          </BrowserRouter>
+        </AppProvider>
+      </AuthProvider>
     </TooltipProvider>
   </QueryClientProvider>
 );
