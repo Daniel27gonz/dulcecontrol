@@ -6,6 +6,7 @@ import { Button } from '@/components/ui/button';
 import { useApp } from '@/context/AppContext';
 import { useAuth } from '@/context/AuthContext';
 import { BottomNav } from '@/components/BottomNav';
+import { HeaderInstallButton } from '@/components/HeaderInstallButton';
 
 export default function DashboardPage() {
   const navigate = useNavigate();
@@ -59,9 +60,12 @@ export default function DashboardPage() {
               {user?.name || settings.userName || 'Bienvenido'}
             </h1>
           </div>
-          <Button onClick={handleLogout} variant="ghost" size="sm" className="text-muted-foreground">
-            <LogOut className="w-4 h-4" />
-          </Button>
+          <div className="flex items-center gap-2">
+            <HeaderInstallButton />
+            <Button onClick={handleLogout} variant="ghost" size="sm" className="text-muted-foreground">
+              <LogOut className="w-4 h-4" />
+            </Button>
+          </div>
         </motion.div>
       </div>
 
