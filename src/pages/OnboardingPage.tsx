@@ -4,7 +4,6 @@ import { useNavigate } from 'react-router-dom';
 import { ChevronRight, Calculator, TrendingUp, Sparkles, Check } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useApp } from '@/context/AppContext';
-import { useAuth } from '@/context/AuthContext';
 
 const CURRENCIES = [
   { code: 'MXN', symbol: '$', name: 'Peso Mexicano' },
@@ -40,11 +39,10 @@ const ONBOARDING_STEPS = [
 export default function OnboardingPage() {
   const navigate = useNavigate();
   const { updateSettings } = useApp();
-  const { user } = useAuth();
   const [currentStep, setCurrentStep] = useState(0);
   const [selectedCurrency, setSelectedCurrency] = useState<typeof CURRENCIES[0] | null>(null);
 
-  const totalSteps = ONBOARDING_STEPS.length + 1;
+  const totalSteps = ONBOARDING_STEPS.length + 1; // +1 for currency selection
   const isLastStep = currentStep === totalSteps - 1;
 
   const handleNext = () => {
@@ -53,7 +51,6 @@ export default function OnboardingPage() {
         currency: selectedCurrency.code,
         currencySymbol: selectedCurrency.symbol,
         hasCompletedOnboarding: true,
-        userName: user?.name,
       });
       navigate('/dashboard');
     } else if (currentStep < totalSteps - 1) {
@@ -66,7 +63,6 @@ export default function OnboardingPage() {
       currency: 'USD',
       currencySymbol: '$',
       hasCompletedOnboarding: true,
-      userName: user?.name,
     });
     navigate('/dashboard');
   };
