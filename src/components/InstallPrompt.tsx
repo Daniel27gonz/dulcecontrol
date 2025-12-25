@@ -1,11 +1,11 @@
 import { motion, AnimatePresence } from 'framer-motion';
-import { X, Share, Plus, MoreVertical, Download, Smartphone, Sparkles } from 'lucide-react';
+import { X, Download, Sparkles } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { usePWAInstall } from '@/hooks/usePWAInstall';
 import { useState, useEffect } from 'react';
 
 export function InstallPrompt() {
-  const { isInstallable, isInstalled, isIOS, isAndroid, promptInstall } = usePWAInstall();
+  const { isInstallable, isInstalled, promptInstall } = usePWAInstall();
   const [showPrompt, setShowPrompt] = useState(false);
   const [dismissed, setDismissed] = useState(false);
 
@@ -20,14 +20,15 @@ export function InstallPrompt() {
     }
 
     const timer = setTimeout(() => {
-      if (!isInstalled && !dismissed) {
-        console.log('[PWA] Showing install prompt popup');
+      // Only show if automatic installation is supported
+      if (!isInstalled && !dismissed && isInstallable) {
+        console.log('[PWA] beforeinstallprompt available - showing install button');
         setShowPrompt(true);
       }
     }, 2000);
 
     return () => clearTimeout(timer);
-  }, [isInstalled, dismissed]);
+  }, [isInstalled, dismissed, isInstallable]);
 
   const handleDismiss = () => {
     setShowPrompt(false);
@@ -36,15 +37,18 @@ export function InstallPrompt() {
   };
 
   const handleInstall = async () => {
-    if (isInstallable) {
-      const installed = await promptInstall();
-      if (installed) {
-        setShowPrompt(false);
-      }
+    console.log('[PWA] Install button clicked - triggering native prompt');
+    const installed = await promptInstall();
+    if (installed) {
+      console.log('[PWA] Installation successful');
+      setShowPrompt(false);
     }
   };
 
-  if (isInstalled || dismissed || !showPrompt) return null;
+  // Only render if: not installed, not dismissed, prompt should show, AND automatic install is available
+  if (isInstalled || dismissed || !showPrompt || !isInstallable) {
+    return null;
+  }
 
   return (
     <AnimatePresence>
@@ -95,81 +99,20 @@ export function InstallPrompt() {
                 ¡Instala la app gratis!
               </h3>
               <p className="text-sm text-muted-foreground leading-relaxed">
-                Accede más rápido, funciona sin internet y calcula tus precios en segundos
+                Accede más rápido y funciona sin internet
               </p>
             </div>
 
-            {/* Benefits */}
-            <div className="flex justify-center gap-4 mb-5 text-xs text-muted-foreground">
-              <div className="flex items-center gap-1.5">
-                <Smartphone className="w-3.5 h-3.5 text-caramel" />
-                <span>Sin descargar</span>
-              </div>
-              <div className="flex items-center gap-1.5">
-                <Download className="w-3.5 h-3.5 text-caramel" />
-                <span>100% gratis</span>
-              </div>
-            </div>
-
-            {isInstallable ? (
-              <Button 
-                onClick={handleInstall} 
-                variant="warm" 
-                size="lg" 
-                className="w-full text-base font-semibold shadow-lg"
-              >
-                <Download className="w-5 h-5" />
-                Instalar ahora — 1 toque
-              </Button>
-            ) : isIOS ? (
-              <div className="space-y-3 bg-muted/50 rounded-xl p-4">
-                <p className="text-sm font-medium text-foreground text-center">Sigue estos 2 pasos:</p>
-                <div className="space-y-2">
-                  <div className="flex items-center gap-3 bg-background rounded-lg p-3">
-                    <div className="w-8 h-8 rounded-full bg-caramel/20 flex items-center justify-center text-sm font-bold text-caramel">1</div>
-                    <div className="flex items-center gap-2">
-                      <Share className="w-4 h-4 text-caramel" />
-                      <span className="text-sm">Toca <strong>Compartir</strong></span>
-                    </div>
-                  </div>
-                  <div className="flex items-center gap-3 bg-background rounded-lg p-3">
-                    <div className="w-8 h-8 rounded-full bg-caramel/20 flex items-center justify-center text-sm font-bold text-caramel">2</div>
-                    <div className="flex items-center gap-2">
-                      <Plus className="w-4 h-4 text-caramel" />
-                      <span className="text-sm">Toca <strong>Agregar a inicio</strong></span>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            ) : isAndroid ? (
-              <div className="space-y-3 bg-muted/50 rounded-xl p-4">
-                <p className="text-sm font-medium text-foreground text-center">Sigue estos 2 pasos:</p>
-                <div className="space-y-2">
-                  <div className="flex items-center gap-3 bg-background rounded-lg p-3">
-                    <div className="w-8 h-8 rounded-full bg-caramel/20 flex items-center justify-center text-sm font-bold text-caramel">1</div>
-                    <div className="flex items-center gap-2">
-                      <MoreVertical className="w-4 h-4 text-caramel" />
-                      <span className="text-sm">Toca <strong>⋮ Menú</strong> arriba</span>
-                    </div>
-                  </div>
-                  <div className="flex items-center gap-3 bg-background rounded-lg p-3">
-                    <div className="w-8 h-8 rounded-full bg-caramel/20 flex items-center justify-center text-sm font-bold text-caramel">2</div>
-                    <div className="flex items-center gap-2">
-                      <Download className="w-4 h-4 text-caramel" />
-                      <span className="text-sm">Toca <strong>Instalar app</strong></span>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            ) : (
-              <div className="space-y-3 bg-muted/50 rounded-xl p-4">
-                <p className="text-sm font-medium text-foreground text-center">Para instalar:</p>
-                <div className="flex items-center gap-3 bg-background rounded-lg p-3">
-                  <Download className="w-5 h-5 text-caramel" />
-                  <span className="text-sm">Busca el ícono <strong>⊕</strong> en la barra de direcciones</span>
-                </div>
-              </div>
-            )}
+            {/* Single install button - triggers native browser prompt directly */}
+            <Button 
+              onClick={handleInstall} 
+              variant="warm" 
+              size="lg" 
+              className="w-full text-base font-semibold shadow-lg"
+            >
+              <Download className="w-5 h-5" />
+              Instalar App
+            </Button>
 
             {/* Skip link */}
             <button 
