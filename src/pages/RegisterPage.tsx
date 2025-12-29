@@ -31,8 +31,29 @@ const RegisterPage = () => {
       return;
     }
 
-    if (password.length < 6) {
-      toast.error('La contraseña debe tener al menos 6 caracteres');
+    // Password strength validation
+    if (password.length < 12) {
+      toast.error('La contraseña debe tener al menos 12 caracteres');
+      return;
+    }
+    
+    if (!/[A-Z]/.test(password)) {
+      toast.error('La contraseña debe incluir al menos una letra mayúscula');
+      return;
+    }
+    
+    if (!/[a-z]/.test(password)) {
+      toast.error('La contraseña debe incluir al menos una letra minúscula');
+      return;
+    }
+    
+    if (!/[0-9]/.test(password)) {
+      toast.error('La contraseña debe incluir al menos un número');
+      return;
+    }
+    
+    if (!/[!@#$%^&*(),.?":{}|<>]/.test(password)) {
+      toast.error('La contraseña debe incluir al menos un carácter especial (!@#$%^&*...)');
       return;
     }
 
@@ -120,7 +141,7 @@ const RegisterPage = () => {
                   type={showPassword ? 'text' : 'password'}
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
-                  placeholder="Mínimo 6 caracteres"
+                  placeholder="Mín 12 caracteres, mayúscula, número, símbolo"
                   className="w-full pr-10"
                 />
                 <button
