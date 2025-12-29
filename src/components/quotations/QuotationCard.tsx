@@ -9,7 +9,8 @@ import {
   Trash2, 
   CheckCircle,
   ShoppingCart,
-  Clock
+  Clock,
+  Copy
 } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -47,7 +48,7 @@ interface QuotationCardProps {
 
 export function QuotationCard({ quotation, onUpdate }: QuotationCardProps) {
   const { settings, addOrder, recipes, calculateRecipeCost } = useApp();
-  const { updateQuotation, deleteQuotation } = useQuotations();
+  const { updateQuotation, deleteQuotation, duplicateQuotation } = useQuotations();
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
   const [isSending, setIsSending] = useState(false);
 
@@ -182,6 +183,17 @@ ${quotation.notes ? `\n📝 ${quotation.notes}` : ''}
     onUpdate?.();
   };
 
+  const handleDuplicate = () => {
+    const newQuotation = duplicateQuotation(quotation.id);
+    if (newQuotation) {
+      toast({
+        title: '¡Cotización duplicada!',
+        description: `Nueva cotización #${newQuotation.number} creada`,
+      });
+      onUpdate?.();
+    }
+  };
+
   return (
     <>
       <motion.div
@@ -222,6 +234,10 @@ ${quotation.notes ? `\n📝 ${quotation.notes}` : ''}
                       }
                       onSave={onUpdate}
                     />
+                    <DropdownMenuItem onClick={handleDuplicate}>
+                      <Copy className="w-4 h-4 mr-2" />
+                      Duplicar
+                    </DropdownMenuItem>
                     {quotation.status !== 'converted' && (
                       <DropdownMenuItem onClick={handleConvertToOrder}>
                         <ShoppingCart className="w-4 h-4 mr-2" />
