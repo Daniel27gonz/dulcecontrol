@@ -79,16 +79,22 @@ export function InstallPrompt() {
           console.log('[PWA Prompt] ✅ Instalación exitosa!');
           setShowPrompt(false);
         } else {
-          console.log('[PWA Prompt] ⚠️ Usuario canceló, mostrando instrucciones');
-          setShowInstructions(true);
+          console.log('[PWA Prompt] ⚠️ Usuario canceló instalación');
+          // No mostrar instrucciones, simplemente cerrar
+          setShowPrompt(false);
         }
-      } else {
-        console.log('[PWA Prompt] ⚠️ No hay prompt nativo, mostrando instrucciones');
+      } else if (isIOS) {
+        // Solo en iOS mostramos instrucciones porque no soporta beforeinstallprompt
+        console.log('[PWA Prompt] 📱 iOS detectado, mostrando instrucciones');
         setShowInstructions(true);
+      } else {
+        // En otros navegadores que no disparan el evento, cerrar
+        console.log('[PWA Prompt] ⚠️ No hay prompt nativo disponible');
+        setShowPrompt(false);
       }
     } catch (error) {
       console.error('[PWA Prompt] ❌ Error:', error);
-      setShowInstructions(true);
+      setShowPrompt(false);
     } finally {
       setIsInstalling(false);
     }
@@ -395,7 +401,7 @@ export function InstallPrompt() {
                       ) : (
                         <>
                           <Download className="w-5 h-5 mr-2" />
-                          {isInstallable ? 'Instalar Ahora — ¡Es Gratis!' : 'Ver Cómo Instalar'}
+                          Instalar Ahora — ¡Es Gratis!
                         </>
                       )}
                     </Button>
