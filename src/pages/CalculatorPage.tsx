@@ -1,13 +1,14 @@
 import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useNavigate, useSearchParams } from 'react-router-dom';
-import { ArrowLeft, Plus, Trash2, ChevronRight, Check, Sparkles } from 'lucide-react';
+import { ArrowLeft, Plus, Trash2, ChevronRight, Check, Sparkles, HelpCircle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent } from '@/components/ui/card';
 import { useApp, Ingredient, IndirectCost, Recipe } from '@/context/AppContext';
 import { BottomNav } from '@/components/BottomNav';
 import { toast } from '@/hooks/use-toast';
+import { RecipeTutorial } from '@/components/calculator/RecipeTutorial';
 
 const CATEGORIES = [
   { id: 'torta', name: 'Torta', emoji: '🎂' },
@@ -28,9 +29,17 @@ export default function CalculatorPage() {
   const [searchParams] = useSearchParams();
   const editId = searchParams.get('edit');
   
-  const { settings, recipes, addRecipe, updateRecipe, calculateRecipeCost } = useApp();
+  const { settings, recipes, addRecipe, updateRecipe, calculateRecipeCost, updateSettings } = useApp();
   const [currentStep, setCurrentStep] = useState(0);
   const [isEditing, setIsEditing] = useState(false);
+  const [showTutorial, setShowTutorial] = useState(false);
+
+  // Show tutorial for new users
+  useEffect(() => {
+    if (!editId && !settings.hasCompletedRecipeTutorial && recipes.length === 0) {
+      setShowTutorial(true);
+    }
+  }, [editId, settings.hasCompletedRecipeTutorial, recipes.length]);
 
   // Form state
   const [recipeId, setRecipeId] = useState<string | null>(null);
@@ -156,8 +165,20 @@ export default function CalculatorPage() {
     }
   };
 
+  const handleTutorialComplete = () => {
+    updateSettings({ hasCompletedRecipeTutorial: true });
+    setShowTutorial(false);
+  };
+
   return (
     <div className="min-h-screen bg-background pb-24">
+      {/* Tutorial */}
+      <RecipeTutorial
+        isOpen={showTutorial}
+        onClose={() => setShowTutorial(false)}
+        onComplete={handleTutorialComplete}
+      />
+
       {/* Header */}
       <div className="sticky top-0 z-30 bg-background/95 backdrop-blur-lg border-b border-border p-4 safe-top">
         <div className="flex items-center gap-4">
@@ -172,6 +193,15 @@ export default function CalculatorPage() {
               Paso {currentStep + 1} de {STEPS.length}
             </p>
           </div>
+          {!isEditing && (
+            <button
+              onClick={() => setShowTutorial(true)}
+              className="p-2 hover:bg-muted rounded-xl transition-colors"
+              title="Ver tutorial"
+            >
+              <HelpCircle className="w-5 h-5 text-muted-foreground" />
+            </button>
+          )}
         </div>
 
         {/* Progress */}
