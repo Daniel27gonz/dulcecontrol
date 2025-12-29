@@ -126,7 +126,6 @@ export function AppProvider({ children }: { children: ReactNode }) {
       const foundUser = users.find(u => u.email === currentUserEmail);
       if (foundUser) {
         setUser(foundUser);
-        console.log('[Auth] Session restored for:', foundUser.email);
       }
     }
 
@@ -164,7 +163,6 @@ export function AppProvider({ children }: { children: ReactNode }) {
     
     // Check if email already exists
     if (users.some(u => u.email.toLowerCase() === email.toLowerCase())) {
-      console.log('[Auth] Registration failed: Email already exists');
       return false;
     }
 
@@ -181,7 +179,6 @@ export function AppProvider({ children }: { children: ReactNode }) {
     localStorage.setItem(STORAGE_KEYS.currentUser, newUser.email);
     setUser(newUser);
     
-    console.log('[Auth] User registered successfully:', newUser.email);
     return true;
   };
 
@@ -194,18 +191,15 @@ export function AppProvider({ children }: { children: ReactNode }) {
     if (foundUser) {
       localStorage.setItem(STORAGE_KEYS.currentUser, foundUser.email);
       setUser(foundUser);
-      console.log('[Auth] Login successful:', foundUser.email);
       return true;
     }
 
-    console.log('[Auth] Login failed: Invalid credentials');
     return false;
   };
 
   const logout = () => {
     localStorage.removeItem(STORAGE_KEYS.currentUser);
     setUser(null);
-    console.log('[Auth] User logged out');
   };
 
   const addRecipe = (recipe: Recipe) => {
