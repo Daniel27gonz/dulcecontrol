@@ -1,6 +1,7 @@
 import { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { Settings, User, DollarSign, Save, Check } from 'lucide-react';
+import { Settings, User, DollarSign, Save, Check, HelpCircle, ChevronRight } from 'lucide-react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -25,6 +26,7 @@ const currencies = [
 ];
 
 export default function SettingsPage() {
+  const navigate = useNavigate();
   const { user, settings, updateSettings } = useApp();
   const { toast } = useToast();
 
@@ -187,11 +189,38 @@ export default function SettingsPage() {
           </Card>
         </motion.div>
 
-        {/* Botón Guardar */}
+        {/* Ayuda */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.3 }}
+        >
+          <Card 
+            className="border-border/50 shadow-warm cursor-pointer hover:border-primary/30 transition-colors"
+            onClick={() => navigate('/help')}
+          >
+            <CardContent className="p-4">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-3">
+                  <div className="p-2 rounded-xl bg-primary/10">
+                    <HelpCircle className="w-5 h-5 text-primary" />
+                  </div>
+                  <div>
+                    <p className="font-medium">Cómo usar la app</p>
+                    <p className="text-sm text-muted-foreground">Guías y tutoriales</p>
+                  </div>
+                </div>
+                <ChevronRight className="w-5 h-5 text-muted-foreground" />
+              </div>
+            </CardContent>
+          </Card>
+        </motion.div>
+
+        {/* Botón Guardar */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.4 }}
         >
           <Button
             onClick={handleSave}
@@ -216,7 +245,7 @@ export default function SettingsPage() {
         <motion.p
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
-          transition={{ delay: 0.4 }}
+          transition={{ delay: 0.5 }}
           className="text-center text-xs text-muted-foreground"
         >
           Los cambios se guardan localmente en tu dispositivo
