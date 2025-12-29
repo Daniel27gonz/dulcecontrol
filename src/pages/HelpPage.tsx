@@ -391,21 +391,6 @@ Si tu torta cuesta $500 en ingredientes + gastos:
           ))}
         </div>
 
-        {/* Contact Support */}
-        <Card className="border-muted">
-          <CardContent className="p-4 text-center">
-            <p className="text-sm text-muted-foreground">
-              ¿Tienes más dudas? Escríbenos y te ayudamos
-            </p>
-            <Button 
-              variant="outline" 
-              className="mt-3"
-              onClick={() => window.open('https://wa.me/+525512345678?text=Hola, tengo una duda sobre la app de costos', '_blank')}
-            >
-              Contactar soporte
-            </Button>
-          </CardContent>
-        </Card>
       </div>
     </div>
   );
