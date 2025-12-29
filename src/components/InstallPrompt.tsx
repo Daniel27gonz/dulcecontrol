@@ -1,63 +1,264 @@
 import { motion, AnimatePresence } from 'framer-motion';
-import { X, Share, Download, Sparkles, Zap, ShieldCheck } from 'lucide-react';
+import { X, Share, Download, Sparkles, Zap, ShieldCheck, MoreVertical, Plus, ArrowUp, Smartphone, Monitor } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { usePWAInstall } from '@/hooks/usePWAInstall';
+import { usePWAInstall, Platform } from '@/hooks/usePWAInstall';
 import { useState, useEffect } from 'react';
 
 export function InstallPrompt() {
-  const { isInstallable, isInstalled, isIOS, promptInstall } = usePWAInstall();
+  const { isInstallable, isInstalled, isIOS, isAndroid, platform, isSafari, isChrome, promptInstall } = usePWAInstall();
   const [showPrompt, setShowPrompt] = useState(false);
   const [dismissed, setDismissed] = useState(false);
   const [isInstalling, setIsInstalling] = useState(false);
+  const [showInstructions, setShowInstructions] = useState(false);
 
   useEffect(() => {
-    console.log('[PWA] Estado:', { isInstallable, isInstalled, isIOS });
+    console.log('[PWA Prompt] 📊 Estado actual:', { 
+      isInstallable, 
+      isInstalled, 
+      isIOS, 
+      isAndroid,
+      platform,
+      isSafari,
+      isChrome,
+      dismissed
+    });
 
     // Verificar cooldown de 24 horas
     const dismissedTime = localStorage.getItem('pwa_prompt_dismissed');
     if (dismissedTime) {
       const hoursSince = (Date.now() - parseInt(dismissedTime)) / (1000 * 60 * 60);
+      console.log('[PWA Prompt] ⏰ Horas desde última dismissión:', hoursSince.toFixed(2));
       if (hoursSince < 24) {
+        console.log('[PWA Prompt] ⏸️ Cooldown activo, no mostramos popup');
         setDismissed(true);
         return;
       }
     }
 
-    // Mostrar popup después de 2 segundos
+    // Mostrar popup después de 2 segundos - SIN condiciones que lo bloqueen
+    console.log('[PWA Prompt] ⏳ Iniciando timer de 2 segundos...');
     const timer = setTimeout(() => {
-      if (!isInstalled && !dismissed) {
-        setShowPrompt(true);
+      console.log('[PWA Prompt] ⏰ Timer completado, verificando condiciones...');
+      
+      if (isInstalled) {
+        console.log('[PWA Prompt] 📲 App ya instalada, no mostramos popup');
+        return;
       }
+      
+      if (dismissed) {
+        console.log('[PWA Prompt] 🚫 Popup fue dismisseado, no mostramos');
+        return;
+      }
+      
+      console.log('[PWA Prompt] ✅ Mostrando popup de instalación!');
+      setShowPrompt(true);
     }, 2000);
 
-    return () => clearTimeout(timer);
-  }, [isInstalled, dismissed, isInstallable, isIOS]);
+    return () => {
+      console.log('[PWA Prompt] 🧹 Limpiando timer');
+      clearTimeout(timer);
+    };
+  }, [isInstalled, dismissed]);
 
   const handleDismiss = () => {
+    console.log('[PWA Prompt] ❌ Usuario cerró el popup');
     setShowPrompt(false);
     setDismissed(true);
     localStorage.setItem('pwa_prompt_dismissed', Date.now().toString());
   };
 
   const handleInstall = async () => {
+    console.log('[PWA Prompt] 🚀 Usuario intentó instalar');
     setIsInstalling(true);
     
     try {
       if (isInstallable) {
+        console.log('[PWA Prompt] 📲 Intentando instalación automática...');
         const installed = await promptInstall();
         if (installed) {
+          console.log('[PWA Prompt] ✅ Instalación exitosa!');
           setShowPrompt(false);
+        } else {
+          console.log('[PWA Prompt] ⚠️ Usuario canceló, mostrando instrucciones');
+          setShowInstructions(true);
         }
+      } else {
+        console.log('[PWA Prompt] ⚠️ No hay prompt nativo, mostrando instrucciones');
+        setShowInstructions(true);
       }
     } catch (error) {
-      console.error('[PWA] Error:', error);
+      console.error('[PWA Prompt] ❌ Error:', error);
+      setShowInstructions(true);
     } finally {
       setIsInstalling(false);
     }
   };
 
-  // No mostrar si ya está instalado o dismisseado
-  if (isInstalled || dismissed || !showPrompt) return null;
+  // Instrucciones específicas por plataforma
+  const renderInstructions = () => {
+    if (isIOS) {
+      return (
+        <div className="space-y-4">
+          <div className="text-center mb-4">
+            <div className="w-12 h-12 mx-auto mb-2 rounded-xl bg-gradient-to-br from-blue-500 to-blue-600 flex items-center justify-center">
+              <Smartphone className="w-6 h-6 text-white" />
+            </div>
+            <h4 className="font-bold text-foreground">Instalar en iPhone/iPad</h4>
+            <p className="text-sm text-muted-foreground">Sigue estos pasos en Safari</p>
+          </div>
+          
+          <div className="space-y-3">
+            <div className="flex items-center gap-3 p-3 bg-muted/50 rounded-xl">
+              <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0">
+                <span className="text-sm font-bold text-primary">1</span>
+              </div>
+              <div className="flex-1">
+                <p className="text-sm text-foreground">
+                  Toca el ícono de <span className="font-semibold">Compartir</span>
+                </p>
+                <div className="flex items-center gap-1 mt-1">
+                  <Share className="w-4 h-4 text-primary" />
+                  <span className="text-xs text-muted-foreground">(cuadrado con flecha hacia arriba)</span>
+                </div>
+              </div>
+            </div>
+            
+            <div className="flex items-center gap-3 p-3 bg-muted/50 rounded-xl">
+              <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0">
+                <span className="text-sm font-bold text-primary">2</span>
+              </div>
+              <div className="flex-1">
+                <p className="text-sm text-foreground">
+                  Desliza y toca <span className="font-semibold">"Agregar a pantalla de inicio"</span>
+                </p>
+                <div className="flex items-center gap-1 mt-1">
+                  <Plus className="w-4 h-4 text-primary" />
+                  <span className="text-xs text-muted-foreground">Add to Home Screen</span>
+                </div>
+              </div>
+            </div>
+            
+            <div className="flex items-center gap-3 p-3 bg-muted/50 rounded-xl">
+              <div className="w-8 h-8 rounded-full bg-success/10 flex items-center justify-center flex-shrink-0">
+                <span className="text-sm font-bold text-success">3</span>
+              </div>
+              <div className="flex-1">
+                <p className="text-sm text-foreground">
+                  Toca <span className="font-semibold">"Agregar"</span> en la esquina superior
+                </p>
+              </div>
+            </div>
+          </div>
+        </div>
+      );
+    }
+
+    if (isAndroid) {
+      return (
+        <div className="space-y-4">
+          <div className="text-center mb-4">
+            <div className="w-12 h-12 mx-auto mb-2 rounded-xl bg-gradient-to-br from-green-500 to-green-600 flex items-center justify-center">
+              <Smartphone className="w-6 h-6 text-white" />
+            </div>
+            <h4 className="font-bold text-foreground">Instalar en Android</h4>
+            <p className="text-sm text-muted-foreground">Sigue estos pasos en Chrome</p>
+          </div>
+          
+          <div className="space-y-3">
+            <div className="flex items-center gap-3 p-3 bg-muted/50 rounded-xl">
+              <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0">
+                <span className="text-sm font-bold text-primary">1</span>
+              </div>
+              <div className="flex-1">
+                <p className="text-sm text-foreground">
+                  Toca el <span className="font-semibold">menú de 3 puntos</span>
+                </p>
+                <div className="flex items-center gap-1 mt-1">
+                  <MoreVertical className="w-4 h-4 text-primary" />
+                  <span className="text-xs text-muted-foreground">(esquina superior derecha)</span>
+                </div>
+              </div>
+            </div>
+            
+            <div className="flex items-center gap-3 p-3 bg-muted/50 rounded-xl">
+              <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0">
+                <span className="text-sm font-bold text-primary">2</span>
+              </div>
+              <div className="flex-1">
+                <p className="text-sm text-foreground">
+                  Busca <span className="font-semibold">"Instalar aplicación"</span> o <span className="font-semibold">"Añadir a pantalla de inicio"</span>
+                </p>
+              </div>
+            </div>
+            
+            <div className="flex items-center gap-3 p-3 bg-muted/50 rounded-xl">
+              <div className="w-8 h-8 rounded-full bg-success/10 flex items-center justify-center flex-shrink-0">
+                <span className="text-sm font-bold text-success">3</span>
+              </div>
+              <div className="flex-1">
+                <p className="text-sm text-foreground">
+                  Toca <span className="font-semibold">"Instalar"</span> para confirmar
+                </p>
+              </div>
+            </div>
+          </div>
+        </div>
+      );
+    }
+
+    // Desktop
+    return (
+      <div className="space-y-4">
+        <div className="text-center mb-4">
+          <div className="w-12 h-12 mx-auto mb-2 rounded-xl bg-gradient-to-br from-purple-500 to-purple-600 flex items-center justify-center">
+            <Monitor className="w-6 h-6 text-white" />
+          </div>
+          <h4 className="font-bold text-foreground">Instalar en Computadora</h4>
+          <p className="text-sm text-muted-foreground">Sigue estos pasos en tu navegador</p>
+        </div>
+        
+        <div className="space-y-3">
+          <div className="flex items-center gap-3 p-3 bg-muted/50 rounded-xl">
+            <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0">
+              <span className="text-sm font-bold text-primary">1</span>
+            </div>
+            <div className="flex-1">
+              <p className="text-sm text-foreground">
+                Busca el <span className="font-semibold">ícono de instalación</span> en la barra de direcciones
+              </p>
+              <div className="flex items-center gap-1 mt-1">
+                <Download className="w-4 h-4 text-primary" />
+                <span className="text-xs text-muted-foreground">(o el ícono + junto a la URL)</span>
+              </div>
+            </div>
+          </div>
+          
+          <div className="flex items-center gap-3 p-3 bg-muted/50 rounded-xl">
+            <div className="w-8 h-8 rounded-full bg-success/10 flex items-center justify-center flex-shrink-0">
+              <span className="text-sm font-bold text-success">2</span>
+            </div>
+            <div className="flex-1">
+              <p className="text-sm text-foreground">
+                Haz clic en <span className="font-semibold">"Instalar"</span>
+              </p>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  };
+
+  // No mostrar si ya está instalado
+  if (isInstalled) {
+    console.log('[PWA Prompt] 📲 Oculto: App ya instalada');
+    return null;
+  }
+
+  // No mostrar si fue dismisseado
+  if (dismissed && !showPrompt) {
+    console.log('[PWA Prompt] 🚫 Oculto: Popup dismisseado');
+    return null;
+  }
 
   return (
     <AnimatePresence>
@@ -68,7 +269,7 @@ export function InstallPrompt() {
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            className="fixed inset-0 bg-foreground/30 backdrop-blur-sm z-40"
+            className="fixed inset-0 bg-foreground/40 backdrop-blur-sm z-40"
             onClick={handleDismiss}
           />
           
@@ -78,106 +279,144 @@ export function InstallPrompt() {
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: 100, scale: 0.95 }}
             transition={{ type: "spring", damping: 25, stiffness: 300 }}
-            className="fixed bottom-0 left-0 right-0 z-50 p-4 md:bottom-4 md:left-auto md:right-4 md:w-[400px]"
+            className="fixed bottom-0 left-0 right-0 z-50 p-4 md:bottom-4 md:left-auto md:right-4 md:max-w-[420px]"
           >
-            <div className="relative overflow-hidden rounded-3xl bg-card border border-border shadow-elevated">
+            <div className="relative overflow-hidden rounded-3xl bg-card border border-border shadow-2xl">
               {/* Header con gradiente */}
-              <div className="gradient-warm p-6 text-center relative overflow-hidden">
-                <div className="absolute inset-0 bg-[radial-gradient(circle_at_30%_20%,rgba(255,255,255,0.2),transparent_50%)]" />
+              <div className="relative p-6 text-center overflow-hidden bg-gradient-to-br from-primary via-caramel to-secondary">
+                {/* Efectos decorativos */}
+                <div className="absolute inset-0 bg-[radial-gradient(circle_at_30%_20%,rgba(255,255,255,0.25),transparent_50%)]" />
+                <div className="absolute -top-10 -right-10 w-40 h-40 bg-white/10 rounded-full blur-2xl" />
+                <div className="absolute -bottom-10 -left-10 w-32 h-32 bg-white/10 rounded-full blur-2xl" />
+                
                 <div className="relative">
-                  <div className="w-20 h-20 mx-auto mb-3 rounded-2xl bg-card/20 backdrop-blur-sm flex items-center justify-center shadow-lg border border-white/20">
-                    <span className="text-5xl">🧁</span>
-                  </div>
-                  <h3 className="text-xl font-bold text-primary-foreground">
-                    ¡Instala Postres Rentables!
+                  {/* Icono animado */}
+                  <motion.div 
+                    className="w-24 h-24 mx-auto mb-4 rounded-3xl bg-white/20 backdrop-blur-sm flex items-center justify-center shadow-xl border-2 border-white/30"
+                    animate={{ 
+                      y: [0, -5, 0],
+                      rotate: [0, 2, -2, 0]
+                    }}
+                    transition={{ 
+                      duration: 3, 
+                      repeat: Infinity,
+                      ease: "easeInOut"
+                    }}
+                  >
+                    <span className="text-6xl drop-shadow-lg">🧁</span>
+                  </motion.div>
+                  
+                  <h3 className="text-2xl font-bold text-white drop-shadow-md">
+                    ¡Instala CostoPostres!
                   </h3>
-                  <p className="text-sm text-primary-foreground/90 mt-1">
-                    Tu negocio de postres en un clic
+                  <p className="text-sm text-white/90 mt-2 max-w-xs mx-auto">
+                    Acceso rápido desde tu pantalla de inicio
                   </p>
                 </div>
+                
+                {/* Botón cerrar */}
+                <button
+                  onClick={handleDismiss}
+                  className="absolute top-3 right-3 p-2.5 rounded-full bg-white/20 backdrop-blur-sm hover:bg-white/30 transition-colors border border-white/20"
+                  aria-label="Cerrar"
+                >
+                  <X className="w-5 h-5 text-white" />
+                </button>
               </div>
-              
-              {/* Botón cerrar */}
-              <button
-                onClick={handleDismiss}
-                className="absolute top-3 right-3 p-2 rounded-full bg-card/20 backdrop-blur-sm hover:bg-card/40 transition-colors"
-                aria-label="Cerrar"
-              >
-                <X className="w-5 h-5 text-primary-foreground" />
-              </button>
 
               {/* Contenido */}
               <div className="p-5">
-                {/* Beneficios compactos */}
-                <div className="flex justify-around mb-5 py-3 bg-muted/30 rounded-xl">
-                  <div className="text-center">
-                    <div className="w-10 h-10 mx-auto mb-1 rounded-full bg-caramel/10 flex items-center justify-center">
-                      <Zap className="w-5 h-5 text-caramel" />
-                    </div>
-                    <span className="text-xs text-muted-foreground">Rápido</span>
-                  </div>
-                  <div className="text-center">
-                    <div className="w-10 h-10 mx-auto mb-1 rounded-full bg-success/10 flex items-center justify-center">
-                      <Sparkles className="w-5 h-5 text-success" />
-                    </div>
-                    <span className="text-xs text-muted-foreground">Offline</span>
-                  </div>
-                  <div className="text-center">
-                    <div className="w-10 h-10 mx-auto mb-1 rounded-full bg-primary/10 flex items-center justify-center">
-                      <ShieldCheck className="w-5 h-5 text-primary" />
-                    </div>
-                    <span className="text-xs text-muted-foreground">Seguro</span>
-                  </div>
-                </div>
-
-                {/* Botón de instalación o instrucciones simplificadas */}
-                {isInstallable ? (
-                  <Button 
-                    onClick={handleInstall} 
-                    variant="warm" 
-                    size="lg" 
-                    className="w-full text-base font-bold h-14 rounded-xl shadow-lg"
-                    disabled={isInstalling}
-                  >
-                    {isInstalling ? (
-                      <>
-                        <div className="w-5 h-5 border-2 border-primary-foreground/30 border-t-primary-foreground rounded-full animate-spin mr-2" />
-                        Instalando...
-                      </>
-                    ) : (
-                      <>
-                        <Download className="w-5 h-5 mr-2" />
-                        Instalar App — 1 Clic
-                      </>
-                    )}
-                  </Button>
-                ) : isIOS ? (
-                  // Instrucciones simplificadas para iOS
-                  <div className="bg-muted/50 rounded-xl p-4 text-center">
-                    <div className="flex items-center justify-center gap-2 mb-2">
-                      <Share className="w-5 h-5 text-primary" />
-                      <span className="text-sm font-semibold text-foreground">Safari</span>
-                    </div>
-                    <p className="text-sm text-muted-foreground">
-                      Toca <span className="font-semibold text-foreground">Compartir</span> → <span className="font-semibold text-foreground">"Agregar a inicio"</span>
-                    </p>
-                  </div>
+                {showInstructions ? (
+                  <>
+                    {renderInstructions()}
+                    <Button 
+                      onClick={() => setShowInstructions(false)}
+                      variant="outline" 
+                      className="w-full mt-4"
+                    >
+                      Volver
+                    </Button>
+                  </>
                 ) : (
-                  // Para Android cuando no hay prompt automático (raro)
-                  <div className="bg-muted/50 rounded-xl p-4 text-center">
-                    <p className="text-sm text-muted-foreground">
-                      Busca <span className="font-semibold text-foreground">"Instalar app"</span> en el menú del navegador
-                    </p>
-                  </div>
-                )}
+                  <>
+                    {/* Beneficios */}
+                    <div className="grid grid-cols-3 gap-3 mb-5">
+                      <motion.div 
+                        className="text-center p-3 rounded-2xl bg-gradient-to-br from-amber-50 to-amber-100/50"
+                        whileHover={{ scale: 1.05 }}
+                      >
+                        <div className="w-12 h-12 mx-auto mb-2 rounded-xl bg-gradient-to-br from-amber-400 to-orange-500 flex items-center justify-center shadow-lg">
+                          <Zap className="w-6 h-6 text-white" />
+                        </div>
+                        <span className="text-xs font-semibold text-amber-900">Ultra Rápido</span>
+                      </motion.div>
+                      
+                      <motion.div 
+                        className="text-center p-3 rounded-2xl bg-gradient-to-br from-green-50 to-green-100/50"
+                        whileHover={{ scale: 1.05 }}
+                      >
+                        <div className="w-12 h-12 mx-auto mb-2 rounded-xl bg-gradient-to-br from-green-400 to-emerald-500 flex items-center justify-center shadow-lg">
+                          <Sparkles className="w-6 h-6 text-white" />
+                        </div>
+                        <span className="text-xs font-semibold text-green-900">Sin Internet</span>
+                      </motion.div>
+                      
+                      <motion.div 
+                        className="text-center p-3 rounded-2xl bg-gradient-to-br from-blue-50 to-blue-100/50"
+                        whileHover={{ scale: 1.05 }}
+                      >
+                        <div className="w-12 h-12 mx-auto mb-2 rounded-xl bg-gradient-to-br from-blue-400 to-indigo-500 flex items-center justify-center shadow-lg">
+                          <ShieldCheck className="w-6 h-6 text-white" />
+                        </div>
+                        <span className="text-xs font-semibold text-blue-900">100% Segura</span>
+                      </motion.div>
+                    </div>
 
-                {/* Link para cerrar */}
-                <button
-                  onClick={handleDismiss}
-                  className="w-full mt-4 text-sm text-muted-foreground hover:text-foreground transition-colors py-2"
-                >
-                  Ahora no, gracias
-                </button>
+                    {/* Texto motivacional */}
+                    <div className="text-center mb-5 p-3 bg-muted/30 rounded-xl border border-border/50">
+                      <p className="text-sm text-muted-foreground">
+                        📲 <span className="text-foreground font-medium">¡Instala gratis!</span> Sin ocupar espacio y siempre actualizada
+                      </p>
+                    </div>
+
+                    {/* Botón principal */}
+                    <Button 
+                      onClick={handleInstall} 
+                      variant="warm" 
+                      size="lg" 
+                      className="w-full text-base font-bold h-14 rounded-2xl shadow-lg hover:shadow-xl transition-all"
+                      disabled={isInstalling}
+                    >
+                      {isInstalling ? (
+                        <>
+                          <div className="w-5 h-5 border-2 border-primary-foreground/30 border-t-primary-foreground rounded-full animate-spin mr-2" />
+                          Instalando...
+                        </>
+                      ) : (
+                        <>
+                          <Download className="w-5 h-5 mr-2" />
+                          {isInstallable ? 'Instalar Ahora — ¡Es Gratis!' : 'Ver Cómo Instalar'}
+                        </>
+                      )}
+                    </Button>
+
+                    {/* Indicador de plataforma */}
+                    <div className="flex items-center justify-center gap-2 mt-3 text-xs text-muted-foreground">
+                      {isIOS && <span className="flex items-center gap-1">🍎 iPhone/iPad</span>}
+                      {isAndroid && <span className="flex items-center gap-1">🤖 Android</span>}
+                      {!isIOS && !isAndroid && <span className="flex items-center gap-1">💻 Escritorio</span>}
+                      {isInstallable && <span className="text-success font-medium">• Instalación rápida disponible</span>}
+                    </div>
+
+                    {/* Link para cerrar */}
+                    <button
+                      onClick={handleDismiss}
+                      className="w-full mt-4 text-sm text-muted-foreground hover:text-foreground transition-colors py-2"
+                    >
+                      Quizás más tarde
+                    </button>
+                  </>
+                )}
               </div>
             </div>
           </motion.div>
