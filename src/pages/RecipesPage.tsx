@@ -11,7 +11,6 @@ import {
   Eye,
   MoreVertical,
   Pencil,
-  X,
   Flame,
   Package,
   Zap
@@ -214,6 +213,13 @@ export default function RecipesPage() {
                                     <Eye className="w-4 h-4 mr-2" />
                                     Ver detalles
                                   </DropdownMenuItem>
+                                  <DropdownMenuItem onClick={(e) => {
+                                    e.stopPropagation();
+                                    navigate(`/calculator?edit=${recipe.id}`);
+                                  }}>
+                                    <Pencil className="w-4 h-4 mr-2" />
+                                    Editar receta
+                                  </DropdownMenuItem>
                                   <DropdownMenuSeparator />
                                   <DropdownMenuItem 
                                     onClick={(e) => {
@@ -384,11 +390,14 @@ export default function RecipesPage() {
                   <div className="flex gap-3 pt-4">
                     <Button
                       variant="outline"
-                      className="flex-1 text-destructive hover:text-destructive"
-                      onClick={() => setRecipeToDelete(selectedRecipe)}
+                      className="flex-1"
+                      onClick={() => {
+                        setSelectedRecipe(null);
+                        navigate(`/calculator?edit=${selectedRecipe.id}`);
+                      }}
                     >
-                      <Trash2 className="w-4 h-4 mr-2" />
-                      Eliminar
+                      <Pencil className="w-4 h-4 mr-2" />
+                      Editar
                     </Button>
                     <Button
                       variant="warm"
