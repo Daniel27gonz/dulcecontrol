@@ -1,12 +1,13 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { ArrowLeft, Plus, Trash2, ChevronRight, Check, Sparkles } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent } from '@/components/ui/card';
 import { useApp, Ingredient, IndirectCost, Recipe } from '@/context/AppContext';
 import { BottomNav } from '@/components/BottomNav';
+import { toast } from '@/hooks/use-toast';
 
 const CATEGORIES = [
   { id: 'torta', name: 'Torta', emoji: '🎂' },
@@ -24,10 +25,15 @@ const STEPS = ['info', 'ingredients', 'costs', 'margin', 'result'];
 
 export default function CalculatorPage() {
   const navigate = useNavigate();
-  const { settings, addRecipe, calculateRecipeCost } = useApp();
+  const [searchParams] = useSearchParams();
+  const editId = searchParams.get('edit');
+  
+  const { settings, recipes, addRecipe, updateRecipe, calculateRecipeCost } = useApp();
   const [currentStep, setCurrentStep] = useState(0);
+  const [isEditing, setIsEditing] = useState(false);
 
   // Form state
+  const [recipeId, setRecipeId] = useState<string | null>(null);
   const [recipeName, setRecipeName] = useState('');
   const [category, setCategory] = useState('');
   const [ingredients, setIngredients] = useState<Ingredient[]>([
@@ -41,6 +47,24 @@ export default function CalculatorPage() {
     other: 0,
   });
   const [marginPercentage, setMarginPercentage] = useState(50);
+
+  // Load recipe data when editing
+  useEffect(() => {
+    if (editId) {
+      const recipe = recipes.find(r => r.id === editId);
+      if (recipe) {
+        setIsEditing(true);
+        setRecipeId(recipe.id);
+        setRecipeName(recipe.name);
+        setCategory(recipe.category);
+        setIngredients(recipe.ingredients.length > 0 ? recipe.ingredients : [
+          { id: '1', name: '', pricePerUnit: 0, quantityUsed: 0, unit: 'g' },
+        ]);
+        setIndirectCosts(recipe.indirectCosts);
+        setMarginPercentage(recipe.marginPercentage);
+      }
+    }
+  }, [editId, recipes]);
 
   const addIngredient = () => {
     setIngredients([
@@ -76,16 +100,32 @@ export default function CalculatorPage() {
   };
 
   const handleSave = () => {
-    const newRecipe: Recipe = {
-      id: Date.now().toString(),
+    const recipeData = {
       name: recipeName,
       category,
       ingredients: ingredients.filter((ing) => ing.name.trim() !== ''),
       indirectCosts,
       marginPercentage,
-      createdAt: new Date().toISOString(),
     };
-    addRecipe(newRecipe);
+
+    if (isEditing && recipeId) {
+      updateRecipe(recipeId, recipeData);
+      toast({
+        title: '¡Receta actualizada!',
+        description: `"${recipeName}" ha sido guardada`,
+      });
+    } else {
+      const newRecipe: Recipe = {
+        id: Date.now().toString(),
+        ...recipeData,
+        createdAt: new Date().toISOString(),
+      };
+      addRecipe(newRecipe);
+      toast({
+        title: '¡Receta creada!',
+        description: `"${recipeName}" ha sido guardada`,
+      });
+    }
     navigate('/recipes');
   };
 
@@ -126,7 +166,7 @@ export default function CalculatorPage() {
           </button>
           <div className="flex-1">
             <h1 className="font-bold text-foreground">
-              {currentStep === 4 ? 'Resultado' : 'Nueva Receta'}
+              {currentStep === 4 ? 'Resultado' : isEditing ? 'Editar Receta' : 'Nueva Receta'}
             </h1>
             <p className="text-xs text-muted-foreground">
               Paso {currentStep + 1} de {STEPS.length}
@@ -160,7 +200,9 @@ export default function CalculatorPage() {
             >
               <div className="text-center mb-6">
                 <span className="text-4xl">🧁</span>
-                <h2 className="text-xl font-bold mt-2">¿Qué vas a preparar?</h2>
+                <h2 className="text-xl font-bold mt-2">
+                  {isEditing ? '¿Qué cambios harás?' : '¿Qué vas a preparar?'}
+                </h2>
                 <p className="text-muted-foreground text-sm">Cuéntanos sobre tu postre</p>
               </div>
 
@@ -482,7 +524,7 @@ export default function CalculatorPage() {
 
               <Button onClick={handleSave} variant="warm" size="xl" className="w-full">
                 <Check className="w-5 h-5" />
-                Guardar receta
+                {isEditing ? 'Guardar cambios' : 'Guardar receta'}
               </Button>
             </motion.div>
           )}
