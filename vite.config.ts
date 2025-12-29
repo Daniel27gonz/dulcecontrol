@@ -17,8 +17,8 @@ export default defineConfig(({ mode }) => ({
       registerType: "autoUpdate",
       includeAssets: ["favicon.ico", "icon-192.png", "icon-512.png", "robots.txt"],
       manifest: {
-        name: "Calculadora de Costos para Emprendedoras de Postres",
-        short_name: "Postres Rentables",
+        name: "CostoPostres - Calculadora de Costos para Postres",
+        short_name: "CostoPostres",
         description: "Calcula el precio correcto de tus postres, gestiona tu negocio y gana lo que realmente vale tu trabajo",
         start_url: "/",
         display: "standalone",
@@ -27,7 +27,8 @@ export default defineConfig(({ mode }) => ({
         orientation: "portrait-primary",
         lang: "es",
         dir: "ltr",
-        categories: ["business", "finance", "food"],
+        categories: ["business", "finance", "food", "productivity"],
+        id: "costopostres-app",
         icons: [
           {
             src: "/icon-192.png",
@@ -60,6 +61,20 @@ export default defineConfig(({ mode }) => ({
             sizes: "512x512",
             type: "image/png",
             form_factor: "narrow"
+          }
+        ],
+        shortcuts: [
+          {
+            name: "Nueva Receta",
+            short_name: "Receta",
+            url: "/calculator",
+            icons: [{ src: "/icon-192.png", sizes: "192x192" }]
+          },
+          {
+            name: "Mis Pedidos",
+            short_name: "Pedidos",
+            url: "/orders",
+            icons: [{ src: "/icon-192.png", sizes: "192x192" }]
           }
         ]
       },

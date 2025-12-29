@@ -1,7 +1,7 @@
 {
-  "name": "Calculadora de Costos para Emprendedoras de Postres",
-  "short_name": "Postres Rentables",
-  "description": "Calcula el precio correcto de tus postres, gestiona tu negocio y gana lo que realmente vale tu trabajo",
+  "name": "CostoPostres - Calculadora de Costos para Postres",
+  "short_name": "CostoPostres",
+  "description": "Calcula el precio correcto de tus postres, gestiona tu negocio y gana lo que realmente vale tu trabajo. Control de costos, recetas, pedidos y finanzas.",
   "start_url": "/",
   "display": "standalone",
   "background_color": "#FDF6F0",
@@ -33,9 +33,43 @@
       "purpose": "maskable"
     }
   ],
-  "categories": ["business", "finance", "food"],
+  "screenshots": [
+    {
+      "src": "/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "form_factor": "narrow",
+      "label": "CostoPostres App"
+    }
+  ],
+  "categories": ["business", "finance", "food", "productivity"],
   "lang": "es",
   "dir": "ltr",
   "scope": "/",
-  "id": "postres-rentables"
+  "id": "costopostres-app",
+  "prefer_related_applications": false,
+  "related_applications": [],
+  "shortcuts": [
+    {
+      "name": "Nueva Receta",
+      "short_name": "Receta",
+      "description": "Crear una nueva receta con cálculo de costos",
+      "url": "/calculator",
+      "icons": [{ "src": "/icon-192.png", "sizes": "192x192" }]
+    },
+    {
+      "name": "Mis Pedidos",
+      "short_name": "Pedidos",
+      "description": "Ver y gestionar pedidos",
+      "url": "/orders",
+      "icons": [{ "src": "/icon-192.png", "sizes": "192x192" }]
+    },
+    {
+      "name": "Finanzas",
+      "short_name": "Finanzas",
+      "description": "Ver resumen financiero",
+      "url": "/finances",
+      "icons": [{ "src": "/icon-192.png", "sizes": "192x192" }]
+    }
+  ]
 }
