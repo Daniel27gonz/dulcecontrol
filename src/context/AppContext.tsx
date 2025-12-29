@@ -61,6 +61,7 @@ export interface UserSettings {
   currency: string;
   currencySymbol: string;
   hasCompletedOnboarding: boolean;
+  hasCompletedRecipeTutorial: boolean;
   userName?: string;
 }
 
@@ -106,6 +107,7 @@ const defaultSettings: UserSettings = {
   currency: 'USD',
   currencySymbol: '$',
   hasCompletedOnboarding: false,
+  hasCompletedRecipeTutorial: false,
 };
 
 export function AppProvider({ children }: { children: ReactNode }) {
