@@ -1,14 +1,8 @@
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
+import { supabase } from '@/integrations/supabase/client';
+import { User, Session } from '@supabase/supabase-js';
 
 // Types
-export interface User {
-  id: string;
-  name: string;
-  email: string;
-  password: string; // In production, this would be hashed
-  createdAt: string;
-}
-
 export interface Ingredient {
   id: string;
   name: string;
@@ -65,43 +59,43 @@ export interface UserSettings {
   userName?: string;
 }
 
+export interface UserProfile {
+  id: string;
+  name: string;
+  email: string;
+}
+
 interface AppContextType {
   // Auth
-  user: User | null;
+  user: UserProfile | null;
+  session: Session | null;
   isAuthenticated: boolean;
-  login: (email: string, password: string) => boolean;
-  register: (name: string, email: string, password: string) => boolean;
-  logout: () => void;
+  isLoading: boolean;
+  login: (email: string, password: string) => Promise<{ success: boolean; error?: string }>;
+  register: (name: string, email: string, password: string) => Promise<{ success: boolean; error?: string }>;
+  logout: () => Promise<void>;
   // Data
   recipes: Recipe[];
   orders: Order[];
   transactions: Transaction[];
   settings: UserSettings;
-  addRecipe: (recipe: Recipe) => void;
-  updateRecipe: (id: string, recipe: Partial<Recipe>) => void;
-  deleteRecipe: (id: string) => void;
-  addOrder: (order: Order) => void;
-  updateOrder: (id: string, order: Partial<Order>) => void;
-  deleteOrder: (id: string) => void;
-  addTransaction: (transaction: Transaction) => void;
-  deleteTransaction: (id: string) => void;
-  updateSettings: (settings: Partial<UserSettings>) => void;
+  addRecipe: (recipe: Omit<Recipe, 'id' | 'createdAt'>) => Promise<void>;
+  updateRecipe: (id: string, recipe: Partial<Recipe>) => Promise<void>;
+  deleteRecipe: (id: string) => Promise<void>;
+  addOrder: (order: Omit<Order, 'id' | 'createdAt'>) => Promise<void>;
+  updateOrder: (id: string, order: Partial<Order>) => Promise<void>;
+  deleteOrder: (id: string) => Promise<void>;
+  addTransaction: (transaction: Omit<Transaction, 'id'>) => Promise<void>;
+  deleteTransaction: (id: string) => Promise<void>;
+  updateSettings: (settings: Partial<UserSettings>) => Promise<void>;
   calculateRecipeCost: (recipe: Recipe) => { ingredientsCost: number; indirectCost: number; totalCost: number; suggestedPrice: number; profit: number };
   getTotalIncome: () => number;
   getTotalExpenses: () => number;
   getNetProfit: () => number;
+  refreshData: () => Promise<void>;
 }
 
 const AppContext = createContext<AppContextType | undefined>(undefined);
-
-const STORAGE_KEYS = {
-  users: 'dessert_calc_users',
-  currentUser: 'dessert_calc_current_user',
-  recipes: 'dessert_calc_recipes',
-  orders: 'dessert_calc_orders',
-  transactions: 'dessert_calc_transactions',
-  settings: 'dessert_calc_settings',
-};
 
 const defaultSettings: UserSettings = {
   currency: 'USD',
@@ -111,145 +105,402 @@ const defaultSettings: UserSettings = {
 };
 
 export function AppProvider({ children }: { children: ReactNode }) {
-  const [user, setUser] = useState<User | null>(null);
+  const [user, setUser] = useState<UserProfile | null>(null);
+  const [session, setSession] = useState<Session | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
   const [recipes, setRecipes] = useState<Recipe[]>([]);
   const [orders, setOrders] = useState<Order[]>([]);
   const [transactions, setTransactions] = useState<Transaction[]>([]);
   const [settings, setSettings] = useState<UserSettings>(defaultSettings);
 
-  // Load data from localStorage on mount
-  useEffect(() => {
-    // Load current user session
-    const currentUserEmail = localStorage.getItem(STORAGE_KEYS.currentUser);
-    if (currentUserEmail) {
-      const users = JSON.parse(localStorage.getItem(STORAGE_KEYS.users) || '[]') as User[];
-      const foundUser = users.find(u => u.email === currentUserEmail);
-      if (foundUser) {
-        setUser(foundUser);
-      }
+  // Load user profile from database
+  const loadUserProfile = async (userId: string, email: string) => {
+    const { data: profile } = await supabase
+      .from('profiles')
+      .select('*')
+      .eq('user_id', userId)
+      .maybeSingle();
+
+    if (profile) {
+      setUser({
+        id: userId,
+        name: profile.name,
+        email: email,
+      });
+    }
+  };
+
+  // Load all user data from database
+  const loadUserData = async (userId: string) => {
+    // Load settings
+    const { data: settingsData } = await supabase
+      .from('user_settings')
+      .select('*')
+      .eq('user_id', userId)
+      .maybeSingle();
+
+    if (settingsData) {
+      setSettings({
+        currency: settingsData.currency,
+        currencySymbol: settingsData.currency_symbol,
+        hasCompletedOnboarding: settingsData.has_completed_onboarding,
+        hasCompletedRecipeTutorial: settingsData.has_completed_recipe_tutorial,
+        userName: user?.name,
+      });
     }
 
-    const loadedRecipes = localStorage.getItem(STORAGE_KEYS.recipes);
-    const loadedOrders = localStorage.getItem(STORAGE_KEYS.orders);
-    const loadedTransactions = localStorage.getItem(STORAGE_KEYS.transactions);
-    const loadedSettings = localStorage.getItem(STORAGE_KEYS.settings);
+    // Load recipes
+    const { data: recipesData } = await supabase
+      .from('recipes')
+      .select('*')
+      .eq('user_id', userId)
+      .order('created_at', { ascending: false });
 
-    if (loadedRecipes) setRecipes(JSON.parse(loadedRecipes));
-    if (loadedOrders) setOrders(JSON.parse(loadedOrders));
-    if (loadedTransactions) setTransactions(JSON.parse(loadedTransactions));
-    if (loadedSettings) setSettings({ ...defaultSettings, ...JSON.parse(loadedSettings) });
+    if (recipesData) {
+      setRecipes(recipesData.map(r => ({
+        id: r.id,
+        name: r.name,
+        category: r.category,
+        image: r.image || undefined,
+        ingredients: (r.ingredients as unknown) as Ingredient[],
+        indirectCosts: (r.indirect_costs as unknown) as IndirectCost,
+        marginPercentage: Number(r.margin_percentage),
+        createdAt: r.created_at,
+      })));
+    }
+
+    // Load orders
+    const { data: ordersData } = await supabase
+      .from('orders')
+      .select('*')
+      .eq('user_id', userId)
+      .order('created_at', { ascending: false });
+
+    if (ordersData) {
+      setOrders(ordersData.map(o => ({
+        id: o.id,
+        clientName: o.client_name,
+        recipeId: o.recipe_id || '',
+        recipeName: o.recipe_name,
+        quantity: o.quantity,
+        totalPrice: Number(o.total_price),
+        status: o.status as Order['status'],
+        deliveryDate: o.delivery_date,
+        createdAt: o.created_at,
+      })));
+    }
+
+    // Load transactions
+    const { data: transactionsData } = await supabase
+      .from('transactions')
+      .select('*')
+      .eq('user_id', userId)
+      .order('date', { ascending: false });
+
+    if (transactionsData) {
+      setTransactions(transactionsData.map(t => ({
+        id: t.id,
+        type: t.type as Transaction['type'],
+        description: t.description,
+        amount: Number(t.amount),
+        category: t.category,
+        date: t.date,
+      })));
+    }
+  };
+
+  // Initialize auth state
+  useEffect(() => {
+    // Set up auth state listener FIRST
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(
+      (event, newSession) => {
+        setSession(newSession);
+        
+        if (newSession?.user) {
+          // Defer data loading to avoid deadlock
+          setTimeout(() => {
+            loadUserProfile(newSession.user.id, newSession.user.email || '');
+            loadUserData(newSession.user.id);
+          }, 0);
+        } else {
+          setUser(null);
+          setRecipes([]);
+          setOrders([]);
+          setTransactions([]);
+          setSettings(defaultSettings);
+        }
+        
+        setIsLoading(false);
+      }
+    );
+
+    // THEN check for existing session
+    supabase.auth.getSession().then(({ data: { session: existingSession } }) => {
+      setSession(existingSession);
+      
+      if (existingSession?.user) {
+        loadUserProfile(existingSession.user.id, existingSession.user.email || '');
+        loadUserData(existingSession.user.id);
+      }
+      
+      setIsLoading(false);
+    });
+
+    return () => subscription.unsubscribe();
   }, []);
 
-  // Save to localStorage whenever data changes
-  useEffect(() => {
-    localStorage.setItem(STORAGE_KEYS.recipes, JSON.stringify(recipes));
-  }, [recipes]);
-
-  useEffect(() => {
-    localStorage.setItem(STORAGE_KEYS.orders, JSON.stringify(orders));
-  }, [orders]);
-
-  useEffect(() => {
-    localStorage.setItem(STORAGE_KEYS.transactions, JSON.stringify(transactions));
-  }, [transactions]);
-
-  useEffect(() => {
-    localStorage.setItem(STORAGE_KEYS.settings, JSON.stringify(settings));
-  }, [settings]);
+  const refreshData = async () => {
+    if (session?.user) {
+      await loadUserData(session.user.id);
+    }
+  };
 
   // Auth functions
-  const register = (name: string, email: string, password: string): boolean => {
-    const users = JSON.parse(localStorage.getItem(STORAGE_KEYS.users) || '[]') as User[];
+  const register = async (name: string, email: string, password: string): Promise<{ success: boolean; error?: string }> => {
+    const redirectUrl = `${window.location.origin}/`;
     
-    // Check if email already exists
-    if (users.some(u => u.email.toLowerCase() === email.toLowerCase())) {
-      return false;
+    const { data, error } = await supabase.auth.signUp({
+      email,
+      password,
+      options: {
+        emailRedirectTo: redirectUrl,
+        data: { name }
+      }
+    });
+
+    if (error) {
+      if (error.message.includes('already registered')) {
+        return { success: false, error: 'Este correo ya está registrado' };
+      }
+      return { success: false, error: error.message };
     }
 
-    const newUser: User = {
-      id: crypto.randomUUID(),
-      name,
-      email: email.toLowerCase(),
-      password, // In production, this would be hashed
-      createdAt: new Date().toISOString(),
-    };
-
-    users.push(newUser);
-    localStorage.setItem(STORAGE_KEYS.users, JSON.stringify(users));
-    localStorage.setItem(STORAGE_KEYS.currentUser, newUser.email);
-    setUser(newUser);
-    
-    return true;
+    return { success: true };
   };
 
-  const login = (email: string, password: string): boolean => {
-    const users = JSON.parse(localStorage.getItem(STORAGE_KEYS.users) || '[]') as User[];
-    const foundUser = users.find(
-      u => u.email.toLowerCase() === email.toLowerCase() && u.password === password
-    );
+  const login = async (email: string, password: string): Promise<{ success: boolean; error?: string }> => {
+    const { data, error } = await supabase.auth.signInWithPassword({
+      email,
+      password
+    });
 
-    if (foundUser) {
-      localStorage.setItem(STORAGE_KEYS.currentUser, foundUser.email);
-      setUser(foundUser);
-      return true;
+    if (error) {
+      if (error.message.includes('Invalid login credentials')) {
+        return { success: false, error: 'Credenciales incorrectas' };
+      }
+      return { success: false, error: error.message };
     }
 
-    return false;
+    return { success: true };
   };
 
-  const logout = () => {
-    localStorage.removeItem(STORAGE_KEYS.currentUser);
-    setUser(null);
+  const logout = async () => {
+    await supabase.auth.signOut();
   };
 
-  const addRecipe = (recipe: Recipe) => {
-    setRecipes((prev) => [...prev, recipe]);
+  // Recipe functions
+  const addRecipe = async (recipe: Omit<Recipe, 'id' | 'createdAt'>) => {
+    if (!session?.user) return;
+
+    const { data, error } = await supabase
+      .from('recipes')
+      .insert([{
+        user_id: session.user.id,
+        name: recipe.name,
+        category: recipe.category,
+        image: recipe.image,
+        ingredients: JSON.parse(JSON.stringify(recipe.ingredients)),
+        indirect_costs: JSON.parse(JSON.stringify(recipe.indirectCosts)),
+        margin_percentage: recipe.marginPercentage,
+      }])
+      .select()
+      .single();
+
+    if (data) {
+      setRecipes(prev => [{
+        id: data.id,
+        name: data.name,
+        category: data.category,
+        image: data.image || undefined,
+        ingredients: (data.ingredients as unknown) as Ingredient[],
+        indirectCosts: (data.indirect_costs as unknown) as IndirectCost,
+        marginPercentage: Number(data.margin_percentage),
+        createdAt: data.created_at,
+      }, ...prev]);
+    }
   };
 
-  const updateRecipe = (id: string, updates: Partial<Recipe>) => {
-    setRecipes((prev) =>
-      prev.map((recipe) => (recipe.id === id ? { ...recipe, ...updates } : recipe))
+  const updateRecipe = async (id: string, updates: Partial<Recipe>) => {
+    if (!session?.user) return;
+
+    const updateData: Record<string, unknown> = {};
+    if (updates.name !== undefined) updateData.name = updates.name;
+    if (updates.category !== undefined) updateData.category = updates.category;
+    if (updates.image !== undefined) updateData.image = updates.image;
+    if (updates.ingredients !== undefined) updateData.ingredients = updates.ingredients;
+    if (updates.indirectCosts !== undefined) updateData.indirect_costs = updates.indirectCosts;
+    if (updates.marginPercentage !== undefined) updateData.margin_percentage = updates.marginPercentage;
+
+    await supabase
+      .from('recipes')
+      .update(updateData)
+      .eq('id', id)
+      .eq('user_id', session.user.id);
+
+    setRecipes(prev =>
+      prev.map(recipe => (recipe.id === id ? { ...recipe, ...updates } : recipe))
     );
   };
 
-  const deleteRecipe = (id: string) => {
-    setRecipes((prev) => prev.filter((recipe) => recipe.id !== id));
+  const deleteRecipe = async (id: string) => {
+    if (!session?.user) return;
+
+    await supabase
+      .from('recipes')
+      .delete()
+      .eq('id', id)
+      .eq('user_id', session.user.id);
+
+    setRecipes(prev => prev.filter(recipe => recipe.id !== id));
   };
 
-  const addOrder = (order: Order) => {
-    setOrders((prev) => [...prev, order]);
-    // Auto-add transaction for order income
-    const transaction: Transaction = {
-      id: crypto.randomUUID(),
-      type: 'income',
-      description: `Pedido: ${order.recipeName} x${order.quantity}`,
-      amount: order.totalPrice,
-      category: 'ventas',
-      date: new Date().toISOString(),
-    };
-    setTransactions((prev) => [...prev, transaction]);
+  // Order functions
+  const addOrder = async (order: Omit<Order, 'id' | 'createdAt'>) => {
+    if (!session?.user) return;
+
+    const { data, error } = await supabase
+      .from('orders')
+      .insert({
+        user_id: session.user.id,
+        client_name: order.clientName,
+        recipe_id: order.recipeId || null,
+        recipe_name: order.recipeName,
+        quantity: order.quantity,
+        total_price: order.totalPrice,
+        status: order.status,
+        delivery_date: order.deliveryDate,
+      })
+      .select()
+      .single();
+
+    if (data) {
+      const newOrder: Order = {
+        id: data.id,
+        clientName: data.client_name,
+        recipeId: data.recipe_id || '',
+        recipeName: data.recipe_name,
+        quantity: data.quantity,
+        totalPrice: Number(data.total_price),
+        status: data.status as Order['status'],
+        deliveryDate: data.delivery_date,
+        createdAt: data.created_at,
+      };
+      
+      setOrders(prev => [newOrder, ...prev]);
+
+      // Auto-add transaction for order income
+      await addTransaction({
+        type: 'income',
+        description: `Pedido: ${order.recipeName} x${order.quantity}`,
+        amount: order.totalPrice,
+        category: 'ventas',
+        date: new Date().toISOString(),
+      });
+    }
   };
 
-  const updateOrder = (id: string, updates: Partial<Order>) => {
-    setOrders((prev) =>
-      prev.map((order) => (order.id === id ? { ...order, ...updates } : order))
+  const updateOrder = async (id: string, updates: Partial<Order>) => {
+    if (!session?.user) return;
+
+    const updateData: Record<string, unknown> = {};
+    if (updates.clientName !== undefined) updateData.client_name = updates.clientName;
+    if (updates.recipeId !== undefined) updateData.recipe_id = updates.recipeId || null;
+    if (updates.recipeName !== undefined) updateData.recipe_name = updates.recipeName;
+    if (updates.quantity !== undefined) updateData.quantity = updates.quantity;
+    if (updates.totalPrice !== undefined) updateData.total_price = updates.totalPrice;
+    if (updates.status !== undefined) updateData.status = updates.status;
+    if (updates.deliveryDate !== undefined) updateData.delivery_date = updates.deliveryDate;
+
+    await supabase
+      .from('orders')
+      .update(updateData)
+      .eq('id', id)
+      .eq('user_id', session.user.id);
+
+    setOrders(prev =>
+      prev.map(order => (order.id === id ? { ...order, ...updates } : order))
     );
   };
 
-  const deleteOrder = (id: string) => {
-    setOrders((prev) => prev.filter((order) => order.id !== id));
+  const deleteOrder = async (id: string) => {
+    if (!session?.user) return;
+
+    await supabase
+      .from('orders')
+      .delete()
+      .eq('id', id)
+      .eq('user_id', session.user.id);
+
+    setOrders(prev => prev.filter(order => order.id !== id));
   };
 
-  const addTransaction = (transaction: Transaction) => {
-    setTransactions((prev) => [...prev, transaction]);
+  // Transaction functions
+  const addTransaction = async (transaction: Omit<Transaction, 'id'>) => {
+    if (!session?.user) return;
+
+    const { data, error } = await supabase
+      .from('transactions')
+      .insert({
+        user_id: session.user.id,
+        type: transaction.type,
+        description: transaction.description,
+        amount: transaction.amount,
+        category: transaction.category,
+        date: transaction.date,
+      })
+      .select()
+      .single();
+
+    if (data) {
+      setTransactions(prev => [{
+        id: data.id,
+        type: data.type as Transaction['type'],
+        description: data.description,
+        amount: Number(data.amount),
+        category: data.category,
+        date: data.date,
+      }, ...prev]);
+    }
   };
 
-  const deleteTransaction = (id: string) => {
-    setTransactions((prev) => prev.filter((t) => t.id !== id));
+  const deleteTransaction = async (id: string) => {
+    if (!session?.user) return;
+
+    await supabase
+      .from('transactions')
+      .delete()
+      .eq('id', id)
+      .eq('user_id', session.user.id);
+
+    setTransactions(prev => prev.filter(t => t.id !== id));
   };
 
-  const updateSettings = (newSettings: Partial<UserSettings>) => {
-    setSettings((prev) => ({ ...prev, ...newSettings }));
+  // Settings functions
+  const updateSettings = async (newSettings: Partial<UserSettings>) => {
+    if (!session?.user) return;
+
+    const updateData: Record<string, unknown> = {};
+    if (newSettings.currency !== undefined) updateData.currency = newSettings.currency;
+    if (newSettings.currencySymbol !== undefined) updateData.currency_symbol = newSettings.currencySymbol;
+    if (newSettings.hasCompletedOnboarding !== undefined) updateData.has_completed_onboarding = newSettings.hasCompletedOnboarding;
+    if (newSettings.hasCompletedRecipeTutorial !== undefined) updateData.has_completed_recipe_tutorial = newSettings.hasCompletedRecipeTutorial;
+
+    await supabase
+      .from('user_settings')
+      .update(updateData)
+      .eq('user_id', session.user.id);
+
+    setSettings(prev => ({ ...prev, ...newSettings }));
   };
 
   const calculateRecipeCost = (recipe: Recipe) => {
@@ -294,7 +545,9 @@ export function AppProvider({ children }: { children: ReactNode }) {
     <AppContext.Provider
       value={{
         user,
-        isAuthenticated: !!user,
+        session,
+        isAuthenticated: !!session,
+        isLoading,
         login,
         register,
         logout,
@@ -315,6 +568,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
         getTotalIncome,
         getTotalExpenses,
         getNetProfit,
+        refreshData,
       }}
     >
       {children}

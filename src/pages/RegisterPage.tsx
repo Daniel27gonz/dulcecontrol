@@ -10,13 +10,38 @@ import heroImage from '@/assets/hero-desserts.jpg';
 
 const RegisterPage = () => {
   const navigate = useNavigate();
-  const { register } = useApp();
+  const { register, isAuthenticated } = useApp();
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+
+  // Redirect if already authenticated
+  if (isAuthenticated) {
+    navigate('/dashboard');
+    return null;
+  }
+
+  const validatePassword = (pwd: string): { valid: boolean; error?: string } => {
+    if (pwd.length < 12) {
+      return { valid: false, error: 'La contraseña debe tener al menos 12 caracteres' };
+    }
+    if (!/[A-Z]/.test(pwd)) {
+      return { valid: false, error: 'La contraseña debe incluir al menos una letra mayúscula' };
+    }
+    if (!/[a-z]/.test(pwd)) {
+      return { valid: false, error: 'La contraseña debe incluir al menos una letra minúscula' };
+    }
+    if (!/[0-9]/.test(pwd)) {
+      return { valid: false, error: 'La contraseña debe incluir al menos un número' };
+    }
+    if (!/[!@#$%^&*(),.?":{}|<>]/.test(pwd)) {
+      return { valid: false, error: 'La contraseña debe incluir al menos un carácter especial (!@#$%^&*...)' };
+    }
+    return { valid: true };
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -31,47 +56,24 @@ const RegisterPage = () => {
       return;
     }
 
-    // Password strength validation
-    if (password.length < 12) {
-      toast.error('La contraseña debe tener al menos 12 caracteres');
-      return;
-    }
-    
-    if (!/[A-Z]/.test(password)) {
-      toast.error('La contraseña debe incluir al menos una letra mayúscula');
-      return;
-    }
-    
-    if (!/[a-z]/.test(password)) {
-      toast.error('La contraseña debe incluir al menos una letra minúscula');
-      return;
-    }
-    
-    if (!/[0-9]/.test(password)) {
-      toast.error('La contraseña debe incluir al menos un número');
-      return;
-    }
-    
-    if (!/[!@#$%^&*(),.?":{}|<>]/.test(password)) {
-      toast.error('La contraseña debe incluir al menos un carácter especial (!@#$%^&*...)');
+    const passwordValidation = validatePassword(password);
+    if (!passwordValidation.valid) {
+      toast.error(passwordValidation.error);
       return;
     }
 
     setIsLoading(true);
     
-    // Simulate async registration
-    setTimeout(() => {
-      const success = register(name, email, password);
-      
-      if (success) {
-        toast.success('¡Cuenta creada exitosamente!');
-        navigate('/onboarding');
-      } else {
-        toast.error('Este correo ya está registrado');
-      }
-      
-      setIsLoading(false);
-    }, 500);
+    const result = await register(name, email, password);
+    
+    if (result.success) {
+      toast.success('¡Cuenta creada exitosamente!');
+      navigate('/onboarding');
+    } else {
+      toast.error(result.error || 'Error al crear la cuenta');
+    }
+    
+    setIsLoading(false);
   };
 
   return (

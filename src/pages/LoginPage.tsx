@@ -10,11 +10,17 @@ import heroImage from '@/assets/hero-desserts.jpg';
 
 const LoginPage = () => {
   const navigate = useNavigate();
-  const { login } = useApp();
+  const { login, isAuthenticated } = useApp();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+
+  // Redirect if already authenticated
+  if (isAuthenticated) {
+    navigate('/dashboard');
+    return null;
+  }
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -26,19 +32,16 @@ const LoginPage = () => {
 
     setIsLoading(true);
     
-    // Simulate async login
-    setTimeout(() => {
-      const success = login(email, password);
-      
-      if (success) {
-        toast.success('¡Bienvenido de vuelta!');
-        navigate('/dashboard');
-      } else {
-        toast.error('Credenciales incorrectas');
-      }
-      
-      setIsLoading(false);
-    }, 500);
+    const result = await login(email, password);
+    
+    if (result.success) {
+      toast.success('¡Bienvenido de vuelta!');
+      navigate('/dashboard');
+    } else {
+      toast.error(result.error || 'Error al iniciar sesión');
+    }
+    
+    setIsLoading(false);
   };
 
   return (
