@@ -1,12 +1,12 @@
 import { NavLink, useLocation } from 'react-router-dom';
-import { Home, Calculator, ClipboardList, Wallet, LayoutGrid } from 'lucide-react';
+import { Home, Calculator, ClipboardList, Wallet, FileText } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { cn } from '@/lib/utils';
 
 const navItems = [
   { to: '/dashboard', icon: Home, label: 'Inicio' },
   { to: '/calculator', icon: Calculator, label: 'Calcular' },
-  { to: '/recipes', icon: LayoutGrid, label: 'Recetas' },
+  { to: '/quotations', icon: FileText, label: 'Cotizar' },
   { to: '/orders', icon: ClipboardList, label: 'Pedidos' },
   { to: '/finances', icon: Wallet, label: 'Finanzas' },
 ];
