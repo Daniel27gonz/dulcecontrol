@@ -50,6 +50,22 @@ export function useQuotations() {
     setQuotations(prev => prev.filter(q => q.id !== id));
   }, []);
 
+  const duplicateQuotation = useCallback((id: string) => {
+    const original = quotations.find(q => q.id === id);
+    if (!original) return null;
+
+    const newQuotation: Quotation = {
+      ...original,
+      id: crypto.randomUUID(),
+      number: generateQuotationNumber(),
+      createdAt: new Date().toISOString(),
+      status: 'draft',
+      convertedToOrderId: undefined,
+    };
+    setQuotations(prev => [newQuotation, ...prev]);
+    return newQuotation;
+  }, [quotations, generateQuotationNumber]);
+
   const getQuotation = useCallback((id: string) => {
     return quotations.find(q => q.id === id);
   }, [quotations]);
@@ -72,6 +88,7 @@ export function useQuotations() {
     addQuotation,
     updateQuotation,
     deleteQuotation,
+    duplicateQuotation,
     getQuotation,
     calculateTotals,
     generateQuotationNumber,
