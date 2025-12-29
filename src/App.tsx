@@ -16,6 +16,7 @@ import OrdersPage from "./pages/OrdersPage";
 import FinancesPage from "./pages/FinancesPage";
 import QuotationsPage from "./pages/QuotationsPage";
 import SettingsPage from "./pages/SettingsPage";
+import HelpPage from "./pages/HelpPage";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -60,6 +61,7 @@ function AppRoutes() {
       <Route path="/quotations" element={<ProtectedRoute><QuotationsPage /></ProtectedRoute>} />
       <Route path="/finances" element={<ProtectedRoute><FinancesPage /></ProtectedRoute>} />
       <Route path="/settings" element={<ProtectedRoute><SettingsPage /></ProtectedRoute>} />
+      <Route path="/help" element={<ProtectedRoute><HelpPage /></ProtectedRoute>} />
       <Route path="*" element={<NotFound />} />
     </Routes>
   );
