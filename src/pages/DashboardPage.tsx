@@ -1,6 +1,6 @@
 import { motion } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
-import { Plus, ClipboardList, DollarSign, TrendingUp, Wallet, TrendingDown } from 'lucide-react';
+import { Plus, ClipboardList, DollarSign, TrendingUp, Wallet, TrendingDown, ChefHat, FileText } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useApp } from '@/context/AppContext';
 import { BottomNav } from '@/components/BottomNav';
@@ -124,7 +124,7 @@ export default function DashboardPage() {
         {/* Quick Actions */}
         <motion.div variants={itemVariants}>
           <h2 className="text-lg font-bold text-foreground mb-3">Acceso rápido</h2>
-          <div className="grid grid-cols-1 gap-3">
+          <div className="grid grid-cols-2 gap-3">
             <Button
               onClick={() => navigate('/calculator')}
               variant="warm"
@@ -136,23 +136,33 @@ export default function DashboardPage() {
             </Button>
 
             <Button
+              onClick={() => navigate('/recipes')}
+              variant="secondary"
+              size="lg"
+              className="w-full justify-start"
+            >
+              <ChefHat className="w-5 h-5" />
+              Mis recetas
+            </Button>
+
+            <Button
+              onClick={() => navigate('/quotations')}
+              variant="secondary"
+              size="lg"
+              className="w-full justify-start"
+            >
+              <FileText className="w-5 h-5" />
+              Cotizaciones
+            </Button>
+
+            <Button
               onClick={() => navigate('/orders')}
               variant="secondary"
               size="lg"
               className="w-full justify-start"
             >
               <ClipboardList className="w-5 h-5" />
-              Ver pedidos
-            </Button>
-
-            <Button
-              onClick={() => navigate('/finances')}
-              variant="secondary"
-              size="lg"
-              className="w-full justify-start"
-            >
-              <DollarSign className="w-5 h-5" />
-              Ver finanzas
+              Pedidos
             </Button>
           </div>
         </motion.div>
