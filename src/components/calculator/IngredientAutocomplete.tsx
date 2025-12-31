@@ -289,20 +289,20 @@ export function IngredientAutocomplete({
                       key={ingredient.id}
                       type="button"
                       onClick={() => handleSelectIngredient(ingredient)}
-                      className="w-full px-3 py-2.5 flex items-center justify-between hover:bg-muted transition-colors text-left"
+                      className="w-full px-3 py-3 flex items-center justify-between hover:bg-primary/10 transition-colors text-left border-b border-border/50 last:border-b-0"
                     >
                       <div className="flex-1 min-w-0">
-                        <span className="text-sm font-medium block truncate">{ingredient.name}</span>
-                        <span className="text-xs text-muted-foreground">
+                        <span className="text-sm font-semibold block truncate">{ingredient.name}</span>
+                        <span className="text-xs text-muted-foreground block mt-0.5">
                           {settings.currencySymbol}{ingredient.presentationPrice} por {ingredient.presentationQuantity} {ingredient.purchaseUnit}
                         </span>
                       </div>
-                      <div className="text-right ml-2 flex-shrink-0">
-                        <span className="text-sm font-semibold text-primary block">
-                          {settings.currencySymbol}{ingredient.costPerBaseUnit.toFixed(3)}
+                      <div className="text-right ml-3 flex-shrink-0 bg-primary/10 px-2 py-1 rounded-lg">
+                        <span className="text-sm font-bold text-primary block">
+                          {settings.currencySymbol}{ingredient.costPerBaseUnit.toFixed(4)}
                         </span>
                         <span className="text-xs text-muted-foreground">
-                          /{getBaseUnit(ingredient.purchaseUnit)}
+                          por {getBaseUnit(ingredient.purchaseUnit)}
                         </span>
                       </div>
                     </button>
