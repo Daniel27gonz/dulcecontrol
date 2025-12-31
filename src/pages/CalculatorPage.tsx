@@ -89,6 +89,13 @@ export default function CalculatorPage() {
     );
   };
 
+  // Actualizar múltiples campos de un ingrediente de forma atómica
+  const updateIngredientFull = (id: string, updates: Partial<Ingredient>) => {
+    setIngredients(prev =>
+      prev.map((ing) => (ing.id === id ? { ...ing, ...updates } : ing))
+    );
+  };
+
   const removeIngredient = (id: string) => {
     if (ingredients.length > 1) {
       setIngredients(ingredients.filter((ing) => ing.id !== id));
@@ -313,17 +320,29 @@ export default function CalculatorPage() {
                         <IngredientAutocomplete
                           value={ing.name}
                           onChange={(value) => {
-                            updateIngredient(ing.id, 'name', value);
-                            // Si borra el nombre, limpiar los demás campos
+                            // Si borra el nombre, limpiar todos los campos
                             if (!value.trim()) {
-                              updateIngredient(ing.id, 'pricePerUnit', 0);
-                              updateIngredient(ing.id, 'unit', 'g');
+                              updateIngredientFull(ing.id, {
+                                name: '',
+                                pricePerUnit: 0,
+                                unit: 'g',
+                                quantityUsed: 0
+                              });
+                            } else {
+                              updateIngredient(ing.id, 'name', value);
                             }
                           }}
                           onSelect={(selected) => {
-                            updateIngredient(ing.id, 'name', selected.name);
-                            updateIngredient(ing.id, 'pricePerUnit', selected.costPerBaseUnit);
-                            updateIngredient(ing.id, 'unit', selected.baseUnit);
+                            // ✅ CRÍTICO: Actualizar TODOS los campos de forma atómica
+                            updateIngredientFull(ing.id, {
+                              name: selected.name,
+                              pricePerUnit: selected.costPerBaseUnit,
+                              unit: selected.baseUnit,
+                            });
+                            toast({
+                              title: '✅ Ingrediente cargado',
+                              description: `${selected.name} - ${settings.currencySymbol}${selected.costPerBaseUnit.toFixed(4)}/${selected.baseUnit}`,
+                            });
                           }}
                           placeholder="Toca para seleccionar ingrediente..."
                         />
