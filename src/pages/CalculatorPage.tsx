@@ -9,6 +9,7 @@ import { useApp, Ingredient, IndirectCost, Recipe } from '@/context/AppContext';
 import { BottomNav } from '@/components/BottomNav';
 import { toast } from '@/hooks/use-toast';
 import { RecipeTutorial } from '@/components/calculator/RecipeTutorial';
+import { IngredientAutocomplete } from '@/components/calculator/IngredientAutocomplete';
 
 const CATEGORIES = [
   { id: 'torta', name: 'Torta', emoji: '🎂' },
@@ -302,10 +303,15 @@ export default function CalculatorPage() {
                         )}
                       </div>
 
-                      <Input
+                      <IngredientAutocomplete
                         value={ing.name}
-                        onChange={(e) => updateIngredient(ing.id, 'name', e.target.value)}
-                        placeholder="Nombre del ingrediente"
+                        onChange={(value) => updateIngredient(ing.id, 'name', value)}
+                        onSelect={(selected) => {
+                          updateIngredient(ing.id, 'name', selected.name);
+                          updateIngredient(ing.id, 'pricePerUnit', selected.pricePerUnit);
+                          updateIngredient(ing.id, 'unit', selected.unit);
+                        }}
+                        placeholder="Buscar ingrediente..."
                       />
 
                       <div className="grid grid-cols-3 gap-2">
