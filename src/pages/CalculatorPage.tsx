@@ -21,7 +21,7 @@ const CATEGORIES = [
   { id: 'otro', name: 'Otro', emoji: '🍰' },
 ];
 
-const UNITS = ['g', 'kg', 'ml', 'L', 'unidad', 'cucharada', 'taza'];
+const UNITS = ['g', 'ml', 'pza'];
 
 const STEPS = ['info', 'ingredients', 'costs', 'margin', 'result'];
 
@@ -156,7 +156,7 @@ export default function CalculatorPage() {
       case 0:
         return recipeName.trim() !== '' && category !== '';
       case 1:
-        return ingredients.some((ing) => ing.name.trim() !== '' && ing.pricePerUnit > 0);
+        return ingredients.some((ing) => ing.name.trim() !== '' && ing.pricePerUnit > 0 && ing.quantityUsed > 0);
       case 2:
         return true;
       case 3:
@@ -282,93 +282,127 @@ export default function CalculatorPage() {
               <div className="text-center mb-6">
                 <span className="text-4xl">📝</span>
                 <h2 className="text-xl font-bold mt-2">Ingredientes</h2>
-                <p className="text-muted-foreground text-sm">Agrega los ingredientes y sus precios</p>
+                <p className="text-muted-foreground text-sm">
+                  Selecciona ingredientes y escribe solo la cantidad usada
+                </p>
               </div>
 
               <div className="space-y-3">
-                {ingredients.map((ing, index) => (
-                  <Card key={ing.id}>
-                    <CardContent className="p-4 space-y-3">
-                      <div className="flex items-center justify-between">
-                        <span className="text-sm font-medium text-muted-foreground">
-                          Ingrediente {index + 1}
-                        </span>
-                        {ingredients.length > 1 && (
-                          <button
-                            onClick={() => removeIngredient(ing.id)}
-                            className="p-1.5 text-destructive hover:bg-destructive/10 rounded-lg transition-colors"
-                          >
-                            <Trash2 className="w-4 h-4" />
-                          </button>
+                {ingredients.map((ing, index) => {
+                  const ingredientCost = ing.pricePerUnit * ing.quantityUsed;
+                  const isSelected = ing.name.trim() !== '' && ing.pricePerUnit > 0;
+                  
+                  return (
+                    <Card key={ing.id} className={isSelected ? 'border-primary/30 bg-primary/5' : ''}>
+                      <CardContent className="p-4 space-y-3">
+                        <div className="flex items-center justify-between">
+                          <span className="text-sm font-medium text-muted-foreground">
+                            Ingrediente {index + 1}
+                          </span>
+                          {ingredients.length > 1 && (
+                            <button
+                              onClick={() => removeIngredient(ing.id)}
+                              className="p-1.5 text-destructive hover:bg-destructive/10 rounded-lg transition-colors"
+                            >
+                              <Trash2 className="w-4 h-4" />
+                            </button>
+                          )}
+                        </div>
+
+                        {/* Autocomplete para seleccionar ingrediente */}
+                        <IngredientAutocomplete
+                          value={ing.name}
+                          onChange={(value) => {
+                            updateIngredient(ing.id, 'name', value);
+                            // Si borra el nombre, limpiar los demás campos
+                            if (!value.trim()) {
+                              updateIngredient(ing.id, 'pricePerUnit', 0);
+                              updateIngredient(ing.id, 'unit', 'g');
+                            }
+                          }}
+                          onSelect={(selected) => {
+                            updateIngredient(ing.id, 'name', selected.name);
+                            updateIngredient(ing.id, 'pricePerUnit', selected.costPerBaseUnit);
+                            updateIngredient(ing.id, 'unit', selected.baseUnit);
+                          }}
+                          placeholder="Toca para seleccionar ingrediente..."
+                        />
+
+                        {/* Mostrar info del ingrediente seleccionado */}
+                        {isSelected && (
+                          <div className="bg-muted/50 rounded-xl p-3 space-y-3">
+                            {/* Info del ingrediente (bloqueada) */}
+                            <div className="flex items-center justify-between text-sm">
+                              <span className="text-muted-foreground">Precio por {ing.unit}:</span>
+                              <span className="font-semibold text-primary">
+                                {settings.currencySymbol}{ing.pricePerUnit.toFixed(4)}
+                              </span>
+                            </div>
+
+                            {/* Campo de cantidad (editable) */}
+                            <div className="flex items-center gap-3">
+                              <label className="text-sm font-medium whitespace-nowrap">
+                                Cantidad usada:
+                              </label>
+                              <div className="flex-1 flex items-center gap-2">
+                                <Input
+                                  type="number"
+                                  min="0"
+                                  step="0.1"
+                                  value={ing.quantityUsed || ''}
+                                  onChange={(e) =>
+                                    updateIngredient(ing.id, 'quantityUsed', parseFloat(e.target.value) || 0)
+                                  }
+                                  placeholder="0"
+                                  className="flex-1 text-center font-medium"
+                                />
+                                <span className="text-sm font-medium text-muted-foreground min-w-[30px]">
+                                  {ing.unit}
+                                </span>
+                              </div>
+                            </div>
+
+                            {/* Costo calculado automáticamente */}
+                            {ing.quantityUsed > 0 && (
+                              <div className="flex items-center justify-between pt-2 border-t border-border">
+                                <span className="text-sm font-medium">Costo del ingrediente:</span>
+                                <span className="text-lg font-bold text-primary">
+                                  {settings.currencySymbol}{ingredientCost.toFixed(2)}
+                                </span>
+                              </div>
+                            )}
+                          </div>
                         )}
-                      </div>
 
-                      <IngredientAutocomplete
-                        value={ing.name}
-                        onChange={(value) => updateIngredient(ing.id, 'name', value)}
-                        onSelect={(selected) => {
-                          updateIngredient(ing.id, 'name', selected.name);
-                          updateIngredient(ing.id, 'pricePerUnit', selected.costPerBaseUnit);
-                          updateIngredient(ing.id, 'unit', selected.baseUnit);
-                        }}
-                        placeholder="Buscar ingrediente..."
-                      />
-
-                      <div className="grid grid-cols-3 gap-2">
-                        <div>
-                          <label className="text-xs text-muted-foreground">Precio</label>
-                          <Input
-                            type="number"
-                            value={ing.pricePerUnit || ''}
-                            onChange={(e) =>
-                              updateIngredient(ing.id, 'pricePerUnit', parseFloat(e.target.value) || 0)
-                            }
-                            placeholder="0.00"
-                          />
-                        </div>
-                        <div>
-                          <label className="text-xs text-muted-foreground">Cantidad</label>
-                          <Input
-                            type="number"
-                            value={ing.quantityUsed || ''}
-                            onChange={(e) =>
-                              updateIngredient(ing.id, 'quantityUsed', parseFloat(e.target.value) || 0)
-                            }
-                            placeholder="0"
-                          />
-                        </div>
-                        <div>
-                          <label className="text-xs text-muted-foreground">Unidad</label>
-                          <select
-                            value={ing.unit}
-                            onChange={(e) => updateIngredient(ing.id, 'unit', e.target.value)}
-                            className="w-full h-12 rounded-xl border-2 border-input bg-background px-3 text-sm"
-                          >
-                            {UNITS.map((unit) => (
-                              <option key={unit} value={unit}>
-                                {unit}
-                              </option>
-                            ))}
-                          </select>
-                        </div>
-                      </div>
-                    </CardContent>
-                  </Card>
-                ))}
+                        {/* Mensaje de ayuda si no hay ingrediente seleccionado */}
+                        {!isSelected && ing.name.trim() === '' && (
+                          <p className="text-xs text-muted-foreground text-center py-2">
+                            👆 Toca el campo para ver los ingredientes disponibles
+                          </p>
+                        )}
+                      </CardContent>
+                    </Card>
+                  );
+                })}
 
                 <Button onClick={addIngredient} variant="outline" className="w-full">
                   <Plus className="w-4 h-4" />
-                  Agregar ingrediente
+                  Agregar otro ingrediente
                 </Button>
               </div>
 
               {/* Running total */}
-              <Card className="bg-secondary/50">
-                <CardContent className="p-4 flex justify-between items-center">
-                  <span className="text-sm text-muted-foreground">Subtotal ingredientes:</span>
-                  <span className="font-bold text-foreground">
-                    {settings.currencySymbol}{costs.ingredientsCost.toFixed(2)}
-                  </span>
+              <Card className="bg-secondary border-2 border-primary/20">
+                <CardContent className="p-4">
+                  <div className="flex justify-between items-center">
+                    <span className="text-sm font-medium">Total ingredientes:</span>
+                    <span className="text-xl font-bold text-primary">
+                      {settings.currencySymbol}{costs.ingredientsCost.toFixed(2)}
+                    </span>
+                  </div>
+                  <p className="text-xs text-muted-foreground mt-1">
+                    {ingredients.filter(i => i.name.trim() && i.quantityUsed > 0).length} ingrediente(s) con cantidad
+                  </p>
                 </CardContent>
               </Card>
             </motion.div>
