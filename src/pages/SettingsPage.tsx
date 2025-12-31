@@ -9,6 +9,7 @@ import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { AppHeader } from '@/components/AppHeader';
 import { BottomNav } from '@/components/BottomNav';
+import { RawMaterialsManager } from '@/components/settings/RawMaterialsManager';
 import { useApp } from '@/context/AppContext';
 import { useToast } from '@/hooks/use-toast';
 
@@ -189,11 +190,20 @@ export default function SettingsPage() {
           </Card>
         </motion.div>
 
-        {/* Ayuda */}
+        {/* Control de Materia Prima */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.3 }}
+        >
+          <RawMaterialsManager />
+        </motion.div>
+
+        {/* Ayuda */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.4 }}
         >
           <Card 
             className="border-border/50 shadow-warm cursor-pointer hover:border-primary/30 transition-colors"
@@ -220,7 +230,7 @@ export default function SettingsPage() {
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.4 }}
+          transition={{ delay: 0.5 }}
         >
           <Button
             onClick={handleSave}
@@ -245,7 +255,7 @@ export default function SettingsPage() {
         <motion.p
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
-          transition={{ delay: 0.5 }}
+          transition={{ delay: 0.6 }}
           className="text-center text-xs text-muted-foreground"
         >
           Los cambios se guardan localmente en tu dispositivo
