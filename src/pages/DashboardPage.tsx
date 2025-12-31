@@ -1,6 +1,6 @@
 import { motion } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
-import { Plus, ClipboardList, DollarSign, TrendingUp, Wallet, TrendingDown, ChefHat, FileText } from 'lucide-react';
+import { Plus, ClipboardList, DollarSign, TrendingUp, Wallet, TrendingDown, ChefHat, FileText, Users, Receipt } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useApp } from '@/context/AppContext';
 import { BottomNav } from '@/components/BottomNav';
@@ -143,6 +143,26 @@ export default function DashboardPage() {
             >
               <ChefHat className="w-5 h-5" />
               Mis recetas
+            </Button>
+
+            <Button
+              onClick={() => navigate('/labor')}
+              variant="secondary"
+              size="lg"
+              className="w-full justify-start"
+            >
+              <Users className="w-5 h-5" />
+              Mano de Obra
+            </Button>
+
+            <Button
+              onClick={() => navigate('/indirect-costs')}
+              variant="secondary"
+              size="lg"
+              className="w-full justify-start"
+            >
+              <Receipt className="w-5 h-5" />
+              Gastos Indirectos
             </Button>
 
             <Button

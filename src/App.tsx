@@ -6,6 +6,8 @@ import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { AppProvider, useApp } from "@/context/AppContext";
 import { QuotationsProvider } from "@/context/QuotationsContext";
 import { BaseIngredientsProvider } from "@/context/BaseIngredientsContext";
+import { LaborProvider } from "@/context/LaborContext";
+import { IndirectCostsProvider } from "@/context/IndirectCostsContext";
 import { InstallPrompt } from "@/components/InstallPrompt";
 import WelcomePage from "./pages/WelcomePage";
 import OnboardingPage from "./pages/OnboardingPage";
@@ -18,6 +20,8 @@ import OrdersPage from "./pages/OrdersPage";
 import FinancesPage from "./pages/FinancesPage";
 import QuotationsPage from "./pages/QuotationsPage";
 import IngredientsPage from "./pages/IngredientsPage";
+import LaborPage from "./pages/LaborPage";
+import IndirectCostsPage from "./pages/IndirectCostsPage";
 import SettingsPage from "./pages/SettingsPage";
 import HelpPage from "./pages/HelpPage";
 import NotFound from "./pages/NotFound";
@@ -63,6 +67,8 @@ function AppRoutes() {
       <Route path="/orders" element={<ProtectedRoute><OrdersPage /></ProtectedRoute>} />
       <Route path="/quotations" element={<ProtectedRoute><QuotationsPage /></ProtectedRoute>} />
       <Route path="/ingredients" element={<ProtectedRoute><IngredientsPage /></ProtectedRoute>} />
+      <Route path="/labor" element={<ProtectedRoute><LaborPage /></ProtectedRoute>} />
+      <Route path="/indirect-costs" element={<ProtectedRoute><IndirectCostsPage /></ProtectedRoute>} />
       <Route path="/finances" element={<ProtectedRoute><FinancesPage /></ProtectedRoute>} />
       <Route path="/settings" element={<ProtectedRoute><SettingsPage /></ProtectedRoute>} />
       <Route path="/help" element={<ProtectedRoute><HelpPage /></ProtectedRoute>} />
@@ -76,14 +82,18 @@ const App = () => (
     <TooltipProvider>
       <AppProvider>
         <BaseIngredientsProvider>
-          <QuotationsProvider>
-            <Toaster />
-            <Sonner />
-            <BrowserRouter>
-              <AppRoutes />
-              <InstallPrompt />
-            </BrowserRouter>
-          </QuotationsProvider>
+          <LaborProvider>
+            <IndirectCostsProvider>
+              <QuotationsProvider>
+                <Toaster />
+                <Sonner />
+                <BrowserRouter>
+                  <AppRoutes />
+                  <InstallPrompt />
+                </BrowserRouter>
+              </QuotationsProvider>
+            </IndirectCostsProvider>
+          </LaborProvider>
         </BaseIngredientsProvider>
       </AppProvider>
     </TooltipProvider>
