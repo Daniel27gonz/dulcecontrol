@@ -17,6 +17,7 @@ import RecipesPage from "./pages/RecipesPage";
 import OrdersPage from "./pages/OrdersPage";
 import FinancesPage from "./pages/FinancesPage";
 import QuotationsPage from "./pages/QuotationsPage";
+import IngredientsPage from "./pages/IngredientsPage";
 import SettingsPage from "./pages/SettingsPage";
 import HelpPage from "./pages/HelpPage";
 import NotFound from "./pages/NotFound";
@@ -61,6 +62,7 @@ function AppRoutes() {
       <Route path="/recipes" element={<ProtectedRoute><RecipesPage /></ProtectedRoute>} />
       <Route path="/orders" element={<ProtectedRoute><OrdersPage /></ProtectedRoute>} />
       <Route path="/quotations" element={<ProtectedRoute><QuotationsPage /></ProtectedRoute>} />
+      <Route path="/ingredients" element={<ProtectedRoute><IngredientsPage /></ProtectedRoute>} />
       <Route path="/finances" element={<ProtectedRoute><FinancesPage /></ProtectedRoute>} />
       <Route path="/settings" element={<ProtectedRoute><SettingsPage /></ProtectedRoute>} />
       <Route path="/help" element={<ProtectedRoute><HelpPage /></ProtectedRoute>} />
