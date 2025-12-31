@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { Settings, User, DollarSign, Save, Check, HelpCircle, ChevronRight } from 'lucide-react';
+import { Settings, User, DollarSign, Save, Check, HelpCircle, ChevronRight, Package } from 'lucide-react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -9,8 +9,8 @@ import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { AppHeader } from '@/components/AppHeader';
 import { BottomNav } from '@/components/BottomNav';
-import { RawMaterialsManager } from '@/components/settings/RawMaterialsManager';
 import { useApp } from '@/context/AppContext';
+import { useBaseIngredients } from '@/context/BaseIngredientsContext';
 import { useToast } from '@/hooks/use-toast';
 
 const currencies = [
@@ -29,12 +29,15 @@ const currencies = [
 export default function SettingsPage() {
   const navigate = useNavigate();
   const { user, settings, updateSettings } = useApp();
+  const { ingredients } = useBaseIngredients();
   const { toast } = useToast();
 
   const [userName, setUserName] = useState(settings.userName || user?.name || '');
   const [selectedCurrency, setSelectedCurrency] = useState(settings.currency);
   const [customSymbol, setCustomSymbol] = useState(settings.currencySymbol);
   const [saved, setSaved] = useState(false);
+
+  const configuredIngredients = ingredients.filter(i => i.presentationPrice > 0).length;
 
   const handleCurrencyChange = (code: string) => {
     setSelectedCurrency(code);
@@ -190,13 +193,33 @@ export default function SettingsPage() {
           </Card>
         </motion.div>
 
-        {/* Control de Materia Prima */}
+        {/* Acceso rápido a Ingredientes */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.3 }}
         >
-          <RawMaterialsManager />
+          <Card 
+            className="border-border/50 shadow-warm cursor-pointer hover:border-primary/30 transition-colors"
+            onClick={() => navigate('/ingredients')}
+          >
+            <CardContent className="p-4">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-3">
+                  <div className="p-2 rounded-xl bg-caramel/10">
+                    <Package className="w-5 h-5 text-caramel" />
+                  </div>
+                  <div>
+                    <p className="font-medium">Control de Materia Prima</p>
+                    <p className="text-sm text-muted-foreground">
+                      {configuredIngredients} ingredientes con precio configurado
+                    </p>
+                  </div>
+                </div>
+                <ChevronRight className="w-5 h-5 text-muted-foreground" />
+              </div>
+            </CardContent>
+          </Card>
         </motion.div>
 
         {/* Ayuda */}

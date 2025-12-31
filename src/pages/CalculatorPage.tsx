@@ -308,8 +308,8 @@ export default function CalculatorPage() {
                         onChange={(value) => updateIngredient(ing.id, 'name', value)}
                         onSelect={(selected) => {
                           updateIngredient(ing.id, 'name', selected.name);
-                          updateIngredient(ing.id, 'pricePerUnit', selected.pricePerUnit);
-                          updateIngredient(ing.id, 'unit', selected.unit);
+                          updateIngredient(ing.id, 'pricePerUnit', selected.costPerBaseUnit);
+                          updateIngredient(ing.id, 'unit', selected.baseUnit);
                         }}
                         placeholder="Buscar ingrediente..."
                       />
