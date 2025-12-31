@@ -19,6 +19,7 @@ interface LaborContextType {
   deleteWorker: (id: string) => void;
   getTotalHourlyRate: () => number;
   getAverageHourlyRate: () => number;
+  getTotalMonthlyHours: () => number;
 }
 
 const LaborContext = createContext<LaborContextType | undefined>(undefined);
@@ -91,6 +92,10 @@ export function LaborProvider({ children }: { children: ReactNode }) {
     return getTotalHourlyRate() / workers.length;
   };
 
+  const getTotalMonthlyHours = () => {
+    return workers.reduce((sum, w) => sum + w.monthlyHours, 0);
+  };
+
   return (
     <LaborContext.Provider value={{
       workers,
@@ -99,6 +104,7 @@ export function LaborProvider({ children }: { children: ReactNode }) {
       deleteWorker,
       getTotalHourlyRate,
       getAverageHourlyRate,
+      getTotalMonthlyHours,
     }}>
       {children}
     </LaborContext.Provider>

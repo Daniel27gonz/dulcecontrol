@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { motion } from 'framer-motion';
-import { Plus, Edit2, Trash2, Building2, Zap, HelpCircle, Receipt } from 'lucide-react';
+import { Plus, Edit2, Trash2, Building2, Zap, HelpCircle, Receipt, Clock, AlertCircle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -9,6 +9,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
 import { useToast } from '@/hooks/use-toast';
 import { useIndirectCosts, Expense } from '@/context/IndirectCostsContext';
+import { useLabor } from '@/context/LaborContext';
 import { useApp } from '@/context/AppContext';
 import { AppHeader } from '@/components/AppHeader';
 import { BottomNav } from '@/components/BottomNav';
@@ -39,8 +40,14 @@ export default function IndirectCostsPage() {
     getTotalVariableExpenses,
     getTotalIndirectCosts,
   } = useIndirectCosts();
+  const { getTotalMonthlyHours } = useLabor();
   const { settings } = useApp();
   const { toast } = useToast();
+
+  // Cálculo del costo indirecto por hora
+  const totalMonthlyHours = getTotalMonthlyHours();
+  const totalIndirectCosts = getTotalIndirectCosts();
+  const indirectCostPerHour = totalMonthlyHours > 0 ? totalIndirectCosts / totalMonthlyHours : 0;
 
   const [showModal, setShowModal] = useState(false);
   const [modalType, setModalType] = useState<ExpenseType>('fixed');
@@ -195,11 +202,45 @@ export default function IndirectCostsPage() {
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-sm text-muted-foreground">Total Gastos Indirectos</p>
-                  <p className="text-2xl font-bold text-warm">{formatCurrency(getTotalIndirectCosts())}</p>
+                  <p className="text-2xl font-bold text-warm">{formatCurrency(totalIndirectCosts)}</p>
                 </div>
                 <Receipt className="w-10 h-10 text-warm/50" />
               </div>
               <p className="text-xs text-muted-foreground mt-2">Mensuales</p>
+            </CardContent>
+          </Card>
+        </motion.div>
+
+        {/* Costo Indirecto por Hora */}
+        <motion.div variants={itemVariants}>
+          <Card className="bg-primary/10 border-primary/30">
+            <CardContent className="p-4">
+              <div className="flex items-center justify-between">
+                <div className="flex-1">
+                  <div className="flex items-center gap-2 mb-1">
+                    <Clock className="w-5 h-5 text-primary" />
+                    <p className="text-sm font-medium text-foreground">Costo Indirecto por Hora</p>
+                  </div>
+                  {totalMonthlyHours > 0 ? (
+                    <>
+                      <p className="text-2xl font-bold text-primary">{formatCurrency(indirectCostPerHour)}</p>
+                      <p className="text-xs text-muted-foreground mt-1">
+                        Basado en {totalMonthlyHours.toLocaleString('es-MX')} horas mensuales de trabajo
+                      </p>
+                    </>
+                  ) : (
+                    <div className="flex items-center gap-2 mt-2 text-amber-600">
+                      <AlertCircle className="w-4 h-4" />
+                      <p className="text-sm">Agrega horas de trabajo para calcular el costo indirecto por hora</p>
+                    </div>
+                  )}
+                </div>
+              </div>
+              {totalMonthlyHours > 0 && (
+                <p className="text-xs text-muted-foreground mt-3 pt-3 border-t border-primary/20">
+                  Este valor te indica cuánto cuesta tu negocio por cada hora de trabajo, incluso antes de producir.
+                </p>
+              )}
             </CardContent>
           </Card>
         </motion.div>
