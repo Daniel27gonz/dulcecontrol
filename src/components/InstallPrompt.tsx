@@ -285,11 +285,11 @@ export function InstallPrompt() {
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: 100, scale: 0.95 }}
             transition={{ type: "spring", damping: 25, stiffness: 300 }}
-            className="fixed bottom-0 left-0 right-0 z-50 p-4 md:bottom-4 md:left-auto md:right-4 md:max-w-[420px]"
+            className="fixed bottom-0 left-0 right-0 z-50 p-3 sm:p-4 md:bottom-4 md:left-auto md:right-4 md:max-w-[420px]"
           >
-            <div className="relative overflow-hidden rounded-3xl bg-card border border-border shadow-2xl">
+            <div className="relative overflow-hidden rounded-2xl sm:rounded-3xl bg-card border border-border shadow-2xl">
               {/* Header con gradiente */}
-              <div className="relative p-6 text-center overflow-hidden bg-gradient-to-br from-primary via-caramel to-secondary">
+              <div className="relative p-4 sm:p-6 text-center overflow-hidden bg-gradient-to-br from-primary via-caramel to-secondary">
                 {/* Efectos decorativos */}
                 <div className="absolute inset-0 bg-[radial-gradient(circle_at_30%_20%,rgba(255,255,255,0.25),transparent_50%)]" />
                 <div className="absolute -top-10 -right-10 w-40 h-40 bg-white/10 rounded-full blur-2xl" />
@@ -298,7 +298,8 @@ export function InstallPrompt() {
                 <div className="relative">
                   {/* Icono animado */}
                   <motion.div 
-                    className="w-24 h-24 mx-auto mb-4 rounded-3xl bg-white/20 backdrop-blur-sm flex items-center justify-center shadow-xl border-2 border-white/30"
+                    className="w-18 h-18 sm:w-24 sm:h-24 mx-auto mb-3 sm:mb-4 rounded-2xl sm:rounded-3xl bg-white/20 backdrop-blur-sm flex items-center justify-center shadow-xl border-2 border-white/30"
+                    style={{ width: '72px', height: '72px' }}
                     animate={{ 
                       y: [0, -5, 0],
                       rotate: [0, 2, -2, 0]
@@ -309,13 +310,13 @@ export function InstallPrompt() {
                       ease: "easeInOut"
                     }}
                   >
-                    <span className="text-6xl drop-shadow-lg">🧁</span>
+                    <span className="text-5xl sm:text-6xl drop-shadow-lg">🧁</span>
                   </motion.div>
                   
-                  <h3 className="text-2xl font-bold text-white drop-shadow-md">
+                  <h3 className="text-xl sm:text-2xl font-bold text-white drop-shadow-md">
                     ¡Instala CostoPostres!
                   </h3>
-                  <p className="text-sm text-white/90 mt-2 max-w-xs mx-auto">
+                  <p className="text-xs sm:text-sm text-white/90 mt-1.5 sm:mt-2 max-w-xs mx-auto">
                     Acceso rápido desde tu pantalla de inicio
                   </p>
                 </div>
@@ -323,21 +324,21 @@ export function InstallPrompt() {
                 {/* Botón cerrar */}
                 <button
                   onClick={handleDismiss}
-                  className="absolute top-3 right-3 p-2.5 rounded-full bg-white/20 backdrop-blur-sm hover:bg-white/30 transition-colors border border-white/20"
+                  className="absolute top-2 right-2 sm:top-3 sm:right-3 p-2 sm:p-2.5 rounded-full bg-white/20 backdrop-blur-sm hover:bg-white/30 transition-colors border border-white/20"
                   aria-label="Cerrar"
                 >
-                  <X className="w-5 h-5 text-white" />
+                  <X className="w-4 h-4 sm:w-5 sm:h-5 text-white" />
                 </button>
               </div>
 
               {/* Contenido */}
-              <div className="p-5">
+              <div className="p-4 sm:p-5">
                 {showInstructions ? (
                   <>
                     {renderInstructions()}
                     <Button 
                       onClick={() => setShowInstructions(false)}
-                      variant="outline" 
+                      variant="outline"
                       className="w-full mt-4"
                     >
                       Volver
@@ -346,41 +347,41 @@ export function InstallPrompt() {
                 ) : (
                   <>
                     {/* Beneficios */}
-                    <div className="grid grid-cols-3 gap-3 mb-5">
+                    <div className="grid grid-cols-3 gap-2 sm:gap-3 mb-4 sm:mb-5">
                       <motion.div 
-                        className="text-center p-3 rounded-2xl bg-gradient-to-br from-amber-50 to-amber-100/50"
+                        className="text-center p-2 sm:p-3 rounded-xl sm:rounded-2xl bg-gradient-to-br from-amber-50 to-amber-100/50"
                         whileHover={{ scale: 1.05 }}
                       >
-                        <div className="w-12 h-12 mx-auto mb-2 rounded-xl bg-gradient-to-br from-amber-400 to-orange-500 flex items-center justify-center shadow-lg">
-                          <Zap className="w-6 h-6 text-white" />
+                        <div className="w-10 h-10 sm:w-12 sm:h-12 mx-auto mb-1.5 sm:mb-2 rounded-lg sm:rounded-xl bg-gradient-to-br from-amber-400 to-orange-500 flex items-center justify-center shadow-lg">
+                          <Zap className="w-5 h-5 sm:w-6 sm:h-6 text-white" />
                         </div>
-                        <span className="text-xs font-semibold text-amber-900">Ultra Rápido</span>
+                        <span className="text-[10px] sm:text-xs font-semibold text-amber-900">Ultra Rápido</span>
                       </motion.div>
                       
                       <motion.div 
-                        className="text-center p-3 rounded-2xl bg-gradient-to-br from-green-50 to-green-100/50"
+                        className="text-center p-2 sm:p-3 rounded-xl sm:rounded-2xl bg-gradient-to-br from-green-50 to-green-100/50"
                         whileHover={{ scale: 1.05 }}
                       >
-                        <div className="w-12 h-12 mx-auto mb-2 rounded-xl bg-gradient-to-br from-green-400 to-emerald-500 flex items-center justify-center shadow-lg">
-                          <Sparkles className="w-6 h-6 text-white" />
+                        <div className="w-10 h-10 sm:w-12 sm:h-12 mx-auto mb-1.5 sm:mb-2 rounded-lg sm:rounded-xl bg-gradient-to-br from-green-400 to-emerald-500 flex items-center justify-center shadow-lg">
+                          <Sparkles className="w-5 h-5 sm:w-6 sm:h-6 text-white" />
                         </div>
-                        <span className="text-xs font-semibold text-green-900">Sin Internet</span>
+                        <span className="text-[10px] sm:text-xs font-semibold text-green-900">Sin Internet</span>
                       </motion.div>
                       
                       <motion.div 
-                        className="text-center p-3 rounded-2xl bg-gradient-to-br from-blue-50 to-blue-100/50"
+                        className="text-center p-2 sm:p-3 rounded-xl sm:rounded-2xl bg-gradient-to-br from-blue-50 to-blue-100/50"
                         whileHover={{ scale: 1.05 }}
                       >
-                        <div className="w-12 h-12 mx-auto mb-2 rounded-xl bg-gradient-to-br from-blue-400 to-indigo-500 flex items-center justify-center shadow-lg">
-                          <ShieldCheck className="w-6 h-6 text-white" />
+                        <div className="w-10 h-10 sm:w-12 sm:h-12 mx-auto mb-1.5 sm:mb-2 rounded-lg sm:rounded-xl bg-gradient-to-br from-blue-400 to-indigo-500 flex items-center justify-center shadow-lg">
+                          <ShieldCheck className="w-5 h-5 sm:w-6 sm:h-6 text-white" />
                         </div>
-                        <span className="text-xs font-semibold text-blue-900">100% Segura</span>
+                        <span className="text-[10px] sm:text-xs font-semibold text-blue-900">100% Segura</span>
                       </motion.div>
                     </div>
 
                     {/* Texto motivacional */}
-                    <div className="text-center mb-5 p-3 bg-muted/30 rounded-xl border border-border/50">
-                      <p className="text-sm text-muted-foreground">
+                    <div className="text-center mb-4 sm:mb-5 p-2.5 sm:p-3 bg-muted/30 rounded-lg sm:rounded-xl border border-border/50">
+                      <p className="text-xs sm:text-sm text-muted-foreground">
                         📲 <span className="text-foreground font-medium">¡Instala gratis!</span> Sin ocupar espacio y siempre actualizada
                       </p>
                     </div>
@@ -390,7 +391,7 @@ export function InstallPrompt() {
                       onClick={handleInstall} 
                       variant="warm" 
                       size="lg" 
-                      className="w-full text-base font-bold h-14 rounded-2xl shadow-lg hover:shadow-xl transition-all"
+                      className="w-full text-sm sm:text-base font-bold h-12 sm:h-14 rounded-xl sm:rounded-2xl shadow-lg hover:shadow-xl transition-all"
                       disabled={isInstalling}
                     >
                       {isInstalling ? (
@@ -401,7 +402,8 @@ export function InstallPrompt() {
                       ) : (
                         <>
                           <Download className="w-5 h-5 mr-2" />
-                          Instalar Ahora — ¡Es Gratis!
+                          <span className="hidden sm:inline">Instalar Ahora — ¡Es Gratis!</span>
+                          <span className="sm:hidden">Instalar Gratis</span>
                         </>
                       )}
                     </Button>

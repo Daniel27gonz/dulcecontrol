@@ -40,15 +40,15 @@ export function MetricCard({
   };
 
   const sizes = {
-    sm: 'p-3',
-    md: 'p-4',
-    lg: 'p-6',
+    sm: 'p-2.5 sm:p-3',
+    md: 'p-3 sm:p-4',
+    lg: 'p-4 sm:p-6',
   };
 
   const iconSizes = {
-    sm: 'w-9 h-9',
-    md: 'w-11 h-11',
-    lg: 'w-14 h-14',
+    sm: 'w-8 h-8 sm:w-9 sm:h-9',
+    md: 'w-9 h-9 sm:w-11 sm:h-11',
+    lg: 'w-11 h-11 sm:w-14 sm:h-14',
   };
 
   return (
@@ -69,7 +69,7 @@ export function MetricCard({
               </p>
               <p className={cn(
                 'font-bold mt-1 truncate',
-                size === 'lg' ? 'text-3xl' : size === 'md' ? 'text-2xl' : 'text-xl'
+                size === 'lg' ? 'text-2xl sm:text-3xl' : size === 'md' ? 'text-xl sm:text-2xl' : 'text-lg sm:text-xl'
               )}>
                 {value}
               </p>

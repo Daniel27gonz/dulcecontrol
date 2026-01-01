@@ -1,3 +1,4 @@
+import React from 'react';
 import { motion } from 'framer-motion';
 import { ChefHat, Package, CheckCircle } from 'lucide-react';
 import { useApp } from '@/context/AppContext';
@@ -37,7 +38,7 @@ export function QuickStats() {
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.3 }}
-      className="grid grid-cols-3 gap-3"
+      className="grid grid-cols-3 gap-2 sm:gap-3"
     >
       {stats.map((stat, index) => (
         <motion.div
@@ -45,13 +46,13 @@ export function QuickStats() {
           initial={{ opacity: 0, scale: 0.9 }}
           animate={{ opacity: 1, scale: 1 }}
           transition={{ delay: index * 0.1 }}
-          className="bg-card rounded-2xl p-4 border border-border text-center shadow-soft"
+          className="bg-card rounded-xl sm:rounded-2xl p-2.5 sm:p-4 border border-border text-center shadow-soft"
         >
-          <div className={`w-10 h-10 mx-auto mb-2 rounded-xl ${stat.bg} flex items-center justify-center ${stat.color}`}>
-            {stat.icon}
+          <div className={`w-8 h-8 sm:w-10 sm:h-10 mx-auto mb-1.5 sm:mb-2 rounded-lg sm:rounded-xl ${stat.bg} flex items-center justify-center ${stat.color}`}>
+            {React.cloneElement(stat.icon as React.ReactElement, { className: 'w-4 h-4 sm:w-5 sm:h-5' })}
           </div>
-          <p className="text-2xl font-bold text-foreground">{stat.value}</p>
-          <p className="text-xs text-muted-foreground">{stat.label}</p>
+          <p className="text-xl sm:text-2xl font-bold text-foreground">{stat.value}</p>
+          <p className="text-[10px] sm:text-xs text-muted-foreground">{stat.label}</p>
         </motion.div>
       ))}
     </motion.div>
