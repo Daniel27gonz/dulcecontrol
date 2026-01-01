@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Plus, Trash2, X, Package } from 'lucide-react';
+import { Plus, Trash2, X, Package, Percent } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -109,11 +109,27 @@ export function QuotationForm({ quotation, trigger, onClose, onSave }: Quotation
       name: recipe.name,
       description: recipe.category,
       quantity: 1,
-      unitPrice: cost.suggestedPrice,
-      total: cost.suggestedPrice,
+      unitPrice: cost.totalCost, // Use base cost, margin will be applied separately
+      total: cost.totalCost,
+      baseCost: cost.totalCost,
     };
     setItems([...items, newItem]);
   };
+
+  // Margin state for each item
+  const [itemMargins, setItemMargins] = useState<Record<string, number>>({});
+
+  const updateItemMargin = (id: string, margin: number) => {
+    setItemMargins(prev => ({ ...prev, [id]: margin }));
+    // Update the unit price based on margin
+    const item = items.find(i => i.id === id);
+    if (item && item.baseCost) {
+      const newUnitPrice = item.baseCost * (1 + margin / 100);
+      updateItem(id, { unitPrice: newUnitPrice });
+    }
+  };
+
+  const getItemMargin = (id: string) => itemMargins[id] ?? 50;
 
   const updateItem = (id: string, updates: Partial<QuotationItem>) => {
     setItems(items.map(item => {
@@ -279,6 +295,35 @@ export function QuotationForm({ quotation, trigger, onClose, onSave }: Quotation
                     value={item.name}
                     onChange={(e) => updateItem(item.id, { name: e.target.value })}
                   />
+                  
+                  {/* Margin section for recipe-based items */}
+                  {item.baseCost && (
+                    <div className="p-3 bg-primary/5 rounded-lg border border-primary/20 space-y-2">
+                      <div className="flex items-center gap-2">
+                        <Percent className="w-4 h-4 text-primary" />
+                        <Label className="text-xs font-medium text-primary">Margen de ganancia</Label>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <input
+                          type="range"
+                          min="0"
+                          max="200"
+                          step="5"
+                          value={getItemMargin(item.id)}
+                          onChange={(e) => updateItemMargin(item.id, parseInt(e.target.value))}
+                          className="flex-1 h-2 bg-muted rounded-full appearance-none cursor-pointer accent-primary"
+                        />
+                        <span className="text-sm font-bold text-primary min-w-[50px] text-right">
+                          {getItemMargin(item.id)}%
+                        </span>
+                      </div>
+                      <div className="flex justify-between text-xs text-muted-foreground">
+                        <span>Costo: {settings.currencySymbol}{item.baseCost.toFixed(2)}</span>
+                        <span>Precio: {settings.currencySymbol}{item.unitPrice.toFixed(2)}</span>
+                      </div>
+                    </div>
+                  )}
+
                   <div className="grid grid-cols-3 gap-2">
                     <div>
                       <Label className="text-xs">Cant.</Label>
@@ -315,6 +360,11 @@ export function QuotationForm({ quotation, trigger, onClose, onSave }: Quotation
                 Agrega productos a la cotización
               </div>
             )}
+
+            {/* Help text */}
+            <p className="text-xs text-muted-foreground text-center">
+              Aquí decides cuánto quieres ganar por este pedido.
+            </p>
           </div>
 
           {/* Discount */}

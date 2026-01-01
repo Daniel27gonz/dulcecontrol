@@ -23,7 +23,7 @@ const CATEGORIES = [
 
 const UNITS = ['g', 'ml', 'pza'];
 
-const STEPS = ['info', 'ingredients', 'production', 'margin', 'result'];
+const STEPS = ['info', 'ingredients', 'production', 'result'];
 
 export default function CalculatorPage() {
   const navigate = useNavigate();
@@ -165,8 +165,9 @@ export default function CalculatorPage() {
     navigate('/recipes');
   };
 
-  // Calcular tiempo total de elaboración
-  const totalElaborationTime = elaborationTime.preparation + elaborationTime.baking + elaborationTime.decoration + elaborationTime.packaging;
+  // Calcular tiempo total de elaboración en minutos y convertir a horas
+  const totalElaborationTimeMinutes = elaborationTime.preparation + elaborationTime.baking + elaborationTime.decoration + elaborationTime.packaging;
+  const totalElaborationTimeHours = totalElaborationTimeMinutes / 60;
 
   // Calculate current recipe for preview
   const currentRecipe: Recipe = {
@@ -190,8 +191,6 @@ export default function CalculatorPage() {
         return ingredients.some((ing) => ing.name.trim() !== '' && ing.pricePerUnit > 0 && ing.quantityUsed > 0);
       case 2:
         return true;
-      case 3:
-        return marginPercentage > 0;
       default:
         return true;
     }
@@ -549,92 +548,27 @@ export default function CalculatorPage() {
                       <div className="flex items-center gap-3">
                         <Clock className="w-6 h-6 text-primary" />
                         <div>
-                          <span className="text-sm font-medium block">Tiempo total por producto</span>
+                          <span className="text-sm font-medium block">Tiempo total de elaboración</span>
                           <span className="text-xs text-muted-foreground">Suma de todas las etapas</span>
                         </div>
                       </div>
                       <span className="text-2xl font-bold text-primary">
-                        {totalElaborationTime} min
+                        {totalElaborationTimeHours.toFixed(1)} horas
                       </span>
                     </div>
                   </CardContent>
                 </Card>
-              </div>
-            </motion.div>
-          )}
 
-          {/* Step 4: Margin */}
-          {currentStep === 3 && (
-            <motion.div
-              key="margin"
-              initial={{ opacity: 0, x: 50 }}
-              animate={{ opacity: 1, x: 0 }}
-              exit={{ opacity: 0, x: -50 }}
-              className="space-y-6"
-            >
-              <div className="text-center mb-6">
-                <span className="text-4xl">💰</span>
-                <h2 className="text-xl font-bold mt-2">¿Cuánto quieres ganar?</h2>
-                <p className="text-muted-foreground text-sm">
-                  Elige el porcentaje de ganancia sobre tu costo
+                {/* Texto de ayuda */}
+                <p className="text-xs text-muted-foreground text-center mt-4 px-4">
+                  Aquí defines tiempos y rendimiento, no precios.
                 </p>
               </div>
-
-              <Card>
-                <CardContent className="p-6 text-center">
-                  <div className="text-5xl font-bold text-caramel mb-4">
-                    {marginPercentage}%
-                  </div>
-                  <input
-                    type="range"
-                    min="10"
-                    max="200"
-                    step="5"
-                    value={marginPercentage}
-                    onChange={(e) => setMarginPercentage(parseInt(e.target.value))}
-                    className="w-full h-3 bg-muted rounded-full appearance-none cursor-pointer accent-caramel"
-                  />
-                  <div className="flex justify-between text-xs text-muted-foreground mt-2">
-                    <span>10%</span>
-                    <span>100%</span>
-                    <span>200%</span>
-                  </div>
-                </CardContent>
-              </Card>
-
-              <div className="grid grid-cols-3 gap-2">
-                {[30, 50, 80].map((percent) => (
-                  <Button
-                    key={percent}
-                    variant={marginPercentage === percent ? 'warm' : 'secondary'}
-                    onClick={() => setMarginPercentage(percent)}
-                    className="flex-col h-auto py-3"
-                  >
-                    <span className="text-lg font-bold">{percent}%</span>
-                    <span className="text-xs opacity-80">
-                      {percent <= 30 ? 'Básico' : percent <= 60 ? 'Recomendado' : 'Premium'}
-                    </span>
-                  </Button>
-                ))}
-              </div>
-
-              <Card className="bg-secondary/50">
-                <CardContent className="p-4 space-y-2">
-                  <div className="flex justify-between text-sm">
-                    <span className="text-muted-foreground">Costo total:</span>
-                    <span className="font-medium">{settings.currencySymbol}{costs.totalCost.toFixed(2)}</span>
-                  </div>
-                  <div className="flex justify-between text-sm">
-                    <span className="text-muted-foreground">Tu ganancia:</span>
-                    <span className="font-medium text-success">+{settings.currencySymbol}{costs.profit.toFixed(2)}</span>
-                  </div>
-                </CardContent>
-              </Card>
             </motion.div>
           )}
 
-          {/* Step 5: Result */}
-          {currentStep === 4 && (
+          {/* Step 4: Result */}
+          {currentStep === 3 && (
             <motion.div
               key="result"
               initial={{ opacity: 0, scale: 0.95 }}
@@ -659,10 +593,10 @@ export default function CalculatorPage() {
                 <CardContent className="p-6 text-center">
                   <p className="text-sm text-muted-foreground mb-2">{recipeName}</p>
                   <p className="text-4xl font-bold text-foreground">
-                    {settings.currencySymbol}{costs.suggestedPrice.toFixed(2)}
+                    {settings.currencySymbol}{costs.totalCost.toFixed(2)}
                   </p>
-                  <p className="text-sm text-success font-medium mt-2">
-                    Ganancia: {settings.currencySymbol}{costs.profit.toFixed(2)} ({marginPercentage}%)
+                  <p className="text-sm text-muted-foreground mt-2">
+                    Costo total de producción
                   </p>
                 </CardContent>
               </Card>
@@ -701,12 +635,12 @@ export default function CalculatorPage() {
                     </div>
                     <div className="flex justify-between">
                       <span className="text-muted-foreground">Tiempo total</span>
-                      <span className="font-medium">{totalElaborationTime} minutos</span>
+                      <span className="font-medium">{totalElaborationTimeHours.toFixed(1)} horas</span>
                     </div>
                     {portions > 1 && (
                       <div className="flex justify-between pt-2 border-t text-primary">
-                        <span className="font-medium">Precio por porción</span>
-                        <span className="font-bold">{settings.currencySymbol}{(costs.suggestedPrice / portions).toFixed(2)}</span>
+                        <span className="font-medium">Costo por porción</span>
+                        <span className="font-bold">{settings.currencySymbol}{(costs.totalCost / portions).toFixed(2)}</span>
                       </div>
                     )}
                   </div>
@@ -723,7 +657,7 @@ export default function CalculatorPage() {
       </div>
 
       {/* Bottom navigation for steps */}
-      {currentStep < 4 && (
+      {currentStep < 3 && (
         <div className="fixed bottom-20 left-0 right-0 p-4 bg-background/95 backdrop-blur-lg border-t border-border">
           <Button
             onClick={handleNext}
