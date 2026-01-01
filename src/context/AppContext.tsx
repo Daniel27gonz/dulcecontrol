@@ -19,6 +19,13 @@ export interface IndirectCost {
   other: number;
 }
 
+export interface RecipeElaborationTime {
+  preparation: number; // minutos
+  baking: number; // minutos
+  decoration: number; // minutos
+  packaging: number; // minutos
+}
+
 export interface Recipe {
   id: string;
   name: string;
@@ -27,6 +34,8 @@ export interface Recipe {
   ingredients: Ingredient[];
   indirectCosts: IndirectCost;
   marginPercentage: number;
+  portions?: number; // número de porciones
+  elaborationTime?: RecipeElaborationTime; // tiempo de elaboración
   createdAt: string;
 }
 
