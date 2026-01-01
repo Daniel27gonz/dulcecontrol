@@ -1,11 +1,11 @@
 import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useNavigate, useSearchParams } from 'react-router-dom';
-import { ArrowLeft, Plus, Trash2, ChevronRight, Check, Sparkles, HelpCircle } from 'lucide-react';
+import { ArrowLeft, Plus, Trash2, ChevronRight, Check, Sparkles, HelpCircle, Clock, Utensils, Flame, Palette, Package } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent } from '@/components/ui/card';
-import { useApp, Ingredient, IndirectCost, Recipe } from '@/context/AppContext';
+import { useApp, Ingredient, IndirectCost, Recipe, RecipeElaborationTime } from '@/context/AppContext';
 import { BottomNav } from '@/components/BottomNav';
 import { toast } from '@/hooks/use-toast';
 import { RecipeTutorial } from '@/components/calculator/RecipeTutorial';
@@ -23,7 +23,7 @@ const CATEGORIES = [
 
 const UNITS = ['g', 'ml', 'pza'];
 
-const STEPS = ['info', 'ingredients', 'costs', 'margin', 'result'];
+const STEPS = ['info', 'ingredients', 'production', 'margin', 'result'];
 
 export default function CalculatorPage() {
   const navigate = useNavigate();
@@ -57,6 +57,15 @@ export default function CalculatorPage() {
     other: 0,
   });
   const [marginPercentage, setMarginPercentage] = useState(50);
+  
+  // Nuevos estados para porciones y tiempo de elaboración
+  const [portions, setPortions] = useState(1);
+  const [elaborationTime, setElaborationTime] = useState<RecipeElaborationTime>({
+    preparation: 0,
+    baking: 0,
+    decoration: 0,
+    packaging: 0,
+  });
 
   // Load recipe data when editing
   useEffect(() => {
@@ -72,6 +81,14 @@ export default function CalculatorPage() {
         ]);
         setIndirectCosts(recipe.indirectCosts);
         setMarginPercentage(recipe.marginPercentage);
+        // Cargar porciones y tiempo de elaboración
+        setPortions(recipe.portions || 1);
+        setElaborationTime(recipe.elaborationTime || {
+          preparation: 0,
+          baking: 0,
+          decoration: 0,
+          packaging: 0,
+        });
       }
     }
   }, [editId, recipes]);
@@ -123,6 +140,8 @@ export default function CalculatorPage() {
       ingredients: ingredients.filter((ing) => ing.name.trim() !== ''),
       indirectCosts,
       marginPercentage,
+      portions,
+      elaborationTime,
     };
 
     if (isEditing && recipeId) {
@@ -146,6 +165,9 @@ export default function CalculatorPage() {
     navigate('/recipes');
   };
 
+  // Calcular tiempo total de elaboración
+  const totalElaborationTime = elaborationTime.preparation + elaborationTime.baking + elaborationTime.decoration + elaborationTime.packaging;
+
   // Calculate current recipe for preview
   const currentRecipe: Recipe = {
     id: 'preview',
@@ -154,6 +176,8 @@ export default function CalculatorPage() {
     ingredients,
     indirectCosts,
     marginPercentage,
+    portions,
+    elaborationTime,
     createdAt: '',
   };
   const costs = calculateRecipeCost(currentRecipe);
@@ -427,63 +451,115 @@ export default function CalculatorPage() {
             </motion.div>
           )}
 
-          {/* Step 3: Indirect Costs */}
+          {/* Step 3: Production - Porciones y Tiempo */}
           {currentStep === 2 && (
             <motion.div
-              key="costs"
+              key="production"
               initial={{ opacity: 0, x: 50 }}
               animate={{ opacity: 1, x: 0 }}
               exit={{ opacity: 0, x: -50 }}
-              className="space-y-4"
+              className="space-y-6"
             >
-              <div className="text-center mb-6">
-                <span className="text-4xl">💡</span>
-                <h2 className="text-xl font-bold mt-2">Gastos indirectos</h2>
-                <p className="text-muted-foreground text-sm">
-                  Estos gastos se suman al costo de tu postre
-                </p>
-              </div>
+              {/* Sección: Rendimiento del producto */}
+              <div>
+                <div className="text-center mb-4">
+                  <span className="text-4xl">🍰</span>
+                  <h2 className="text-xl font-bold mt-2">Rendimiento del producto</h2>
+                  <p className="text-muted-foreground text-sm">
+                    Indica cuántas porciones reales obtienes con esta receta
+                  </p>
+                </div>
 
-              <div className="space-y-3">
-                {[
-                  { key: 'gas', label: 'Gas', emoji: '🔥' },
-                  { key: 'electricity', label: 'Luz', emoji: '💡' },
-                  { key: 'packaging', label: 'Empaque', emoji: '📦' },
-                  { key: 'labor', label: 'Mano de obra', emoji: '👩‍🍳' },
-                  { key: 'other', label: 'Otros', emoji: '📋' },
-                ].map((item) => (
-                  <Card key={item.key}>
-                    <CardContent className="p-4 flex items-center gap-4">
-                      <span className="text-2xl">{item.emoji}</span>
+                <Card>
+                  <CardContent className="p-4">
+                    <div className="flex items-center gap-4">
                       <div className="flex-1">
-                        <label className="text-sm font-medium">{item.label}</label>
-                      </div>
-                      <div className="w-32">
+                        <label className="text-sm font-medium block mb-2">
+                          Número de porciones
+                        </label>
                         <Input
                           type="number"
-                          value={indirectCosts[item.key as keyof IndirectCost] || ''}
-                          onChange={(e) =>
-                            setIndirectCosts({
-                              ...indirectCosts,
-                              [item.key]: parseFloat(e.target.value) || 0,
-                            })
-                          }
-                          placeholder="0.00"
+                          min="1"
+                          value={portions}
+                          onChange={(e) => setPortions(Math.max(1, parseInt(e.target.value) || 1))}
+                          className="text-center text-lg font-bold"
                         />
                       </div>
-                    </CardContent>
-                  </Card>
-                ))}
+                    </div>
+                  </CardContent>
+                </Card>
               </div>
 
-              <Card className="bg-secondary/50">
-                <CardContent className="p-4 flex justify-between items-center">
-                  <span className="text-sm text-muted-foreground">Total gastos indirectos:</span>
-                  <span className="font-bold text-foreground">
-                    {settings.currencySymbol}{costs.indirectCost.toFixed(2)}
-                  </span>
-                </CardContent>
-              </Card>
+              {/* Sección: Tiempo de elaboración */}
+              <div>
+                <div className="text-center mb-4">
+                  <span className="text-4xl">⏱️</span>
+                  <h2 className="text-xl font-bold mt-2">Tiempo de elaboración</h2>
+                  <p className="text-muted-foreground text-sm">
+                    Este tiempo te ayuda a saber cuánto tardas realmente en producir este postre
+                  </p>
+                </div>
+
+                <div className="space-y-3">
+                  {[
+                    { key: 'preparation', label: 'Preparación', icon: Utensils, description: 'Mezclar, batir, preparar' },
+                    { key: 'baking', label: 'Horneado', icon: Flame, description: 'Tiempo en el horno' },
+                    { key: 'decoration', label: 'Decoración', icon: Palette, description: 'Decorar y embellecer' },
+                    { key: 'packaging', label: 'Empaque', icon: Package, description: 'Empacar y alistar' },
+                  ].map((item) => {
+                    const IconComponent = item.icon;
+                    return (
+                      <Card key={item.key}>
+                        <CardContent className="p-4">
+                          <div className="flex items-center gap-4">
+                            <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center">
+                              <IconComponent className="w-5 h-5 text-primary" />
+                            </div>
+                            <div className="flex-1">
+                              <label className="text-sm font-medium block">{item.label}</label>
+                              <span className="text-xs text-muted-foreground">{item.description}</span>
+                            </div>
+                            <div className="flex items-center gap-2">
+                              <Input
+                                type="number"
+                                min="0"
+                                value={elaborationTime[item.key as keyof RecipeElaborationTime] || ''}
+                                onChange={(e) =>
+                                  setElaborationTime({
+                                    ...elaborationTime,
+                                    [item.key]: parseInt(e.target.value) || 0,
+                                  })
+                                }
+                                placeholder="0"
+                                className="w-20 text-center"
+                              />
+                              <span className="text-sm text-muted-foreground">min</span>
+                            </div>
+                          </div>
+                        </CardContent>
+                      </Card>
+                    );
+                  })}
+                </div>
+
+                {/* Total tiempo */}
+                <Card className="bg-primary/10 border-primary/30 mt-4">
+                  <CardContent className="p-4">
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-3">
+                        <Clock className="w-6 h-6 text-primary" />
+                        <div>
+                          <span className="text-sm font-medium block">Tiempo total por producto</span>
+                          <span className="text-xs text-muted-foreground">Suma de todas las etapas</span>
+                        </div>
+                      </div>
+                      <span className="text-2xl font-bold text-primary">
+                        {totalElaborationTime} min
+                      </span>
+                    </div>
+                  </CardContent>
+                </Card>
+              </div>
             </motion.div>
           )}
 
@@ -607,6 +683,32 @@ export default function CalculatorPage() {
                       <span>Costo total</span>
                       <span>{settings.currencySymbol}{costs.totalCost.toFixed(2)}</span>
                     </div>
+                  </div>
+                </CardContent>
+              </Card>
+
+              {/* Información de producción */}
+              <Card className="bg-muted/50">
+                <CardContent className="p-4 space-y-3">
+                  <h3 className="font-bold text-foreground flex items-center gap-2">
+                    <Clock className="w-4 h-4" />
+                    Datos de producción
+                  </h3>
+                  <div className="space-y-2 text-sm">
+                    <div className="flex justify-between">
+                      <span className="text-muted-foreground">Porciones</span>
+                      <span className="font-medium">{portions} {portions === 1 ? 'porción' : 'porciones'}</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-muted-foreground">Tiempo total</span>
+                      <span className="font-medium">{totalElaborationTime} minutos</span>
+                    </div>
+                    {portions > 1 && (
+                      <div className="flex justify-between pt-2 border-t text-primary">
+                        <span className="font-medium">Precio por porción</span>
+                        <span className="font-bold">{settings.currencySymbol}{(costs.suggestedPrice / portions).toFixed(2)}</span>
+                      </div>
+                    )}
                   </div>
                 </CardContent>
               </Card>
