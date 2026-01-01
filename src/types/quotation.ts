@@ -5,6 +5,7 @@ export interface QuotationItem {
   quantity: number;
   unitPrice: number;
   total: number;
+  baseCost?: number; // Original cost from recipe, used for margin calculation
 }
 
 export interface Quotation {
