@@ -7,16 +7,31 @@ export interface Expense {
   lastUpdated: string;
 }
 
+export interface Equipment {
+  id: string;
+  name: string;
+  purchaseCost: number;
+  usefulLifeMonths: number;
+  lastUpdated: string;
+}
+
 interface IndirectCostsContextType {
   fixedExpenses: Expense[];
   variableExpenses: Expense[];
+  equipment: Equipment[];
   addFixedExpense: (expense: Omit<Expense, 'id' | 'lastUpdated'>) => void;
   updateFixedExpense: (id: string, updates: Partial<Omit<Expense, 'id' | 'lastUpdated'>>) => void;
   deleteFixedExpense: (id: string) => void;
   addVariableExpense: (expense: Omit<Expense, 'id' | 'lastUpdated'>) => void;
   updateVariableExpense: (id: string, updates: Partial<Omit<Expense, 'id' | 'lastUpdated'>>) => void;
   deleteVariableExpense: (id: string) => void;
+  addEquipment: (equip: Omit<Equipment, 'id' | 'lastUpdated'>) => void;
+  updateEquipment: (id: string, updates: Partial<Omit<Equipment, 'id' | 'lastUpdated'>>) => void;
+  deleteEquipment: (id: string) => void;
+  getEquipmentDepreciation: (equip: Equipment) => number;
+  getTotalDepreciation: () => number;
   getTotalFixedExpenses: () => number;
+  getTotalFixedWithDepreciation: () => number;
   getTotalVariableExpenses: () => number;
   getTotalIndirectCosts: () => number;
 }
@@ -47,6 +62,7 @@ const DEFAULT_VARIABLE_EXPENSES: Expense[] = [
 
 const STORAGE_KEY_FIXED = 'dolce-calcolo-fixed-expenses';
 const STORAGE_KEY_VARIABLE = 'dolce-calcolo-variable-expenses';
+const STORAGE_KEY_EQUIPMENT = 'dolce-calcolo-equipment';
 
 export function IndirectCostsProvider({ children }: { children: ReactNode }) {
   const [fixedExpenses, setFixedExpenses] = useState<Expense[]>(() => {
@@ -73,6 +89,18 @@ export function IndirectCostsProvider({ children }: { children: ReactNode }) {
     return DEFAULT_VARIABLE_EXPENSES;
   });
 
+  const [equipment, setEquipment] = useState<Equipment[]>(() => {
+    const stored = localStorage.getItem(STORAGE_KEY_EQUIPMENT);
+    if (stored) {
+      try {
+        return JSON.parse(stored);
+      } catch {
+        return [];
+      }
+    }
+    return [];
+  });
+
   // Guardar en localStorage
   useEffect(() => {
     localStorage.setItem(STORAGE_KEY_FIXED, JSON.stringify(fixedExpenses));
@@ -81,6 +109,10 @@ export function IndirectCostsProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     localStorage.setItem(STORAGE_KEY_VARIABLE, JSON.stringify(variableExpenses));
   }, [variableExpenses]);
+
+  useEffect(() => {
+    localStorage.setItem(STORAGE_KEY_EQUIPMENT, JSON.stringify(equipment));
+  }, [equipment]);
 
   // Funciones para gastos fijos
   const addFixedExpense = (expense: Omit<Expense, 'id' | 'lastUpdated'>) => {
@@ -126,30 +158,75 @@ export function IndirectCostsProvider({ children }: { children: ReactNode }) {
     setVariableExpenses(prev => prev.filter(exp => exp.id !== id));
   };
 
+  // Funciones para equipos (depreciación)
+  const addEquipment = (equip: Omit<Equipment, 'id' | 'lastUpdated'>) => {
+    const newEquipment: Equipment = {
+      ...equip,
+      id: crypto.randomUUID(),
+      lastUpdated: new Date().toISOString(),
+    };
+    setEquipment(prev => [...prev, newEquipment]);
+  };
+
+  const updateEquipment = (id: string, updates: Partial<Omit<Equipment, 'id' | 'lastUpdated'>>) => {
+    setEquipment(prev => prev.map(eq => 
+      eq.id === id 
+        ? { ...eq, ...updates, lastUpdated: new Date().toISOString() } 
+        : eq
+    ));
+  };
+
+  const deleteEquipment = (id: string) => {
+    setEquipment(prev => prev.filter(eq => eq.id !== id));
+  };
+
+  // Calcular depreciación de un equipo
+  const getEquipmentDepreciation = (equip: Equipment): number => {
+    if (equip.usefulLifeMonths <= 0 || equip.purchaseCost <= 0) return 0;
+    return Math.round((equip.purchaseCost / equip.usefulLifeMonths) * 100) / 100;
+  };
+
+  // Total de depreciación mensual
+  const getTotalDepreciation = (): number => {
+    return Math.round(equipment.reduce((sum, eq) => sum + getEquipmentDepreciation(eq), 0) * 100) / 100;
+  };
+
   // Cálculos totales
-  const getTotalFixedExpenses = () => {
-    return fixedExpenses.reduce((sum, exp) => sum + exp.amount, 0);
+  const getTotalFixedExpenses = (): number => {
+    return Math.round(fixedExpenses.reduce((sum, exp) => sum + (exp.amount || 0), 0) * 100) / 100;
   };
 
-  const getTotalVariableExpenses = () => {
-    return variableExpenses.reduce((sum, exp) => sum + exp.amount, 0);
+  // Gastos fijos + depreciación
+  const getTotalFixedWithDepreciation = (): number => {
+    return Math.round((getTotalFixedExpenses() + getTotalDepreciation()) * 100) / 100;
   };
 
-  const getTotalIndirectCosts = () => {
-    return getTotalFixedExpenses() + getTotalVariableExpenses();
+  const getTotalVariableExpenses = (): number => {
+    return Math.round(variableExpenses.reduce((sum, exp) => sum + (exp.amount || 0), 0) * 100) / 100;
+  };
+
+  const getTotalIndirectCosts = (): number => {
+    return Math.round((getTotalFixedWithDepreciation() + getTotalVariableExpenses()) * 100) / 100;
   };
 
   return (
     <IndirectCostsContext.Provider value={{
       fixedExpenses,
       variableExpenses,
+      equipment,
       addFixedExpense,
       updateFixedExpense,
       deleteFixedExpense,
       addVariableExpense,
       updateVariableExpense,
       deleteVariableExpense,
+      addEquipment,
+      updateEquipment,
+      deleteEquipment,
+      getEquipmentDepreciation,
+      getTotalDepreciation,
       getTotalFixedExpenses,
+      getTotalFixedWithDepreciation,
       getTotalVariableExpenses,
       getTotalIndirectCosts,
     }}>
