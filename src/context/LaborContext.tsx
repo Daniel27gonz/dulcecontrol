@@ -20,6 +20,7 @@ interface LaborContextType {
   getTotalHourlyRate: () => number;
   getAverageHourlyRate: () => number;
   getTotalMonthlyHours: () => number;
+  getLaborCostPerHour: () => number; // Costo por hora para usar en cálculos de recetas
 }
 
 const LaborContext = createContext<LaborContextType | undefined>(undefined);
@@ -96,6 +97,12 @@ export function LaborProvider({ children }: { children: ReactNode }) {
     return workers.reduce((sum, w) => sum + w.monthlyHours, 0);
   };
 
+  // Costo por hora de mano de obra para usar en cálculos de recetas
+  // Usa el promedio de los trabajadores registrados
+  const getLaborCostPerHour = () => {
+    return getAverageHourlyRate();
+  };
+
   return (
     <LaborContext.Provider value={{
       workers,
@@ -105,6 +112,7 @@ export function LaborProvider({ children }: { children: ReactNode }) {
       getTotalHourlyRate,
       getAverageHourlyRate,
       getTotalMonthlyHours,
+      getLaborCostPerHour,
     }}>
       {children}
     </LaborContext.Provider>

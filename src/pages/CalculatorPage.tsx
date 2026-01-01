@@ -1,11 +1,14 @@
 import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useNavigate, useSearchParams } from 'react-router-dom';
-import { ArrowLeft, Plus, Trash2, ChevronRight, Check, Sparkles, HelpCircle, Clock, Utensils, Flame, Palette, Package } from 'lucide-react';
+import { ArrowLeft, Plus, Trash2, ChevronRight, Check, Sparkles, HelpCircle, Clock, Utensils, Flame, Palette, Package, Gift, DollarSign, Percent, AlertTriangle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent } from '@/components/ui/card';
-import { useApp, Ingredient, IndirectCost, Recipe, RecipeElaborationTime } from '@/context/AppContext';
+import { Slider } from '@/components/ui/slider';
+import { useApp, Ingredient, IndirectCost, Recipe, RecipeElaborationTime, RecipeExtra } from '@/context/AppContext';
+import { useLabor } from '@/context/LaborContext';
+import { useIndirectCosts } from '@/context/IndirectCostsContext';
 import { BottomNav } from '@/components/BottomNav';
 import { toast } from '@/hooks/use-toast';
 import { RecipeTutorial } from '@/components/calculator/RecipeTutorial';
@@ -23,7 +26,9 @@ const CATEGORIES = [
 
 const UNITS = ['g', 'ml', 'pza'];
 
-const STEPS = ['info', 'ingredients', 'production', 'result'];
+const STEPS = ['info', 'ingredients', 'production', 'extras', 'result'];
+
+const WASTE_PERCENTAGE = 0.05; // 5% merma fija
 
 export default function CalculatorPage() {
   const navigate = useNavigate();
@@ -31,6 +36,9 @@ export default function CalculatorPage() {
   const editId = searchParams.get('edit');
   
   const { settings, recipes, addRecipe, updateRecipe, calculateRecipeCost, updateSettings } = useApp();
+  const { getLaborCostPerHour, getTotalMonthlyHours } = useLabor();
+  const { getTotalIndirectCosts } = useIndirectCosts();
+  
   const [currentStep, setCurrentStep] = useState(0);
   const [isEditing, setIsEditing] = useState(false);
   const [showTutorial, setShowTutorial] = useState(false);
@@ -58,7 +66,7 @@ export default function CalculatorPage() {
   });
   const [marginPercentage, setMarginPercentage] = useState(50);
   
-  // Nuevos estados para porciones y tiempo de elaboración
+  // Estados para porciones y tiempo de elaboración
   const [portions, setPortions] = useState(1);
   const [elaborationTime, setElaborationTime] = useState<RecipeElaborationTime>({
     preparation: 0,
@@ -66,6 +74,13 @@ export default function CalculatorPage() {
     decoration: 0,
     packaging: 0,
   });
+
+  // Estados para extras
+  const [extras, setExtras] = useState<RecipeExtra[]>([]);
+  const [decorationHours, setDecorationHours] = useState(0);
+
+  // Margen de venta (para el resultado final)
+  const [saleMargin, setSaleMargin] = useState(50);
 
   // Load recipe data when editing
   useEffect(() => {
@@ -81,7 +96,6 @@ export default function CalculatorPage() {
         ]);
         setIndirectCosts(recipe.indirectCosts);
         setMarginPercentage(recipe.marginPercentage);
-        // Cargar porciones y tiempo de elaboración
         setPortions(recipe.portions || 1);
         setElaborationTime(recipe.elaborationTime || {
           preparation: 0,
@@ -89,10 +103,19 @@ export default function CalculatorPage() {
           decoration: 0,
           packaging: 0,
         });
+        setExtras(recipe.extras || []);
+        setDecorationHours(recipe.decorationHours || 0);
       }
     }
   }, [editId, recipes]);
 
+  // Obtener costos globales
+  const laborCostPerHour = getLaborCostPerHour();
+  const totalMonthlyHours = getTotalMonthlyHours();
+  const totalIndirectCosts = getTotalIndirectCosts();
+  const indirectCostPerHour = totalMonthlyHours > 0 ? totalIndirectCosts / totalMonthlyHours : 0;
+
+  // Ingredientes
   const addIngredient = () => {
     setIngredients([
       ...ingredients,
@@ -106,7 +129,6 @@ export default function CalculatorPage() {
     );
   };
 
-  // Actualizar múltiples campos de un ingrediente de forma atómica
   const updateIngredientFull = (id: string, updates: Partial<Ingredient>) => {
     setIngredients(prev =>
       prev.map((ing) => (ing.id === id ? { ...ing, ...updates } : ing))
@@ -117,6 +139,24 @@ export default function CalculatorPage() {
     if (ingredients.length > 1) {
       setIngredients(ingredients.filter((ing) => ing.id !== id));
     }
+  };
+
+  // Extras
+  const addExtra = () => {
+    setExtras([
+      ...extras,
+      { id: Date.now().toString(), name: '', quantity: 1, unitCost: 0 },
+    ]);
+  };
+
+  const updateExtra = (id: string, field: keyof RecipeExtra, value: any) => {
+    setExtras(
+      extras.map((extra) => (extra.id === id ? { ...extra, [field]: value } : extra))
+    );
+  };
+
+  const removeExtra = (id: string) => {
+    setExtras(extras.filter((extra) => extra.id !== id));
   };
 
   const handleNext = () => {
@@ -139,9 +179,11 @@ export default function CalculatorPage() {
       category,
       ingredients: ingredients.filter((ing) => ing.name.trim() !== ''),
       indirectCosts,
-      marginPercentage,
+      marginPercentage: saleMargin,
       portions,
       elaborationTime,
+      extras: extras.filter((e) => e.name.trim() !== ''),
+      decorationHours,
     };
 
     if (isEditing && recipeId) {
@@ -165,11 +207,55 @@ export default function CalculatorPage() {
     navigate('/recipes');
   };
 
-  // Calcular tiempo total de elaboración en minutos y convertir a horas
+  // === CÁLCULOS ===
+  
+  // Costo de ingredientes
+  const ingredientsCost = ingredients.reduce(
+    (sum, ing) => sum + (ing.pricePerUnit * ing.quantityUsed),
+    0
+  );
+
+  // Tiempo total de elaboración (producción) en horas
+  const productionTimeMinutes = elaborationTime.preparation + elaborationTime.baking + elaborationTime.packaging;
+  const productionTimeHours = productionTimeMinutes / 60;
+
+  // Tiempo de decoración ya viene en horas (decorationHours)
+  const decorationTimeMinutes = elaborationTime.decoration;
+  const decorationTimeHours = decorationTimeMinutes / 60;
+
+  // Mano de obra de producción
+  const laborProductionCost = productionTimeHours * laborCostPerHour;
+
+  // Gastos indirectos de producción
+  const indirectProductionCost = productionTimeHours * indirectCostPerHour;
+
+  // Costo total de extras
+  const extrasCost = extras.reduce(
+    (sum, extra) => sum + (extra.quantity * extra.unitCost),
+    0
+  );
+
+  // Mano de obra de decoración (separada)
+  const laborDecorationCost = decorationHours * laborCostPerHour;
+
+  // Costo base del producto
+  const baseCost = ingredientsCost + laborProductionCost + indirectProductionCost + extrasCost + laborDecorationCost;
+
+  // Merma (5%)
+  const wasteCost = baseCost * WASTE_PERCENTAGE;
+
+  // Costo total con merma
+  const totalCostWithWaste = baseCost + wasteCost;
+
+  // Precio sugerido con margen real (fórmula: costo / (1 - margen))
+  const marginDecimal = Math.min(Math.max(saleMargin, 30), 90) / 100;
+  const suggestedPrice = totalCostWithWaste / (1 - marginDecimal);
+
+  // Tiempo total de elaboración para mostrar
   const totalElaborationTimeMinutes = elaborationTime.preparation + elaborationTime.baking + elaborationTime.decoration + elaborationTime.packaging;
   const totalElaborationTimeHours = totalElaborationTimeMinutes / 60;
 
-  // Calculate current recipe for preview
+  // Para el cálculo antiguo (compatibilidad)
   const currentRecipe: Recipe = {
     id: 'preview',
     name: recipeName,
@@ -179,6 +265,8 @@ export default function CalculatorPage() {
     marginPercentage,
     portions,
     elaborationTime,
+    extras,
+    decorationHours,
     createdAt: '',
   };
   const costs = calculateRecipeCost(currentRecipe);
@@ -191,6 +279,8 @@ export default function CalculatorPage() {
         return ingredients.some((ing) => ing.name.trim() !== '' && ing.pricePerUnit > 0 && ing.quantityUsed > 0);
       case 2:
         return true;
+      case 3:
+        return true;
       default:
         return true;
     }
@@ -200,6 +290,9 @@ export default function CalculatorPage() {
     updateSettings({ hasCompletedRecipeTutorial: true });
     setShowTutorial(false);
   };
+
+  // Redondear a 2 decimales
+  const round2 = (n: number) => Math.round(n * 100) / 100;
 
   return (
     <div className="min-h-screen bg-background pb-24">
@@ -339,11 +432,9 @@ export default function CalculatorPage() {
                           )}
                         </div>
 
-                        {/* Autocomplete para seleccionar ingrediente */}
                         <IngredientAutocomplete
                           value={ing.name}
                           onChange={(value) => {
-                            // Si borra el nombre, limpiar todos los campos
                             if (!value.trim()) {
                               updateIngredientFull(ing.id, {
                                 name: '',
@@ -356,7 +447,6 @@ export default function CalculatorPage() {
                             }
                           }}
                           onSelect={(selected) => {
-                            // ✅ CRÍTICO: Actualizar TODOS los campos de forma atómica
                             updateIngredientFull(ing.id, {
                               name: selected.name,
                               pricePerUnit: selected.costPerBaseUnit,
@@ -370,10 +460,8 @@ export default function CalculatorPage() {
                           placeholder="Toca para seleccionar ingrediente..."
                         />
 
-                        {/* Mostrar info del ingrediente seleccionado */}
                         {isSelected && (
                           <div className="bg-muted/50 rounded-xl p-3 space-y-3">
-                            {/* Info del ingrediente (bloqueada) */}
                             <div className="flex items-center justify-between text-sm">
                               <span className="text-muted-foreground">Precio por {ing.unit}:</span>
                               <span className="font-semibold text-primary">
@@ -381,7 +469,6 @@ export default function CalculatorPage() {
                               </span>
                             </div>
 
-                            {/* Campo de cantidad (editable) */}
                             <div className="flex items-center gap-3">
                               <label className="text-sm font-medium whitespace-nowrap">
                                 Cantidad usada:
@@ -404,7 +491,6 @@ export default function CalculatorPage() {
                               </div>
                             </div>
 
-                            {/* Costo calculado automáticamente */}
                             {ing.quantityUsed > 0 && (
                               <div className="flex items-center justify-between pt-2 border-t border-border">
                                 <span className="text-sm font-medium">Costo del ingrediente:</span>
@@ -416,7 +502,6 @@ export default function CalculatorPage() {
                           </div>
                         )}
 
-                        {/* Mensaje de ayuda si no hay ingrediente seleccionado */}
                         {!isSelected && ing.name.trim() === '' && (
                           <p className="text-xs text-muted-foreground text-center py-2">
                             👆 Toca el campo para ver los ingredientes disponibles
@@ -433,13 +518,12 @@ export default function CalculatorPage() {
                 </Button>
               </div>
 
-              {/* Running total */}
               <Card className="bg-secondary border-2 border-primary/20">
                 <CardContent className="p-4">
                   <div className="flex justify-between items-center">
                     <span className="text-sm font-medium">Total ingredientes:</span>
                     <span className="text-xl font-bold text-primary">
-                      {settings.currencySymbol}{costs.ingredientsCost.toFixed(2)}
+                      {settings.currencySymbol}{round2(ingredientsCost).toFixed(2)}
                     </span>
                   </div>
                   <p className="text-xs text-muted-foreground mt-1">
@@ -526,7 +610,7 @@ export default function CalculatorPage() {
                                 onChange={(e) =>
                                   setElaborationTime({
                                     ...elaborationTime,
-                                    [item.key]: parseInt(e.target.value) || 0,
+                                    [item.key]: Math.max(0, parseInt(e.target.value) || 0),
                                   })
                                 }
                                 placeholder="0"
@@ -559,7 +643,6 @@ export default function CalculatorPage() {
                   </CardContent>
                 </Card>
 
-                {/* Texto de ayuda */}
                 <p className="text-xs text-muted-foreground text-center mt-4 px-4">
                   Aquí defines tiempos y rendimiento, no precios.
                 </p>
@@ -567,8 +650,179 @@ export default function CalculatorPage() {
             </motion.div>
           )}
 
-          {/* Step 4: Result */}
+          {/* Step 4: Extras */}
           {currentStep === 3 && (
+            <motion.div
+              key="extras"
+              initial={{ opacity: 0, x: 50 }}
+              animate={{ opacity: 1, x: 0 }}
+              exit={{ opacity: 0, x: -50 }}
+              className="space-y-6"
+            >
+              {/* Sección: Extras materiales */}
+              <div>
+                <div className="text-center mb-4">
+                  <span className="text-4xl">📦</span>
+                  <h2 className="text-xl font-bold mt-2">Extras del producto</h2>
+                  <p className="text-muted-foreground text-sm">
+                    Agrega toppers, cajas, bases, listón, flores, placas, etc.
+                  </p>
+                </div>
+
+                <div className="space-y-3">
+                  {extras.map((extra, index) => {
+                    const extraCost = extra.quantity * extra.unitCost;
+                    return (
+                      <Card key={extra.id}>
+                        <CardContent className="p-4 space-y-3">
+                          <div className="flex items-center justify-between">
+                            <span className="text-sm font-medium text-muted-foreground">
+                              Extra {index + 1}
+                            </span>
+                            <button
+                              onClick={() => removeExtra(extra.id)}
+                              className="p-1.5 text-destructive hover:bg-destructive/10 rounded-lg transition-colors"
+                            >
+                              <Trash2 className="w-4 h-4" />
+                            </button>
+                          </div>
+
+                          <Input
+                            value={extra.name}
+                            onChange={(e) => updateExtra(extra.id, 'name', e.target.value)}
+                            placeholder="Nombre del extra (ej. Topper, Caja)"
+                          />
+
+                          <div className="grid grid-cols-2 gap-3">
+                            <div>
+                              <label className="text-xs text-muted-foreground block mb-1">Cantidad</label>
+                              <Input
+                                type="number"
+                                min="0"
+                                step="1"
+                                value={extra.quantity || ''}
+                                onChange={(e) => updateExtra(extra.id, 'quantity', Math.max(0, parseInt(e.target.value) || 0))}
+                                placeholder="0"
+                                className="text-center"
+                              />
+                            </div>
+                            <div>
+                              <label className="text-xs text-muted-foreground block mb-1">Costo unitario</label>
+                              <div className="relative">
+                                <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground text-sm">
+                                  {settings.currencySymbol}
+                                </span>
+                                <Input
+                                  type="number"
+                                  min="0"
+                                  step="0.01"
+                                  value={extra.unitCost || ''}
+                                  onChange={(e) => updateExtra(extra.id, 'unitCost', Math.max(0, parseFloat(e.target.value) || 0))}
+                                  placeholder="0.00"
+                                  className="pl-7 text-center"
+                                />
+                              </div>
+                            </div>
+                          </div>
+
+                          {extra.quantity > 0 && extra.unitCost > 0 && (
+                            <div className="flex items-center justify-between pt-2 border-t border-border">
+                              <span className="text-sm text-muted-foreground">Subtotal:</span>
+                              <span className="font-bold text-primary">
+                                {settings.currencySymbol}{extraCost.toFixed(2)}
+                              </span>
+                            </div>
+                          )}
+                        </CardContent>
+                      </Card>
+                    );
+                  })}
+
+                  <Button onClick={addExtra} variant="outline" className="w-full">
+                    <Plus className="w-4 h-4" />
+                    Agregar extra
+                  </Button>
+                </div>
+
+                {extras.length > 0 && (
+                  <Card className="bg-secondary border-2 border-primary/20 mt-4">
+                    <CardContent className="p-4">
+                      <div className="flex justify-between items-center">
+                        <div className="flex items-center gap-2">
+                          <Gift className="w-5 h-5 text-primary" />
+                          <span className="text-sm font-medium">Costo total de extras:</span>
+                        </div>
+                        <span className="text-xl font-bold text-primary">
+                          {settings.currencySymbol}{round2(extrasCost).toFixed(2)}
+                        </span>
+                      </div>
+                    </CardContent>
+                  </Card>
+                )}
+              </div>
+
+              {/* Sección: Mano de obra de decoración */}
+              <div>
+                <div className="text-center mb-4">
+                  <span className="text-4xl">🎨</span>
+                  <h2 className="text-xl font-bold mt-2">Mano de obra de decoración</h2>
+                  <p className="text-muted-foreground text-sm">
+                    Esta mano de obra NO se mezcla con la producción
+                  </p>
+                </div>
+
+                <Card>
+                  <CardContent className="p-4 space-y-4">
+                    <div>
+                      <label className="text-sm font-medium block mb-2">
+                        Horas usadas en decoración
+                      </label>
+                      <div className="flex items-center gap-3">
+                        <Input
+                          type="number"
+                          min="0"
+                          step="0.5"
+                          value={decorationHours || ''}
+                          onChange={(e) => setDecorationHours(Math.max(0, parseFloat(e.target.value) || 0))}
+                          placeholder="0"
+                          className="text-center text-lg font-bold"
+                        />
+                        <span className="text-sm text-muted-foreground">horas</span>
+                      </div>
+                    </div>
+
+                    <div className="bg-muted/50 rounded-xl p-3 space-y-2">
+                      <div className="flex justify-between text-sm">
+                        <span className="text-muted-foreground">Costo por hora (desde Mano de Obra):</span>
+                        <span className="font-medium">
+                          {settings.currencySymbol}{laborCostPerHour.toFixed(2)}
+                        </span>
+                      </div>
+                      
+                      {laborCostPerHour === 0 && (
+                        <div className="flex items-center gap-2 text-amber-600 text-xs">
+                          <AlertTriangle className="w-4 h-4" />
+                          <span>Agrega trabajadores en el módulo Mano de Obra</span>
+                        </div>
+                      )}
+                    </div>
+
+                    {decorationHours > 0 && laborCostPerHour > 0 && (
+                      <div className="flex items-center justify-between pt-3 border-t border-border">
+                        <span className="font-medium">Mano de obra de decoración:</span>
+                        <span className="text-xl font-bold text-primary">
+                          {settings.currencySymbol}{round2(laborDecorationCost).toFixed(2)}
+                        </span>
+                      </div>
+                    )}
+                  </CardContent>
+                </Card>
+              </div>
+            </motion.div>
+          )}
+
+          {/* Step 5: Result */}
+          {currentStep === 4 && (
             <motion.div
               key="result"
               initial={{ opacity: 0, scale: 0.95 }}
@@ -586,36 +840,91 @@ export default function CalculatorPage() {
                   <Sparkles className="w-10 h-10 text-success" />
                 </motion.div>
                 <h2 className="text-2xl font-bold">¡Listo!</h2>
-                <p className="text-muted-foreground">Este es el precio sugerido para tu postre</p>
+                <p className="text-muted-foreground">Resumen completo de costos</p>
               </div>
 
-              <Card className="bg-gradient-to-br from-caramel/20 to-accent/20 border-caramel/30">
-                <CardContent className="p-6 text-center">
-                  <p className="text-sm text-muted-foreground mb-2">{recipeName}</p>
-                  <p className="text-4xl font-bold text-foreground">
-                    {settings.currencySymbol}{costs.totalCost.toFixed(2)}
-                  </p>
-                  <p className="text-sm text-muted-foreground mt-2">
-                    Costo total de producción
-                  </p>
+              {/* Resumen de costos detallado */}
+              <Card>
+                <CardContent className="p-4 space-y-3">
+                  <h3 className="font-bold text-foreground flex items-center gap-2">
+                    <DollarSign className="w-5 h-5" />
+                    Desglose de costos
+                  </h3>
+                  <div className="space-y-2 text-sm">
+                    <div className="flex justify-between">
+                      <span className="text-muted-foreground">Costo total de la receta (ingredientes)</span>
+                      <span>{settings.currencySymbol}{round2(ingredientsCost).toFixed(2)}</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-muted-foreground">Mano de obra de producción ({productionTimeHours.toFixed(1)}h)</span>
+                      <span>{settings.currencySymbol}{round2(laborProductionCost).toFixed(2)}</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-muted-foreground">Gastos indirectos de producción</span>
+                      <span>{settings.currencySymbol}{round2(indirectProductionCost).toFixed(2)}</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-muted-foreground">Extras (decoración y empaques)</span>
+                      <span>{settings.currencySymbol}{round2(extrasCost).toFixed(2)}</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-muted-foreground">Mano de obra de decoración ({decorationHours}h)</span>
+                      <span>{settings.currencySymbol}{round2(laborDecorationCost).toFixed(2)}</span>
+                    </div>
+                    <div className="flex justify-between font-medium pt-2 border-t">
+                      <span>Costo base del producto</span>
+                      <span>{settings.currencySymbol}{round2(baseCost).toFixed(2)}</span>
+                    </div>
+                    <div className="flex justify-between text-amber-600">
+                      <span>Merma (5%)</span>
+                      <span>+{settings.currencySymbol}{round2(wasteCost).toFixed(2)}</span>
+                    </div>
+                    <div className="flex justify-between font-bold pt-2 border-t text-lg">
+                      <span>Costo total con merma</span>
+                      <span className="text-primary">{settings.currencySymbol}{round2(totalCostWithWaste).toFixed(2)}</span>
+                    </div>
+                  </div>
                 </CardContent>
               </Card>
 
-              <Card>
-                <CardContent className="p-4 space-y-3">
-                  <h3 className="font-bold text-foreground">Resumen de costos</h3>
-                  <div className="space-y-2 text-sm">
-                    <div className="flex justify-between">
-                      <span className="text-muted-foreground">Ingredientes</span>
-                      <span>{settings.currencySymbol}{costs.ingredientsCost.toFixed(2)}</span>
+              {/* Margen y precio sugerido */}
+              <Card className="bg-gradient-to-br from-caramel/20 to-accent/20 border-caramel/30">
+                <CardContent className="p-4 space-y-4">
+                  <div className="flex items-center gap-2">
+                    <Percent className="w-5 h-5 text-caramel" />
+                    <h3 className="font-bold">Margen de ganancia</h3>
+                  </div>
+                  
+                  <div className="space-y-3">
+                    <div className="flex items-center justify-between">
+                      <span className="text-sm text-muted-foreground">Margen deseado:</span>
+                      <span className="text-2xl font-bold text-caramel">{saleMargin}%</span>
                     </div>
-                    <div className="flex justify-between">
-                      <span className="text-muted-foreground">Gastos indirectos</span>
-                      <span>{settings.currencySymbol}{costs.indirectCost.toFixed(2)}</span>
+                    
+                    <Slider
+                      value={[saleMargin]}
+                      onValueChange={(value) => setSaleMargin(value[0])}
+                      min={30}
+                      max={90}
+                      step={1}
+                      className="my-4"
+                    />
+                    
+                    <div className="flex justify-between text-xs text-muted-foreground">
+                      <span>30% (mínimo)</span>
+                      <span>90% (máximo)</span>
                     </div>
-                    <div className="flex justify-between font-bold pt-2 border-t">
-                      <span>Costo total</span>
-                      <span>{settings.currencySymbol}{costs.totalCost.toFixed(2)}</span>
+                  </div>
+
+                  <div className="pt-4 border-t border-caramel/30">
+                    <div className="text-center">
+                      <p className="text-sm text-muted-foreground mb-1">Precio sugerido de venta</p>
+                      <p className="text-4xl font-bold text-foreground">
+                        {settings.currencySymbol}{round2(suggestedPrice).toFixed(2)}
+                      </p>
+                      <p className="text-xs text-muted-foreground mt-2">
+                        Fórmula: Costo ÷ (1 − margen)
+                      </p>
                     </div>
                   </div>
                 </CardContent>
@@ -638,10 +947,16 @@ export default function CalculatorPage() {
                       <span className="font-medium">{totalElaborationTimeHours.toFixed(1)} horas</span>
                     </div>
                     {portions > 1 && (
-                      <div className="flex justify-between pt-2 border-t text-primary">
-                        <span className="font-medium">Costo por porción</span>
-                        <span className="font-bold">{settings.currencySymbol}{(costs.totalCost / portions).toFixed(2)}</span>
-                      </div>
+                      <>
+                        <div className="flex justify-between pt-2 border-t">
+                          <span className="font-medium">Costo por porción</span>
+                          <span className="font-bold text-primary">{settings.currencySymbol}{(totalCostWithWaste / portions).toFixed(2)}</span>
+                        </div>
+                        <div className="flex justify-between">
+                          <span className="font-medium">Precio por porción</span>
+                          <span className="font-bold text-caramel">{settings.currencySymbol}{(suggestedPrice / portions).toFixed(2)}</span>
+                        </div>
+                      </>
                     )}
                   </div>
                 </CardContent>
@@ -657,7 +972,7 @@ export default function CalculatorPage() {
       </div>
 
       {/* Bottom navigation for steps */}
-      {currentStep < 3 && (
+      {currentStep < 4 && (
         <div className="fixed bottom-20 left-0 right-0 p-4 bg-background/95 backdrop-blur-lg border-t border-border">
           <Button
             onClick={handleNext}

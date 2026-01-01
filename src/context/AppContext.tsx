@@ -26,6 +26,13 @@ export interface RecipeElaborationTime {
   packaging: number; // minutos
 }
 
+export interface RecipeExtra {
+  id: string;
+  name: string;
+  quantity: number;
+  unitCost: number;
+}
+
 export interface Recipe {
   id: string;
   name: string;
@@ -36,6 +43,8 @@ export interface Recipe {
   marginPercentage: number;
   portions?: number; // número de porciones
   elaborationTime?: RecipeElaborationTime; // tiempo de elaboración
+  extras?: RecipeExtra[]; // extras del producto
+  decorationHours?: number; // horas de mano de obra de decoración
   createdAt: string;
 }
 
