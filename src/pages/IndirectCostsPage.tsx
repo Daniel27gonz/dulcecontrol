@@ -220,36 +220,41 @@ export default function IndirectCostsPage() {
   };
 
   const ExpenseCard = ({ expense, type }: { expense: Expense; type: ExpenseType }) => (
-    <div className="flex items-center justify-between py-3 border-b border-border last:border-0 gap-2">
-      <div className="flex-1 min-w-0">
-        <p className="font-medium text-foreground text-sm truncate">{expense.concept}</p>
+    <div className="flex flex-col sm:flex-row sm:items-center justify-between py-3 border-b border-border last:border-0 gap-2">
+      <div className="flex items-center justify-between sm:flex-1 sm:min-w-0 gap-2">
+        <p className="font-medium text-foreground text-sm">{expense.concept}</p>
+        <span className="font-semibold text-foreground text-sm sm:hidden">{formatCurrency(expense.amount)}</span>
       </div>
-      <div className="flex items-center gap-1 sm:gap-2 shrink-0">
-        <span className="font-semibold text-foreground text-sm">{formatCurrency(expense.amount)}</span>
-        <Button variant="ghost" size="icon" className="h-8 w-8 shrink-0" onClick={() => handleOpenEditExpense(expense, type)}>
-          <Edit2 className="w-4 h-4" />
-        </Button>
-        <AlertDialog>
-          <AlertDialogTrigger asChild>
-            <Button variant="ghost" size="icon" className="h-8 w-8 text-destructive shrink-0">
-              <Trash2 className="w-4 h-4" />
-            </Button>
-          </AlertDialogTrigger>
-          <AlertDialogContent className="max-w-[90vw] sm:max-w-md">
-            <AlertDialogHeader>
-              <AlertDialogTitle>¿Eliminar gasto?</AlertDialogTitle>
-              <AlertDialogDescription>
-                Se eliminará "{expense.concept}" de la lista.
-              </AlertDialogDescription>
-            </AlertDialogHeader>
-            <AlertDialogFooter className="flex-col gap-2 sm:flex-row">
-              <AlertDialogCancel className="w-full sm:w-auto">Cancelar</AlertDialogCancel>
-              <AlertDialogAction onClick={() => handleDeleteExpense(expense, type)} className="w-full sm:w-auto">
-                Eliminar
-              </AlertDialogAction>
-            </AlertDialogFooter>
-          </AlertDialogContent>
-        </AlertDialog>
+      <div className="flex items-center justify-between sm:justify-end gap-2 sm:gap-2 shrink-0">
+        <span className="font-semibold text-foreground text-sm hidden sm:block">{formatCurrency(expense.amount)}</span>
+        <div className="flex items-center gap-1">
+          <Button variant="outline" size="sm" className="h-8 px-2 sm:px-3" onClick={() => handleOpenEditExpense(expense, type)}>
+            <Edit2 className="w-3.5 h-3.5 sm:mr-1" />
+            <span className="hidden sm:inline">Editar</span>
+          </Button>
+          <AlertDialog>
+            <AlertDialogTrigger asChild>
+              <Button variant="outline" size="sm" className="h-8 px-2 sm:px-3 text-destructive border-destructive/30 hover:bg-destructive/10">
+                <Trash2 className="w-3.5 h-3.5 sm:mr-1" />
+                <span className="hidden sm:inline">Eliminar</span>
+              </Button>
+            </AlertDialogTrigger>
+            <AlertDialogContent className="max-w-[90vw] sm:max-w-md">
+              <AlertDialogHeader>
+                <AlertDialogTitle>¿Eliminar gasto?</AlertDialogTitle>
+                <AlertDialogDescription>
+                  Se eliminará "{expense.concept}" de la lista.
+                </AlertDialogDescription>
+              </AlertDialogHeader>
+              <AlertDialogFooter className="flex-col gap-2 sm:flex-row">
+                <AlertDialogCancel className="w-full sm:w-auto">Cancelar</AlertDialogCancel>
+                <AlertDialogAction onClick={() => handleDeleteExpense(expense, type)} className="w-full sm:w-auto">
+                  Eliminar
+                </AlertDialogAction>
+              </AlertDialogFooter>
+            </AlertDialogContent>
+          </AlertDialog>
+        </div>
       </div>
     </div>
   );
@@ -257,42 +262,52 @@ export default function IndirectCostsPage() {
   const EquipmentCard = ({ equip }: { equip: Equipment }) => {
     const depreciation = getEquipmentDepreciation(equip);
     return (
-      <div className="flex items-center justify-between py-3 border-b border-border last:border-0 gap-2">
-        <div className="flex-1 min-w-0">
-          <p className="font-medium text-foreground text-sm truncate">{equip.name}</p>
-          <p className="text-xs text-muted-foreground">
-            {formatCurrency(equip.purchaseCost)} / {equip.usefulLifeMonths} meses
-          </p>
-        </div>
-        <div className="flex items-center gap-1 sm:gap-2 shrink-0">
-          <div className="text-right">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between py-3 border-b border-border last:border-0 gap-2">
+        <div className="flex items-center justify-between sm:flex-1 sm:min-w-0 gap-2">
+          <div className="min-w-0">
+            <p className="font-medium text-foreground text-sm">{equip.name}</p>
+            <p className="text-xs text-muted-foreground">
+              {formatCurrency(equip.purchaseCost)} / {equip.usefulLifeMonths} meses
+            </p>
+          </div>
+          <div className="text-right sm:hidden">
             <span className="font-semibold text-foreground text-sm">{formatCurrency(depreciation)}</span>
             <p className="text-xs text-muted-foreground">/mes</p>
           </div>
-          <Button variant="ghost" size="icon" className="h-8 w-8 shrink-0" onClick={() => handleOpenEditEquipment(equip)}>
-            <Edit2 className="w-4 h-4" />
-          </Button>
-          <AlertDialog>
-            <AlertDialogTrigger asChild>
-              <Button variant="ghost" size="icon" className="h-8 w-8 text-destructive shrink-0">
-                <Trash2 className="w-4 h-4" />
-              </Button>
-            </AlertDialogTrigger>
-            <AlertDialogContent className="max-w-[90vw] sm:max-w-md">
-              <AlertDialogHeader>
-                <AlertDialogTitle>¿Eliminar equipo?</AlertDialogTitle>
-                <AlertDialogDescription>
-                  Se eliminará "{equip.name}" de la lista de depreciación.
-                </AlertDialogDescription>
-              </AlertDialogHeader>
-              <AlertDialogFooter className="flex-col gap-2 sm:flex-row">
-                <AlertDialogCancel className="w-full sm:w-auto">Cancelar</AlertDialogCancel>
-                <AlertDialogAction onClick={() => handleDeleteEquipment(equip)} className="w-full sm:w-auto">
-                  Eliminar
-                </AlertDialogAction>
-              </AlertDialogFooter>
-            </AlertDialogContent>
-          </AlertDialog>
+        </div>
+        <div className="flex items-center justify-between sm:justify-end gap-2 sm:gap-2 shrink-0">
+          <div className="text-right hidden sm:block">
+            <span className="font-semibold text-foreground text-sm">{formatCurrency(depreciation)}</span>
+            <p className="text-xs text-muted-foreground">/mes</p>
+          </div>
+          <div className="flex items-center gap-1">
+            <Button variant="outline" size="sm" className="h-8 px-2 sm:px-3" onClick={() => handleOpenEditEquipment(equip)}>
+              <Edit2 className="w-3.5 h-3.5 sm:mr-1" />
+              <span className="hidden sm:inline">Editar</span>
+            </Button>
+            <AlertDialog>
+              <AlertDialogTrigger asChild>
+                <Button variant="outline" size="sm" className="h-8 px-2 sm:px-3 text-destructive border-destructive/30 hover:bg-destructive/10">
+                  <Trash2 className="w-3.5 h-3.5 sm:mr-1" />
+                  <span className="hidden sm:inline">Eliminar</span>
+                </Button>
+              </AlertDialogTrigger>
+              <AlertDialogContent className="max-w-[90vw] sm:max-w-md">
+                <AlertDialogHeader>
+                  <AlertDialogTitle>¿Eliminar equipo?</AlertDialogTitle>
+                  <AlertDialogDescription>
+                    Se eliminará "{equip.name}" de la lista de depreciación.
+                  </AlertDialogDescription>
+                </AlertDialogHeader>
+                <AlertDialogFooter className="flex-col gap-2 sm:flex-row">
+                  <AlertDialogCancel className="w-full sm:w-auto">Cancelar</AlertDialogCancel>
+                  <AlertDialogAction onClick={() => handleDeleteEquipment(equip)} className="w-full sm:w-auto">
+                    Eliminar
+                  </AlertDialogAction>
+                </AlertDialogFooter>
+              </AlertDialogContent>
+            </AlertDialog>
+          </div>
         </div>
       </div>
     );
