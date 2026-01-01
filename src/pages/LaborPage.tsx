@@ -180,20 +180,20 @@ export default function LaborPage() {
                       </Button>
                       <AlertDialog>
                         <AlertDialogTrigger asChild>
-                          <Button variant="ghost" size="icon" className="text-destructive">
+                          <Button variant="ghost" size="icon" className="text-destructive h-8 w-8">
                             <Trash2 className="w-4 h-4" />
                           </Button>
                         </AlertDialogTrigger>
-                        <AlertDialogContent>
+                        <AlertDialogContent className="max-w-[90vw] sm:max-w-md">
                           <AlertDialogHeader>
                             <AlertDialogTitle>¿Eliminar trabajador?</AlertDialogTitle>
                             <AlertDialogDescription>
                               Esta acción no se puede deshacer.
                             </AlertDialogDescription>
                           </AlertDialogHeader>
-                          <AlertDialogFooter>
-                            <AlertDialogCancel>Cancelar</AlertDialogCancel>
-                            <AlertDialogAction onClick={() => handleDelete(worker)}>
+                          <AlertDialogFooter className="flex-col gap-2 sm:flex-row">
+                            <AlertDialogCancel className="w-full sm:w-auto">Cancelar</AlertDialogCancel>
+                            <AlertDialogAction onClick={() => handleDelete(worker)} className="w-full sm:w-auto">
                               Eliminar
                             </AlertDialogAction>
                           </AlertDialogFooter>
@@ -203,14 +203,14 @@ export default function LaborPage() {
                   </div>
 
                   {/* Worker details grid */}
-                  <div className="grid grid-cols-2 gap-3 text-sm">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 sm:gap-3 text-sm">
                     <div className="flex items-center gap-2 text-muted-foreground">
-                      <Clock className="w-4 h-4" />
-                      <span>{worker.hoursPerDay}h/día × {worker.daysPerMonth} días</span>
+                      <Clock className="w-4 h-4 shrink-0" />
+                      <span className="truncate">{worker.hoursPerDay}h/día × {worker.daysPerMonth} días</span>
                     </div>
                     <div className="flex items-center gap-2 text-muted-foreground">
-                      <Calendar className="w-4 h-4" />
-                      <span>{worker.monthlyHours}h mensuales</span>
+                      <Calendar className="w-4 h-4 shrink-0" />
+                      <span className="truncate">{worker.monthlyHours}h mensuales</span>
                     </div>
                   </div>
 
@@ -238,7 +238,7 @@ export default function LaborPage() {
 
       {/* Modal for Add/Edit */}
       <Dialog open={showModal} onOpenChange={setShowModal}>
-        <DialogContent className="max-w-md">
+        <DialogContent className="max-w-[90vw] sm:max-w-md">
           <DialogHeader>
             <DialogTitle>
               {editingWorker ? 'Editar trabajador' : 'Agregar trabajador'}
@@ -315,11 +315,11 @@ export default function LaborPage() {
             </Card>
           </div>
 
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setShowModal(false)}>
+          <DialogFooter className="flex-col gap-2 sm:flex-row mt-4">
+            <Button variant="outline" onClick={() => setShowModal(false)} className="w-full sm:w-auto">
               Cancelar
             </Button>
-            <Button variant="warm" onClick={handleSave}>
+            <Button variant="warm" onClick={handleSave} className="w-full sm:w-auto">
               {editingWorker ? 'Guardar cambios' : 'Agregar'}
             </Button>
           </DialogFooter>
