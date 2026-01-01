@@ -1028,16 +1028,16 @@ export default function CalculatorPage() {
 
       {/* Bottom navigation for steps */}
       {currentStep < 4 && (
-        <div className="fixed bottom-20 left-0 right-0 p-4 bg-background/95 backdrop-blur-lg border-t border-border">
+        <div className="fixed bottom-16 sm:bottom-20 left-0 right-0 p-3 sm:p-4 bg-background/95 backdrop-blur-lg border-t border-border safe-bottom">
           <Button
             onClick={handleNext}
             variant="warm"
-            size="lg"
-            className="w-full"
+            size="default"
+            className="w-full h-11 sm:h-12 text-sm sm:text-base"
             disabled={!canProceed()}
           >
             Continuar
-            <ChevronRight className="w-5 h-5" />
+            <ChevronRight className="w-4 h-4 sm:w-5 sm:h-5" />
           </Button>
         </div>
       )}

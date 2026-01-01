@@ -123,66 +123,66 @@ export default function DashboardPage() {
 
         {/* Quick Actions */}
         <motion.div variants={itemVariants}>
-          <h2 className="text-lg font-bold text-foreground mb-3">Acceso rápido</h2>
-          <div className="grid grid-cols-2 gap-3">
+          <h2 className="text-base sm:text-lg font-bold text-foreground mb-3">Acceso rápido</h2>
+          <div className="grid grid-cols-2 gap-2 sm:gap-3">
             <Button
               onClick={() => navigate('/calculator')}
               variant="warm"
-              size="lg"
-              className="w-full justify-start"
+              size="default"
+              className="w-full h-auto py-3 px-3 flex flex-col sm:flex-row items-center justify-center sm:justify-start gap-1.5 sm:gap-2 text-xs sm:text-sm whitespace-normal"
             >
-              <Plus className="w-5 h-5" />
-              Nueva receta
+              <Plus className="w-4 h-4 sm:w-5 sm:h-5 shrink-0" />
+              <span className="text-center sm:text-left leading-tight">Nueva receta</span>
             </Button>
 
             <Button
               onClick={() => navigate('/recipes')}
               variant="secondary"
-              size="lg"
-              className="w-full justify-start"
+              size="default"
+              className="w-full h-auto py-3 px-3 flex flex-col sm:flex-row items-center justify-center sm:justify-start gap-1.5 sm:gap-2 text-xs sm:text-sm whitespace-normal"
             >
-              <ChefHat className="w-5 h-5" />
-              Mis recetas
+              <ChefHat className="w-4 h-4 sm:w-5 sm:h-5 shrink-0" />
+              <span className="text-center sm:text-left leading-tight">Mis recetas</span>
             </Button>
 
             <Button
               onClick={() => navigate('/labor')}
               variant="secondary"
-              size="lg"
-              className="w-full justify-start"
+              size="default"
+              className="w-full h-auto py-3 px-3 flex flex-col sm:flex-row items-center justify-center sm:justify-start gap-1.5 sm:gap-2 text-xs sm:text-sm whitespace-normal"
             >
-              <Users className="w-5 h-5" />
-              Mano de Obra
+              <Users className="w-4 h-4 sm:w-5 sm:h-5 shrink-0" />
+              <span className="text-center sm:text-left leading-tight">Mano de Obra</span>
             </Button>
 
             <Button
               onClick={() => navigate('/indirect-costs')}
               variant="secondary"
-              size="lg"
-              className="w-full justify-start"
+              size="default"
+              className="w-full h-auto py-3 px-3 flex flex-col sm:flex-row items-center justify-center sm:justify-start gap-1.5 sm:gap-2 text-xs sm:text-sm whitespace-normal"
             >
-              <Receipt className="w-5 h-5" />
-              Gastos Indirectos
+              <Receipt className="w-4 h-4 sm:w-5 sm:h-5 shrink-0" />
+              <span className="text-center sm:text-left leading-tight">Gastos Indirectos</span>
             </Button>
 
             <Button
               onClick={() => navigate('/quotations')}
               variant="secondary"
-              size="lg"
-              className="w-full justify-start"
+              size="default"
+              className="w-full h-auto py-3 px-3 flex flex-col sm:flex-row items-center justify-center sm:justify-start gap-1.5 sm:gap-2 text-xs sm:text-sm whitespace-normal"
             >
-              <FileText className="w-5 h-5" />
-              Cotizaciones
+              <FileText className="w-4 h-4 sm:w-5 sm:h-5 shrink-0" />
+              <span className="text-center sm:text-left leading-tight">Cotizaciones</span>
             </Button>
 
             <Button
               onClick={() => navigate('/orders')}
               variant="secondary"
-              size="lg"
-              className="w-full justify-start"
+              size="default"
+              className="w-full h-auto py-3 px-3 flex flex-col sm:flex-row items-center justify-center sm:justify-start gap-1.5 sm:gap-2 text-xs sm:text-sm whitespace-normal"
             >
-              <ClipboardList className="w-5 h-5" />
-              Pedidos
+              <ClipboardList className="w-4 h-4 sm:w-5 sm:h-5 shrink-0" />
+              <span className="text-center sm:text-left leading-tight">Pedidos</span>
             </Button>
           </div>
         </motion.div>
