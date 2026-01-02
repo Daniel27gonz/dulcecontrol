@@ -148,7 +148,7 @@ export function QuotationForm({ quotation, trigger, onClose, onSave }: Quotation
 
   const { subtotal, total } = calculateTotals(items, discount, discountType);
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
     if (!clientName.trim()) {
@@ -183,19 +183,21 @@ export function QuotationForm({ quotation, trigger, onClose, onSave }: Quotation
     };
 
     if (isEditing) {
-      updateQuotation(quotation.id, quotationData);
+      await updateQuotation(quotation.id, quotationData);
       toast({
         title: '¡Cotización actualizada!',
         description: `Cotización para ${clientName} guardada`,
       });
       onSave?.({ ...quotation, ...quotationData });
     } else {
-      const newQuotation = addQuotation(quotationData);
-      toast({
-        title: '¡Cotización creada!',
-        description: `Cotización #${newQuotation.number} lista`,
-      });
-      onSave?.(newQuotation);
+      const newQuotation = await addQuotation(quotationData);
+      if (newQuotation) {
+        toast({
+          title: '¡Cotización creada!',
+          description: `Cotización #${newQuotation.number} lista`,
+        });
+        onSave?.(newQuotation);
+      }
     }
 
     resetForm();

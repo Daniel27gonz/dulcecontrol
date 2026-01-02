@@ -147,7 +147,7 @@ export function IngredientAutocomplete({
     setIsOpen(false);
   };
 
-  const handleSaveQuickAdd = () => {
+  const handleSaveQuickAdd = async () => {
     const qty = parseFloat(quickAddForm.presentationQuantity);
     const price = parseFloat(quickAddForm.presentationPrice);
 
@@ -164,13 +164,18 @@ export function IngredientAutocomplete({
       return;
     }
 
-    const newIngredient = addIngredient({
+    const newIngredient = await addIngredient({
       name: quickAddForm.name.trim(),
       category: quickAddForm.category,
       purchaseUnit: quickAddForm.purchaseUnit as any,
       presentationQuantity: qty,
       presentationPrice: price,
     });
+
+    if (!newIngredient) {
+      toast({ title: 'Error', description: 'No se pudo crear el ingrediente', variant: 'destructive' });
+      return;
+    }
 
     const baseUnit = getBaseUnit(newIngredient.purchaseUnit);
     const presentationInfo = `${settings.currencySymbol}${newIngredient.presentationPrice} por ${newIngredient.presentationQuantity} ${newIngredient.purchaseUnit}`;

@@ -1,4 +1,6 @@
-import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
+import React, { createContext, useContext, useState, useEffect, useCallback, ReactNode } from 'react';
+import { supabase } from '@/integrations/supabase/client';
+import { useApp } from './AppContext';
 
 export interface Expense {
   id: string;
@@ -19,201 +21,410 @@ interface IndirectCostsContextType {
   fixedExpenses: Expense[];
   variableExpenses: Expense[];
   equipment: Equipment[];
-  addFixedExpense: (expense: Omit<Expense, 'id' | 'lastUpdated'>) => void;
-  updateFixedExpense: (id: string, updates: Partial<Omit<Expense, 'id' | 'lastUpdated'>>) => void;
-  deleteFixedExpense: (id: string) => void;
-  addVariableExpense: (expense: Omit<Expense, 'id' | 'lastUpdated'>) => void;
-  updateVariableExpense: (id: string, updates: Partial<Omit<Expense, 'id' | 'lastUpdated'>>) => void;
-  deleteVariableExpense: (id: string) => void;
-  addEquipment: (equip: Omit<Equipment, 'id' | 'lastUpdated'>) => void;
-  updateEquipment: (id: string, updates: Partial<Omit<Equipment, 'id' | 'lastUpdated'>>) => void;
-  deleteEquipment: (id: string) => void;
+  isLoading: boolean;
+  addFixedExpense: (expense: Omit<Expense, 'id' | 'lastUpdated'>) => Promise<void>;
+  updateFixedExpense: (id: string, updates: Partial<Omit<Expense, 'id' | 'lastUpdated'>>) => Promise<void>;
+  deleteFixedExpense: (id: string) => Promise<void>;
+  addVariableExpense: (expense: Omit<Expense, 'id' | 'lastUpdated'>) => Promise<void>;
+  updateVariableExpense: (id: string, updates: Partial<Omit<Expense, 'id' | 'lastUpdated'>>) => Promise<void>;
+  deleteVariableExpense: (id: string) => Promise<void>;
+  addEquipment: (equip: Omit<Equipment, 'id' | 'lastUpdated'>) => Promise<void>;
+  updateEquipment: (id: string, updates: Partial<Omit<Equipment, 'id' | 'lastUpdated'>>) => Promise<void>;
+  deleteEquipment: (id: string) => Promise<void>;
   getEquipmentDepreciation: (equip: Equipment) => number;
   getTotalDepreciation: () => number;
   getTotalFixedExpenses: () => number;
   getTotalFixedWithDepreciation: () => number;
   getTotalVariableExpenses: () => number;
   getTotalIndirectCosts: () => number;
+  refreshCosts: () => Promise<void>;
 }
 
 const IndirectCostsContext = createContext<IndirectCostsContextType | undefined>(undefined);
 
-// Gastos fijos precargados
-const DEFAULT_FIXED_EXPENSES: Expense[] = [
-  { id: '1', concept: 'Renta del local', amount: 0, lastUpdated: new Date().toISOString() },
-  { id: '2', concept: 'Parte proporcional de renta de casa', amount: 0, lastUpdated: new Date().toISOString() },
-  { id: '3', concept: 'Internet', amount: 0, lastUpdated: new Date().toISOString() },
-  { id: '4', concept: 'Teléfono', amount: 0, lastUpdated: new Date().toISOString() },
-  { id: '5', concept: 'Seguro', amount: 0, lastUpdated: new Date().toISOString() },
-  { id: '6', concept: 'Papelería administrativa', amount: 0, lastUpdated: new Date().toISOString() },
+// Default expenses for new users
+const DEFAULT_FIXED_EXPENSES = [
+  'Renta del local',
+  'Parte proporcional de renta de casa',
+  'Internet',
+  'Teléfono',
+  'Seguro',
+  'Papelería administrativa',
 ];
 
-// Gastos variables precargados
-const DEFAULT_VARIABLE_EXPENSES: Expense[] = [
-  { id: '1', concept: 'Gas (uso del horno)', amount: 0, lastUpdated: new Date().toISOString() },
-  { id: '2', concept: 'Luz por producción', amount: 0, lastUpdated: new Date().toISOString() },
-  { id: '3', concept: 'Agua por producción', amount: 0, lastUpdated: new Date().toISOString() },
-  { id: '4', concept: 'Envíos / mensajería', amount: 0, lastUpdated: new Date().toISOString() },
-  { id: '5', concept: 'Gasolina para entregas', amount: 0, lastUpdated: new Date().toISOString() },
-  { id: '6', concept: 'Publicidad', amount: 0, lastUpdated: new Date().toISOString() },
-  { id: '7', concept: 'Empaques adicionales', amount: 0, lastUpdated: new Date().toISOString() },
-  { id: '8', concept: 'Insumos de limpieza ligados a producción', amount: 0, lastUpdated: new Date().toISOString() },
+const DEFAULT_VARIABLE_EXPENSES = [
+  'Gas (uso del horno)',
+  'Luz por producción',
+  'Agua por producción',
+  'Envíos / mensajería',
+  'Gasolina para entregas',
+  'Publicidad',
+  'Empaques adicionales',
+  'Insumos de limpieza ligados a producción',
 ];
-
-const STORAGE_KEY_FIXED = 'dolce-calcolo-fixed-expenses';
-const STORAGE_KEY_VARIABLE = 'dolce-calcolo-variable-expenses';
-const STORAGE_KEY_EQUIPMENT = 'dolce-calcolo-equipment';
 
 export function IndirectCostsProvider({ children }: { children: ReactNode }) {
-  const [fixedExpenses, setFixedExpenses] = useState<Expense[]>(() => {
-    const stored = localStorage.getItem(STORAGE_KEY_FIXED);
-    if (stored) {
-      try {
-        return JSON.parse(stored);
-      } catch {
-        return DEFAULT_FIXED_EXPENSES;
+  const [fixedExpenses, setFixedExpenses] = useState<Expense[]>([]);
+  const [variableExpenses, setVariableExpenses] = useState<Expense[]>([]);
+  const [equipment, setEquipment] = useState<Equipment[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const { session } = useApp();
+
+  const loadCosts = useCallback(async () => {
+    if (!session?.user) {
+      setFixedExpenses([]);
+      setVariableExpenses([]);
+      setEquipment([]);
+      setIsLoading(false);
+      return;
+    }
+
+    setIsLoading(true);
+    const { data, error } = await supabase
+      .from('indirect_costs')
+      .select('*')
+      .eq('user_id', session.user.id)
+      .order('concept', { ascending: true });
+
+    if (error) {
+      console.error('Error loading indirect costs:', error);
+      setIsLoading(false);
+      return;
+    }
+
+    if (data && data.length > 0) {
+      const fixed: Expense[] = [];
+      const variable: Expense[] = [];
+      const equip: Equipment[] = [];
+
+      data.forEach(item => {
+        if (item.cost_type === 'fixed') {
+          fixed.push({
+            id: item.id,
+            concept: item.concept,
+            amount: Number(item.amount),
+            lastUpdated: item.last_updated,
+          });
+        } else if (item.cost_type === 'variable') {
+          variable.push({
+            id: item.id,
+            concept: item.concept,
+            amount: Number(item.amount),
+            lastUpdated: item.last_updated,
+          });
+        } else if (item.cost_type === 'equipment') {
+          equip.push({
+            id: item.id,
+            name: item.concept,
+            purchaseCost: Number(item.purchase_cost || 0),
+            usefulLifeMonths: Number(item.useful_life_months || 0),
+            lastUpdated: item.last_updated,
+          });
+        }
+      });
+
+      setFixedExpenses(fixed);
+      setVariableExpenses(variable);
+      setEquipment(equip);
+    } else {
+      // Initialize defaults for new users
+      const defaultsToInsert = [
+        ...DEFAULT_FIXED_EXPENSES.map(concept => ({
+          user_id: session.user.id,
+          cost_type: 'fixed',
+          concept,
+          amount: 0,
+        })),
+        ...DEFAULT_VARIABLE_EXPENSES.map(concept => ({
+          user_id: session.user.id,
+          cost_type: 'variable',
+          concept,
+          amount: 0,
+        })),
+      ];
+
+      const { data: insertedData, error: insertError } = await supabase
+        .from('indirect_costs')
+        .insert(defaultsToInsert)
+        .select();
+
+      if (insertError) {
+        console.error('Error inserting default costs:', insertError);
+      } else if (insertedData) {
+        const fixed: Expense[] = [];
+        const variable: Expense[] = [];
+
+        insertedData.forEach(item => {
+          if (item.cost_type === 'fixed') {
+            fixed.push({
+              id: item.id,
+              concept: item.concept,
+              amount: Number(item.amount),
+              lastUpdated: item.last_updated,
+            });
+          } else if (item.cost_type === 'variable') {
+            variable.push({
+              id: item.id,
+              concept: item.concept,
+              amount: Number(item.amount),
+              lastUpdated: item.last_updated,
+            });
+          }
+        });
+
+        setFixedExpenses(fixed);
+        setVariableExpenses(variable);
       }
     }
-    return DEFAULT_FIXED_EXPENSES;
-  });
+    setIsLoading(false);
+  }, [session?.user]);
 
-  const [variableExpenses, setVariableExpenses] = useState<Expense[]>(() => {
-    const stored = localStorage.getItem(STORAGE_KEY_VARIABLE);
-    if (stored) {
-      try {
-        return JSON.parse(stored);
-      } catch {
-        return DEFAULT_VARIABLE_EXPENSES;
-      }
+  useEffect(() => {
+    loadCosts();
+  }, [loadCosts]);
+
+  // Fixed Expenses
+  const addFixedExpense = useCallback(async (expense: Omit<Expense, 'id' | 'lastUpdated'>) => {
+    if (!session?.user) return;
+
+    const { data, error } = await supabase
+      .from('indirect_costs')
+      .insert([{
+        user_id: session.user.id,
+        cost_type: 'fixed',
+        concept: expense.concept,
+        amount: expense.amount,
+      }])
+      .select()
+      .single();
+
+    if (error) {
+      console.error('Error adding fixed expense:', error);
+      return;
     }
-    return DEFAULT_VARIABLE_EXPENSES;
-  });
 
-  const [equipment, setEquipment] = useState<Equipment[]>(() => {
-    const stored = localStorage.getItem(STORAGE_KEY_EQUIPMENT);
-    if (stored) {
-      try {
-        return JSON.parse(stored);
-      } catch {
-        return [];
-      }
+    setFixedExpenses(prev => [...prev, {
+      id: data.id,
+      concept: data.concept,
+      amount: Number(data.amount),
+      lastUpdated: data.last_updated,
+    }]);
+  }, [session?.user]);
+
+  const updateFixedExpense = useCallback(async (id: string, updates: Partial<Omit<Expense, 'id' | 'lastUpdated'>>) => {
+    if (!session?.user) return;
+
+    const { error } = await supabase
+      .from('indirect_costs')
+      .update({
+        ...updates,
+        last_updated: new Date().toISOString(),
+      })
+      .eq('id', id)
+      .eq('user_id', session.user.id);
+
+    if (error) {
+      console.error('Error updating fixed expense:', error);
+      return;
     }
-    return [];
-  });
 
-  // Guardar en localStorage
-  useEffect(() => {
-    localStorage.setItem(STORAGE_KEY_FIXED, JSON.stringify(fixedExpenses));
-  }, [fixedExpenses]);
-
-  useEffect(() => {
-    localStorage.setItem(STORAGE_KEY_VARIABLE, JSON.stringify(variableExpenses));
-  }, [variableExpenses]);
-
-  useEffect(() => {
-    localStorage.setItem(STORAGE_KEY_EQUIPMENT, JSON.stringify(equipment));
-  }, [equipment]);
-
-  // Funciones para gastos fijos
-  const addFixedExpense = (expense: Omit<Expense, 'id' | 'lastUpdated'>) => {
-    const newExpense: Expense = {
-      ...expense,
-      id: crypto.randomUUID(),
-      lastUpdated: new Date().toISOString(),
-    };
-    setFixedExpenses(prev => [...prev, newExpense]);
-  };
-
-  const updateFixedExpense = (id: string, updates: Partial<Omit<Expense, 'id' | 'lastUpdated'>>) => {
-    setFixedExpenses(prev => prev.map(exp => 
-      exp.id === id 
-        ? { ...exp, ...updates, lastUpdated: new Date().toISOString() } 
-        : exp
+    setFixedExpenses(prev => prev.map(exp =>
+      exp.id === id ? { ...exp, ...updates, lastUpdated: new Date().toISOString() } : exp
     ));
-  };
+  }, [session?.user]);
 
-  const deleteFixedExpense = (id: string) => {
+  const deleteFixedExpense = useCallback(async (id: string) => {
+    if (!session?.user) return;
+
+    const { error } = await supabase
+      .from('indirect_costs')
+      .delete()
+      .eq('id', id)
+      .eq('user_id', session.user.id);
+
+    if (error) {
+      console.error('Error deleting fixed expense:', error);
+      return;
+    }
+
     setFixedExpenses(prev => prev.filter(exp => exp.id !== id));
-  };
+  }, [session?.user]);
 
-  // Funciones para gastos variables
-  const addVariableExpense = (expense: Omit<Expense, 'id' | 'lastUpdated'>) => {
-    const newExpense: Expense = {
-      ...expense,
-      id: crypto.randomUUID(),
-      lastUpdated: new Date().toISOString(),
-    };
-    setVariableExpenses(prev => [...prev, newExpense]);
-  };
+  // Variable Expenses
+  const addVariableExpense = useCallback(async (expense: Omit<Expense, 'id' | 'lastUpdated'>) => {
+    if (!session?.user) return;
 
-  const updateVariableExpense = (id: string, updates: Partial<Omit<Expense, 'id' | 'lastUpdated'>>) => {
-    setVariableExpenses(prev => prev.map(exp => 
-      exp.id === id 
-        ? { ...exp, ...updates, lastUpdated: new Date().toISOString() } 
-        : exp
+    const { data, error } = await supabase
+      .from('indirect_costs')
+      .insert([{
+        user_id: session.user.id,
+        cost_type: 'variable',
+        concept: expense.concept,
+        amount: expense.amount,
+      }])
+      .select()
+      .single();
+
+    if (error) {
+      console.error('Error adding variable expense:', error);
+      return;
+    }
+
+    setVariableExpenses(prev => [...prev, {
+      id: data.id,
+      concept: data.concept,
+      amount: Number(data.amount),
+      lastUpdated: data.last_updated,
+    }]);
+  }, [session?.user]);
+
+  const updateVariableExpense = useCallback(async (id: string, updates: Partial<Omit<Expense, 'id' | 'lastUpdated'>>) => {
+    if (!session?.user) return;
+
+    const { error } = await supabase
+      .from('indirect_costs')
+      .update({
+        ...updates,
+        last_updated: new Date().toISOString(),
+      })
+      .eq('id', id)
+      .eq('user_id', session.user.id);
+
+    if (error) {
+      console.error('Error updating variable expense:', error);
+      return;
+    }
+
+    setVariableExpenses(prev => prev.map(exp =>
+      exp.id === id ? { ...exp, ...updates, lastUpdated: new Date().toISOString() } : exp
     ));
-  };
+  }, [session?.user]);
 
-  const deleteVariableExpense = (id: string) => {
+  const deleteVariableExpense = useCallback(async (id: string) => {
+    if (!session?.user) return;
+
+    const { error } = await supabase
+      .from('indirect_costs')
+      .delete()
+      .eq('id', id)
+      .eq('user_id', session.user.id);
+
+    if (error) {
+      console.error('Error deleting variable expense:', error);
+      return;
+    }
+
     setVariableExpenses(prev => prev.filter(exp => exp.id !== id));
-  };
+  }, [session?.user]);
 
-  // Funciones para equipos (depreciación)
-  const addEquipment = (equip: Omit<Equipment, 'id' | 'lastUpdated'>) => {
-    const newEquipment: Equipment = {
-      ...equip,
-      id: crypto.randomUUID(),
-      lastUpdated: new Date().toISOString(),
-    };
-    setEquipment(prev => [...prev, newEquipment]);
-  };
+  // Equipment
+  const addEquipment = useCallback(async (equip: Omit<Equipment, 'id' | 'lastUpdated'>) => {
+    if (!session?.user) return;
 
-  const updateEquipment = (id: string, updates: Partial<Omit<Equipment, 'id' | 'lastUpdated'>>) => {
-    setEquipment(prev => prev.map(eq => 
-      eq.id === id 
-        ? { ...eq, ...updates, lastUpdated: new Date().toISOString() } 
-        : eq
+    const { data, error } = await supabase
+      .from('indirect_costs')
+      .insert([{
+        user_id: session.user.id,
+        cost_type: 'equipment',
+        concept: equip.name,
+        amount: 0,
+        purchase_cost: equip.purchaseCost,
+        useful_life_months: equip.usefulLifeMonths,
+      }])
+      .select()
+      .single();
+
+    if (error) {
+      console.error('Error adding equipment:', error);
+      return;
+    }
+
+    setEquipment(prev => [...prev, {
+      id: data.id,
+      name: data.concept,
+      purchaseCost: Number(data.purchase_cost || 0),
+      usefulLifeMonths: Number(data.useful_life_months || 0),
+      lastUpdated: data.last_updated,
+    }]);
+  }, [session?.user]);
+
+  const updateEquipment = useCallback(async (id: string, updates: Partial<Omit<Equipment, 'id' | 'lastUpdated'>>) => {
+    if (!session?.user) return;
+
+    const updateData: Record<string, unknown> = { last_updated: new Date().toISOString() };
+    if (updates.name !== undefined) updateData.concept = updates.name;
+    if (updates.purchaseCost !== undefined) updateData.purchase_cost = updates.purchaseCost;
+    if (updates.usefulLifeMonths !== undefined) updateData.useful_life_months = updates.usefulLifeMonths;
+
+    const { error } = await supabase
+      .from('indirect_costs')
+      .update(updateData)
+      .eq('id', id)
+      .eq('user_id', session.user.id);
+
+    if (error) {
+      console.error('Error updating equipment:', error);
+      return;
+    }
+
+    setEquipment(prev => prev.map(eq =>
+      eq.id === id ? { ...eq, ...updates, lastUpdated: new Date().toISOString() } : eq
     ));
-  };
+  }, [session?.user]);
 
-  const deleteEquipment = (id: string) => {
+  const deleteEquipment = useCallback(async (id: string) => {
+    if (!session?.user) return;
+
+    const { error } = await supabase
+      .from('indirect_costs')
+      .delete()
+      .eq('id', id)
+      .eq('user_id', session.user.id);
+
+    if (error) {
+      console.error('Error deleting equipment:', error);
+      return;
+    }
+
     setEquipment(prev => prev.filter(eq => eq.id !== id));
-  };
+  }, [session?.user]);
 
-  // Calcular depreciación de un equipo
-  const getEquipmentDepreciation = (equip: Equipment): number => {
+  // Calculations
+  const getEquipmentDepreciation = useCallback((equip: Equipment): number => {
     if (equip.usefulLifeMonths <= 0 || equip.purchaseCost <= 0) return 0;
     return Math.round((equip.purchaseCost / equip.usefulLifeMonths) * 100) / 100;
-  };
+  }, []);
 
-  // Total de depreciación mensual
-  const getTotalDepreciation = (): number => {
+  const getTotalDepreciation = useCallback((): number => {
     return Math.round(equipment.reduce((sum, eq) => sum + getEquipmentDepreciation(eq), 0) * 100) / 100;
-  };
+  }, [equipment, getEquipmentDepreciation]);
 
-  // Cálculos totales
-  const getTotalFixedExpenses = (): number => {
+  const getTotalFixedExpenses = useCallback((): number => {
     return Math.round(fixedExpenses.reduce((sum, exp) => sum + (exp.amount || 0), 0) * 100) / 100;
-  };
+  }, [fixedExpenses]);
 
-  // Gastos fijos + depreciación
-  const getTotalFixedWithDepreciation = (): number => {
+  const getTotalFixedWithDepreciation = useCallback((): number => {
     return Math.round((getTotalFixedExpenses() + getTotalDepreciation()) * 100) / 100;
-  };
+  }, [getTotalFixedExpenses, getTotalDepreciation]);
 
-  const getTotalVariableExpenses = (): number => {
+  const getTotalVariableExpenses = useCallback((): number => {
     return Math.round(variableExpenses.reduce((sum, exp) => sum + (exp.amount || 0), 0) * 100) / 100;
-  };
+  }, [variableExpenses]);
 
-  const getTotalIndirectCosts = (): number => {
+  const getTotalIndirectCosts = useCallback((): number => {
     return Math.round((getTotalFixedWithDepreciation() + getTotalVariableExpenses()) * 100) / 100;
-  };
+  }, [getTotalFixedWithDepreciation, getTotalVariableExpenses]);
+
+  const refreshCosts = useCallback(async () => {
+    await loadCosts();
+  }, [loadCosts]);
 
   return (
     <IndirectCostsContext.Provider value={{
       fixedExpenses,
       variableExpenses,
       equipment,
+      isLoading,
       addFixedExpense,
       updateFixedExpense,
       deleteFixedExpense,
@@ -229,6 +440,7 @@ export function IndirectCostsProvider({ children }: { children: ReactNode }) {
       getTotalFixedWithDepreciation,
       getTotalVariableExpenses,
       getTotalIndirectCosts,
+      refreshCosts,
     }}>
       {children}
     </IndirectCostsContext.Provider>

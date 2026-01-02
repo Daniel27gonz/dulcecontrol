@@ -183,8 +183,8 @@ ${quotation.notes ? `\n📝 ${quotation.notes}` : ''}
     onUpdate?.();
   };
 
-  const handleDuplicate = () => {
-    const newQuotation = duplicateQuotation(quotation.id);
+  const handleDuplicate = async () => {
+    const newQuotation = await duplicateQuotation(quotation.id);
     if (newQuotation) {
       toast({
         title: '¡Cotización duplicada!',

@@ -14,6 +14,81 @@ export type Database = {
   }
   public: {
     Tables: {
+      base_ingredients: {
+        Row: {
+          category: string
+          cost_per_base_unit: number
+          created_at: string
+          id: string
+          last_updated: string
+          name: string
+          presentation_price: number
+          presentation_quantity: number
+          purchase_unit: string
+          user_id: string
+        }
+        Insert: {
+          category: string
+          cost_per_base_unit: number
+          created_at?: string
+          id?: string
+          last_updated?: string
+          name: string
+          presentation_price: number
+          presentation_quantity: number
+          purchase_unit: string
+          user_id: string
+        }
+        Update: {
+          category?: string
+          cost_per_base_unit?: number
+          created_at?: string
+          id?: string
+          last_updated?: string
+          name?: string
+          presentation_price?: number
+          presentation_quantity?: number
+          purchase_unit?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      indirect_costs: {
+        Row: {
+          amount: number
+          concept: string
+          cost_type: string
+          created_at: string
+          id: string
+          last_updated: string
+          purchase_cost: number | null
+          useful_life_months: number | null
+          user_id: string
+        }
+        Insert: {
+          amount?: number
+          concept: string
+          cost_type: string
+          created_at?: string
+          id?: string
+          last_updated?: string
+          purchase_cost?: number | null
+          useful_life_months?: number | null
+          user_id: string
+        }
+        Update: {
+          amount?: number
+          concept?: string
+          cost_type?: string
+          created_at?: string
+          id?: string
+          last_updated?: string
+          purchase_cost?: number | null
+          useful_life_months?: number | null
+          user_id?: string
+        }
+        Relationships: []
+      }
       orders: {
         Row: {
           client_name: string
@@ -85,6 +160,66 @@ export type Database = {
           name?: string
           updated_at?: string
           user_id?: string
+        }
+        Relationships: []
+      }
+      quotations: {
+        Row: {
+          client_email: string | null
+          client_name: string
+          client_phone: string | null
+          converted_to_order_id: string | null
+          created_at: string
+          discount: number
+          discount_type: string
+          id: string
+          items: Json
+          notes: string | null
+          number: string
+          status: string
+          subtotal: number
+          total: number
+          updated_at: string
+          user_id: string
+          valid_until: string | null
+        }
+        Insert: {
+          client_email?: string | null
+          client_name: string
+          client_phone?: string | null
+          converted_to_order_id?: string | null
+          created_at?: string
+          discount?: number
+          discount_type?: string
+          id?: string
+          items?: Json
+          notes?: string | null
+          number: string
+          status?: string
+          subtotal?: number
+          total?: number
+          updated_at?: string
+          user_id: string
+          valid_until?: string | null
+        }
+        Update: {
+          client_email?: string | null
+          client_name?: string
+          client_phone?: string | null
+          converted_to_order_id?: string | null
+          created_at?: string
+          discount?: number
+          discount_type?: string
+          id?: string
+          items?: Json
+          notes?: string | null
+          number?: string
+          status?: string
+          subtotal?: number
+          total?: number
+          updated_at?: string
+          user_id?: string
+          valid_until?: string | null
         }
         Relationships: []
       }
@@ -189,6 +324,48 @@ export type Database = {
           has_completed_recipe_tutorial?: boolean
           id?: string
           updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      workers: {
+        Row: {
+          created_at: string
+          daily_salary: number
+          days_per_month: number
+          hourly_rate: number
+          hours_per_day: number
+          id: string
+          last_updated: string
+          monthly_hours: number
+          monthly_salary: number
+          name: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          daily_salary: number
+          days_per_month: number
+          hourly_rate: number
+          hours_per_day: number
+          id?: string
+          last_updated?: string
+          monthly_hours: number
+          monthly_salary: number
+          name: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          daily_salary?: number
+          days_per_month?: number
+          hourly_rate?: number
+          hours_per_day?: number
+          id?: string
+          last_updated?: string
+          monthly_hours?: number
+          monthly_salary?: number
+          name?: string
           user_id?: string
         }
         Relationships: []
