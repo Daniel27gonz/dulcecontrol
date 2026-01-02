@@ -1,31 +1,34 @@
-import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
+import React, { createContext, useContext, useState, useEffect, useCallback, ReactNode } from 'react';
+import { supabase } from '@/integrations/supabase/client';
+import { useApp } from './AppContext';
 
 export interface Worker {
   id: string;
   name: string;
   hoursPerDay: number;
   daysPerMonth: number;
-  monthlyHours: number; // Autocalculado
+  monthlyHours: number;
   monthlySalary: number;
-  dailySalary: number; // Autocalculado
-  hourlyRate: number; // Autocalculado
+  dailySalary: number;
+  hourlyRate: number;
   lastUpdated: string;
 }
 
 interface LaborContextType {
   workers: Worker[];
-  addWorker: (worker: Omit<Worker, 'id' | 'monthlyHours' | 'dailySalary' | 'hourlyRate' | 'lastUpdated'>) => void;
-  updateWorker: (id: string, updates: Partial<Omit<Worker, 'id' | 'monthlyHours' | 'dailySalary' | 'hourlyRate' | 'lastUpdated'>>) => void;
-  deleteWorker: (id: string) => void;
+  isLoading: boolean;
+  addWorker: (worker: Omit<Worker, 'id' | 'monthlyHours' | 'dailySalary' | 'hourlyRate' | 'lastUpdated'>) => Promise<void>;
+  updateWorker: (id: string, updates: Partial<Omit<Worker, 'id' | 'monthlyHours' | 'dailySalary' | 'hourlyRate' | 'lastUpdated'>>) => Promise<void>;
+  deleteWorker: (id: string) => Promise<void>;
   getTotalHourlyRate: () => number;
   getAverageHourlyRate: () => number;
   getTotalMonthlyHours: () => number;
-  getLaborCostPerHour: () => number; // Costo por hora para usar en cálculos de recetas
+  getLaborCostPerHour: () => number;
+  refreshWorkers: () => Promise<void>;
 }
 
 const LaborContext = createContext<LaborContextType | undefined>(undefined);
 
-// Función para calcular los valores derivados
 function calculateWorkerValues(worker: Omit<Worker, 'monthlyHours' | 'dailySalary' | 'hourlyRate'>): Worker {
   const monthlyHours = worker.hoursPerDay * worker.daysPerMonth;
   const dailySalary = worker.daysPerMonth > 0 ? worker.monthlySalary / worker.daysPerMonth : 0;
@@ -39,73 +42,172 @@ function calculateWorkerValues(worker: Omit<Worker, 'monthlyHours' | 'dailySalar
   };
 }
 
-const STORAGE_KEY = 'dolce-calcolo-workers';
-
 export function LaborProvider({ children }: { children: ReactNode }) {
-  const [workers, setWorkers] = useState<Worker[]>(() => {
-    const stored = localStorage.getItem(STORAGE_KEY);
-    if (stored) {
-      try {
-        return JSON.parse(stored);
-      } catch {
-        return [];
-      }
+  const [workers, setWorkers] = useState<Worker[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const { session } = useApp();
+
+  const loadWorkers = useCallback(async () => {
+    if (!session?.user) {
+      setWorkers([]);
+      setIsLoading(false);
+      return;
     }
-    return [];
-  });
 
-  // Guardar en localStorage cuando cambia
+    setIsLoading(true);
+    const { data, error } = await supabase
+      .from('workers')
+      .select('*')
+      .eq('user_id', session.user.id)
+      .order('name', { ascending: true });
+
+    if (error) {
+      console.error('Error loading workers:', error);
+      setIsLoading(false);
+      return;
+    }
+
+    if (data) {
+      setWorkers(data.map(w => ({
+        id: w.id,
+        name: w.name,
+        hoursPerDay: Number(w.hours_per_day),
+        daysPerMonth: Number(w.days_per_month),
+        monthlySalary: Number(w.monthly_salary),
+        monthlyHours: Number(w.monthly_hours),
+        dailySalary: Number(w.daily_salary),
+        hourlyRate: Number(w.hourly_rate),
+        lastUpdated: w.last_updated,
+      })));
+    }
+    setIsLoading(false);
+  }, [session?.user]);
+
   useEffect(() => {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(workers));
-  }, [workers]);
+    loadWorkers();
+  }, [loadWorkers]);
 
-  const addWorker = (workerData: Omit<Worker, 'id' | 'monthlyHours' | 'dailySalary' | 'hourlyRate' | 'lastUpdated'>) => {
-    const newWorker = calculateWorkerValues({
+  const addWorker = useCallback(async (workerData: Omit<Worker, 'id' | 'monthlyHours' | 'dailySalary' | 'hourlyRate' | 'lastUpdated'>) => {
+    if (!session?.user) return;
+
+    const calculated = calculateWorkerValues({
       ...workerData,
-      id: crypto.randomUUID(),
+      id: '',
       lastUpdated: new Date().toISOString(),
     });
-    setWorkers(prev => [...prev, newWorker]);
-  };
 
-  const updateWorker = (id: string, updates: Partial<Omit<Worker, 'id' | 'monthlyHours' | 'dailySalary' | 'hourlyRate' | 'lastUpdated'>>) => {
+    const { data, error } = await supabase
+      .from('workers')
+      .insert([{
+        user_id: session.user.id,
+        name: workerData.name,
+        hours_per_day: workerData.hoursPerDay,
+        days_per_month: workerData.daysPerMonth,
+        monthly_salary: workerData.monthlySalary,
+        monthly_hours: calculated.monthlyHours,
+        daily_salary: calculated.dailySalary,
+        hourly_rate: calculated.hourlyRate,
+      }])
+      .select()
+      .single();
+
+    if (error) {
+      console.error('Error adding worker:', error);
+      return;
+    }
+
+    const newWorker: Worker = {
+      id: data.id,
+      name: data.name,
+      hoursPerDay: Number(data.hours_per_day),
+      daysPerMonth: Number(data.days_per_month),
+      monthlySalary: Number(data.monthly_salary),
+      monthlyHours: Number(data.monthly_hours),
+      dailySalary: Number(data.daily_salary),
+      hourlyRate: Number(data.hourly_rate),
+      lastUpdated: data.last_updated,
+    };
+
+    setWorkers(prev => [...prev, newWorker].sort((a, b) => a.name.localeCompare(b.name)));
+  }, [session?.user]);
+
+  const updateWorker = useCallback(async (id: string, updates: Partial<Omit<Worker, 'id' | 'monthlyHours' | 'dailySalary' | 'hourlyRate' | 'lastUpdated'>>) => {
+    if (!session?.user) return;
+
+    const existing = workers.find(w => w.id === id);
+    if (!existing) return;
+
+    const updatedBase = { ...existing, ...updates };
+    const calculated = calculateWorkerValues(updatedBase);
+
+    const { error } = await supabase
+      .from('workers')
+      .update({
+        name: calculated.name,
+        hours_per_day: calculated.hoursPerDay,
+        days_per_month: calculated.daysPerMonth,
+        monthly_salary: calculated.monthlySalary,
+        monthly_hours: calculated.monthlyHours,
+        daily_salary: calculated.dailySalary,
+        hourly_rate: calculated.hourlyRate,
+        last_updated: new Date().toISOString(),
+      })
+      .eq('id', id)
+      .eq('user_id', session.user.id);
+
+    if (error) {
+      console.error('Error updating worker:', error);
+      return;
+    }
+
     setWorkers(prev => prev.map(worker => {
       if (worker.id !== id) return worker;
-      const updatedBase = {
-        ...worker,
-        ...updates,
-        lastUpdated: new Date().toISOString(),
-      };
-      return calculateWorkerValues(updatedBase);
+      return { ...calculated, lastUpdated: new Date().toISOString() };
     }));
-  };
+  }, [session?.user, workers]);
 
-  const deleteWorker = (id: string) => {
+  const deleteWorker = useCallback(async (id: string) => {
+    if (!session?.user) return;
+
+    const { error } = await supabase
+      .from('workers')
+      .delete()
+      .eq('id', id)
+      .eq('user_id', session.user.id);
+
+    if (error) {
+      console.error('Error deleting worker:', error);
+      return;
+    }
+
     setWorkers(prev => prev.filter(w => w.id !== id));
-  };
+  }, [session?.user]);
 
-  const getTotalHourlyRate = () => {
+  const getTotalHourlyRate = useCallback(() => {
     return workers.reduce((sum, w) => sum + w.hourlyRate, 0);
-  };
+  }, [workers]);
 
-  const getAverageHourlyRate = () => {
+  const getAverageHourlyRate = useCallback(() => {
     if (workers.length === 0) return 0;
     return getTotalHourlyRate() / workers.length;
-  };
+  }, [workers, getTotalHourlyRate]);
 
-  const getTotalMonthlyHours = () => {
+  const getTotalMonthlyHours = useCallback(() => {
     return workers.reduce((sum, w) => sum + w.monthlyHours, 0);
-  };
+  }, [workers]);
 
-  // Costo por hora de mano de obra para usar en cálculos de recetas
-  // Usa el promedio de los trabajadores registrados
-  const getLaborCostPerHour = () => {
+  const getLaborCostPerHour = useCallback(() => {
     return getAverageHourlyRate();
-  };
+  }, [getAverageHourlyRate]);
+
+  const refreshWorkers = useCallback(async () => {
+    await loadWorkers();
+  }, [loadWorkers]);
 
   return (
     <LaborContext.Provider value={{
       workers,
+      isLoading,
       addWorker,
       updateWorker,
       deleteWorker,
@@ -113,6 +215,7 @@ export function LaborProvider({ children }: { children: ReactNode }) {
       getAverageHourlyRate,
       getTotalMonthlyHours,
       getLaborCostPerHour,
+      refreshWorkers,
     }}>
       {children}
     </LaborContext.Provider>

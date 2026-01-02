@@ -1,55 +1,73 @@
 import React, { createContext, useContext, useState, useEffect, useCallback, ReactNode } from 'react';
 import { Quotation, QuotationItem } from '@/types/quotation';
-
-const STORAGE_KEY = 'dessert_calc_quotations';
+import { supabase } from '@/integrations/supabase/client';
+import { useApp } from './AppContext';
 
 interface QuotationsContextType {
   quotations: Quotation[];
-  addQuotation: (quotation: Omit<Quotation, 'id' | 'number' | 'createdAt'>) => Quotation;
-  updateQuotation: (id: string, updates: Partial<Quotation>) => void;
-  deleteQuotation: (id: string) => void;
-  duplicateQuotation: (id: string) => Quotation | null;
+  isLoading: boolean;
+  addQuotation: (quotation: Omit<Quotation, 'id' | 'number' | 'createdAt'>) => Promise<Quotation | null>;
+  updateQuotation: (id: string, updates: Partial<Quotation>) => Promise<void>;
+  deleteQuotation: (id: string) => Promise<void>;
+  duplicateQuotation: (id: string) => Promise<Quotation | null>;
   getQuotation: (id: string) => Quotation | undefined;
   calculateTotals: (items: QuotationItem[], discount: number, discountType: 'percentage' | 'fixed') => { subtotal: number; total: number };
   generateQuotationNumber: () => string;
+  refreshQuotations: () => Promise<void>;
 }
 
 const QuotationsContext = createContext<QuotationsContextType | undefined>(undefined);
 
-// Helper to safely read from localStorage
-const loadQuotations = (): Quotation[] => {
-  try {
-    const saved = localStorage.getItem(STORAGE_KEY);
-    if (saved) {
-      const parsed = JSON.parse(saved);
-      if (Array.isArray(parsed)) {
-        return parsed;
-      }
-    }
-  } catch (error) {
-    console.error('Error loading quotations from localStorage:', error);
-  }
-  return [];
-};
-
-// Helper to safely save to localStorage
-const saveQuotations = (quotations: Quotation[]): boolean => {
-  try {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(quotations));
-    return true;
-  } catch (error) {
-    console.error('Error saving quotations to localStorage:', error);
-    return false;
-  }
-};
-
 export function QuotationsProvider({ children }: { children: ReactNode }) {
-  const [quotations, setQuotations] = useState<Quotation[]>(() => loadQuotations());
+  const [quotations, setQuotations] = useState<Quotation[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const { session } = useApp();
 
-  // Save to localStorage whenever quotations change
+  const loadQuotations = useCallback(async () => {
+    if (!session?.user) {
+      setQuotations([]);
+      setIsLoading(false);
+      return;
+    }
+
+    setIsLoading(true);
+    const { data, error } = await supabase
+      .from('quotations')
+      .select('*')
+      .eq('user_id', session.user.id)
+      .order('created_at', { ascending: false });
+
+    if (error) {
+      console.error('Error loading quotations:', error);
+      setIsLoading(false);
+      return;
+    }
+
+    if (data) {
+      setQuotations(data.map(q => ({
+        id: q.id,
+        number: q.number,
+        clientName: q.client_name,
+        clientPhone: q.client_phone || undefined,
+        clientEmail: q.client_email || undefined,
+        notes: q.notes || undefined,
+        items: (q.items as unknown) as QuotationItem[],
+        discount: Number(q.discount),
+        discountType: q.discount_type as 'percentage' | 'fixed',
+        subtotal: Number(q.subtotal),
+        total: Number(q.total),
+        status: q.status as 'draft' | 'sent' | 'accepted' | 'rejected' | 'converted',
+        validUntil: q.valid_until || undefined,
+        convertedToOrderId: q.converted_to_order_id || undefined,
+        createdAt: q.created_at,
+      })));
+    }
+    setIsLoading(false);
+  }, [session?.user]);
+
   useEffect(() => {
-    saveQuotations(quotations);
-  }, [quotations]);
+    loadQuotations();
+  }, [loadQuotations]);
 
   const generateQuotationNumber = useCallback(() => {
     const now = new Date();
@@ -57,70 +75,132 @@ export function QuotationsProvider({ children }: { children: ReactNode }) {
     const month = (now.getMonth() + 1).toString().padStart(2, '0');
     const day = now.getDate().toString().padStart(2, '0');
     
-    // Get current quotations to find the next number
-    const currentQuotations = loadQuotations();
     const todayPrefix = `COT-${year}${month}${day}`;
-    const todayQuotations = currentQuotations.filter(q => q.number.startsWith(todayPrefix));
+    const todayQuotations = quotations.filter(q => q.number.startsWith(todayPrefix));
     const nextNumber = todayQuotations.length + 1;
     
     return `${todayPrefix}-${nextNumber.toString().padStart(3, '0')}`;
-  }, []);
+  }, [quotations]);
 
-  const addQuotation = useCallback((quotation: Omit<Quotation, 'id' | 'number' | 'createdAt'>): Quotation => {
+  const addQuotation = useCallback(async (quotation: Omit<Quotation, 'id' | 'number' | 'createdAt'>): Promise<Quotation | null> => {
+    if (!session?.user) return null;
+
+    const number = generateQuotationNumber();
+
+    const { data, error } = await supabase
+      .from('quotations')
+      .insert([{
+        user_id: session.user.id,
+        number,
+        client_name: quotation.clientName,
+        client_phone: quotation.clientPhone,
+        client_email: quotation.clientEmail,
+        notes: quotation.notes,
+        items: JSON.parse(JSON.stringify(quotation.items)),
+        discount: quotation.discount,
+        discount_type: quotation.discountType,
+        subtotal: quotation.subtotal,
+        total: quotation.total,
+        status: quotation.status,
+        valid_until: quotation.validUntil,
+        converted_to_order_id: quotation.convertedToOrderId,
+      }])
+      .select()
+      .single();
+
+    if (error) {
+      console.error('Error adding quotation:', error);
+      return null;
+    }
+
     const newQuotation: Quotation = {
-      ...quotation,
-      id: crypto.randomUUID(),
-      number: generateQuotationNumber(),
-      createdAt: new Date().toISOString(),
+      id: data.id,
+      number: data.number,
+      clientName: data.client_name,
+      clientPhone: data.client_phone || undefined,
+      clientEmail: data.client_email || undefined,
+      notes: data.notes || undefined,
+      items: (data.items as unknown) as QuotationItem[],
+      discount: Number(data.discount),
+      discountType: data.discount_type as 'percentage' | 'fixed',
+      subtotal: Number(data.subtotal),
+      total: Number(data.total),
+      status: data.status as 'draft' | 'sent' | 'accepted' | 'rejected' | 'converted',
+      validUntil: data.valid_until || undefined,
+      convertedToOrderId: data.converted_to_order_id || undefined,
+      createdAt: data.created_at,
     };
-    
-    setQuotations(prev => {
-      const updated = [newQuotation, ...prev];
-      // Immediately persist to ensure data is saved
-      saveQuotations(updated);
-      return updated;
-    });
-    
+
+    setQuotations(prev => [newQuotation, ...prev]);
     return newQuotation;
-  }, [generateQuotationNumber]);
+  }, [session?.user, generateQuotationNumber]);
 
-  const updateQuotation = useCallback((id: string, updates: Partial<Quotation>) => {
-    setQuotations(prev => {
-      const updated = prev.map(q => q.id === id ? { ...q, ...updates } : q);
-      saveQuotations(updated);
-      return updated;
-    });
-  }, []);
+  const updateQuotation = useCallback(async (id: string, updates: Partial<Quotation>) => {
+    if (!session?.user) return;
 
-  const deleteQuotation = useCallback((id: string) => {
-    setQuotations(prev => {
-      const updated = prev.filter(q => q.id !== id);
-      saveQuotations(updated);
-      return updated;
-    });
-  }, []);
+    const updateData: Record<string, unknown> = { updated_at: new Date().toISOString() };
+    if (updates.clientName !== undefined) updateData.client_name = updates.clientName;
+    if (updates.clientPhone !== undefined) updateData.client_phone = updates.clientPhone;
+    if (updates.clientEmail !== undefined) updateData.client_email = updates.clientEmail;
+    if (updates.notes !== undefined) updateData.notes = updates.notes;
+    if (updates.items !== undefined) updateData.items = JSON.parse(JSON.stringify(updates.items));
+    if (updates.discount !== undefined) updateData.discount = updates.discount;
+    if (updates.discountType !== undefined) updateData.discount_type = updates.discountType;
+    if (updates.subtotal !== undefined) updateData.subtotal = updates.subtotal;
+    if (updates.total !== undefined) updateData.total = updates.total;
+    if (updates.status !== undefined) updateData.status = updates.status;
+    if (updates.validUntil !== undefined) updateData.valid_until = updates.validUntil;
+    if (updates.convertedToOrderId !== undefined) updateData.converted_to_order_id = updates.convertedToOrderId;
 
-  const duplicateQuotation = useCallback((id: string): Quotation | null => {
+    const { error } = await supabase
+      .from('quotations')
+      .update(updateData)
+      .eq('id', id)
+      .eq('user_id', session.user.id);
+
+    if (error) {
+      console.error('Error updating quotation:', error);
+      return;
+    }
+
+    setQuotations(prev => prev.map(q => q.id === id ? { ...q, ...updates } : q));
+  }, [session?.user]);
+
+  const deleteQuotation = useCallback(async (id: string) => {
+    if (!session?.user) return;
+
+    const { error } = await supabase
+      .from('quotations')
+      .delete()
+      .eq('id', id)
+      .eq('user_id', session.user.id);
+
+    if (error) {
+      console.error('Error deleting quotation:', error);
+      return;
+    }
+
+    setQuotations(prev => prev.filter(q => q.id !== id));
+  }, [session?.user]);
+
+  const duplicateQuotation = useCallback(async (id: string): Promise<Quotation | null> => {
     const original = quotations.find(q => q.id === id);
     if (!original) return null;
 
-    const newQuotation: Quotation = {
-      ...original,
-      id: crypto.randomUUID(),
-      number: generateQuotationNumber(),
-      createdAt: new Date().toISOString(),
+    return addQuotation({
+      clientName: original.clientName,
+      clientPhone: original.clientPhone,
+      clientEmail: original.clientEmail,
+      notes: original.notes,
+      items: original.items,
+      discount: original.discount,
+      discountType: original.discountType,
+      subtotal: original.subtotal,
+      total: original.total,
       status: 'draft',
-      convertedToOrderId: undefined,
-    };
-    
-    setQuotations(prev => {
-      const updated = [newQuotation, ...prev];
-      saveQuotations(updated);
-      return updated;
+      validUntil: original.validUntil,
     });
-    
-    return newQuotation;
-  }, [quotations, generateQuotationNumber]);
+  }, [quotations, addQuotation]);
 
   const getQuotation = useCallback((id: string) => {
     return quotations.find(q => q.id === id);
@@ -139,9 +219,14 @@ export function QuotationsProvider({ children }: { children: ReactNode }) {
     return { subtotal, total };
   }, []);
 
+  const refreshQuotations = useCallback(async () => {
+    await loadQuotations();
+  }, [loadQuotations]);
+
   return (
     <QuotationsContext.Provider value={{
       quotations,
+      isLoading,
       addQuotation,
       updateQuotation,
       deleteQuotation,
@@ -149,6 +234,7 @@ export function QuotationsProvider({ children }: { children: ReactNode }) {
       getQuotation,
       calculateTotals,
       generateQuotationNumber,
+      refreshQuotations,
     }}>
       {children}
     </QuotationsContext.Provider>
