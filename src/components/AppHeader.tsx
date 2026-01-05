@@ -24,9 +24,14 @@ export function AppHeader({ title, showGreeting = false, showBack = false }: App
 
   const handleInstall = async () => {
     console.log('[PWA] Header install button clicked');
-    const installed = await promptInstall();
-    if (installed) {
-      toast.success('¡App instalada correctamente!');
+    try {
+      const installed = await promptInstall();
+      if (installed) {
+        toast.success('¡App instalada correctamente!');
+      }
+    } catch (error) {
+      console.error('[PWA] Error en instalación:', error);
+      toast.error('Error al instalar. Intenta desde el menú del navegador.');
     }
   };
 

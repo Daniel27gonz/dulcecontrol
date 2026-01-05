@@ -1,8 +1,9 @@
 import { motion, AnimatePresence } from 'framer-motion';
 import { X, Share, Download, Sparkles, Zap, ShieldCheck, MoreVertical, Plus, ArrowUp, Smartphone, Monitor } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { usePWAInstall, Platform } from '@/hooks/usePWAInstall';
+import { usePWAInstall } from '@/hooks/usePWAInstall';
 import { useState, useEffect } from 'react';
+import { toast } from 'sonner';
 
 export function InstallPrompt() {
   const { isInstallable, isInstalled, isIOS, isAndroid, platform, isSafari, isChrome, promptInstall } = usePWAInstall();
@@ -72,28 +73,30 @@ export function InstallPrompt() {
     setIsInstalling(true);
     
     try {
+      // Siempre intentar primero el prompt nativo si está disponible
       if (isInstallable) {
-        console.log('[PWA Prompt] 📲 Intentando instalación automática...');
+        console.log('[PWA Prompt] 📲 Ejecutando prompt de instalación nativo...');
         const installed = await promptInstall();
         if (installed) {
           console.log('[PWA Prompt] ✅ Instalación exitosa!');
-          setShowPrompt(false);
+          toast.success('¡App instalada correctamente!');
         } else {
-          console.log('[PWA Prompt] ⚠️ Usuario canceló instalación');
-          // No mostrar instrucciones, simplemente cerrar
-          setShowPrompt(false);
+          console.log('[PWA Prompt] ⚠️ Usuario canceló o cerró el prompt');
         }
+        setShowPrompt(false);
       } else if (isIOS) {
-        // Solo en iOS mostramos instrucciones porque no soporta beforeinstallprompt
+        // iOS no soporta beforeinstallprompt, mostrar instrucciones
         console.log('[PWA Prompt] 📱 iOS detectado, mostrando instrucciones');
         setShowInstructions(true);
       } else {
-        // En otros navegadores que no disparan el evento, cerrar
-        console.log('[PWA Prompt] ⚠️ No hay prompt nativo disponible');
+        // Para navegadores sin soporte, cerrar el popup
+        console.log('[PWA Prompt] ⚠️ Navegador sin soporte de instalación PWA');
+        toast.info('Tu navegador no soporta instalación directa. Usa el menú del navegador.');
         setShowPrompt(false);
       }
     } catch (error) {
-      console.error('[PWA Prompt] ❌ Error:', error);
+      console.error('[PWA Prompt] ❌ Error durante instalación:', error);
+      toast.error('Error al intentar instalar. Intenta desde el menú del navegador.');
       setShowPrompt(false);
     } finally {
       setIsInstalling(false);
