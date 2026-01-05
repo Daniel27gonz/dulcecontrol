@@ -1,5 +1,5 @@
 import { useNavigate, Link } from 'react-router-dom';
-import { LogOut, Download, Settings, ArrowLeft } from 'lucide-react';
+import { LogOut, Download, Settings, ArrowLeft, Zap } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useApp } from '@/context/AppContext';
 import { usePWAInstall } from '@/hooks/usePWAInstall';
@@ -14,7 +14,7 @@ interface AppHeaderProps {
 export function AppHeader({ title, showGreeting = false, showBack = false }: AppHeaderProps) {
   const navigate = useNavigate();
   const { logout, user, settings } = useApp();
-  const { isInstallable, isInstalled, promptInstall } = usePWAInstall();
+  const { isInstallable, isInstalled, promptInstall, hasNativePrompt, isIOS } = usePWAInstall();
 
   const handleLogout = () => {
     logout();
@@ -24,14 +24,32 @@ export function AppHeader({ title, showGreeting = false, showBack = false }: App
 
   const handleInstall = async () => {
     console.log('[PWA] Header install button clicked');
+    console.log('[PWA] hasNativePrompt:', hasNativePrompt);
+    
     try {
-      const installed = await promptInstall();
-      if (installed) {
-        toast.success('¡App instalada correctamente!');
+      if (hasNativePrompt) {
+        const installed = await promptInstall();
+        if (installed) {
+          toast.success('¡App instalada correctamente! 🎉', {
+            description: 'Búscala en tu pantalla de inicio'
+          });
+        }
+      } else if (isIOS) {
+        toast.info('Para instalar en iOS:', {
+          description: 'Toca Compartir → Agregar a pantalla de inicio',
+          duration: 5000
+        });
+      } else {
+        toast.info('Busca el ícono de instalación', {
+          description: 'En la barra de direcciones de tu navegador',
+          duration: 5000
+        });
       }
     } catch (error) {
       console.error('[PWA] Error en instalación:', error);
-      toast.error('Error al instalar. Intenta desde el menú del navegador.');
+      toast.error('Error al instalar', {
+        description: 'Intenta desde el menú del navegador'
+      });
     }
   };
 
