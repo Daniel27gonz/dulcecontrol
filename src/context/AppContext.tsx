@@ -229,6 +229,49 @@ export function AppProvider({ children }: { children: ReactNode }) {
 
   // Initialize auth state
   useEffect(() => {
+  const checkSessionAndAccess = async () => {
+    const { data: { session: existingSession } } = await supabase.auth.getSession();
+
+    if (!existingSession?.user?.email) {
+      setSession(null);
+      setUser(null);
+      setIsLoading(false);
+      return;
+    }
+
+    const email = existingSession.user.email;
+
+    const { data: accessData, error } = await supabase
+      .from('access')
+      .select('active')
+      .eq('email', email)
+      .single();
+
+    if (error || !accessData || accessData.active !== true) {
+      await supabase.auth.signOut();
+      setSession(null);
+      setUser(null);
+      setIsLoading(false);
+      return;
+    }
+
+    setSession(existingSession);
+    await loadUserProfile(existingSession.user.id, email);
+    await loadUserData(existingSession.user.id);
+    setIsLoading(false);
+  };
+
+  checkSessionAndAccess();
+
+  const { data: { subscription } } = supabase.auth.onAuthStateChange(() => {
+    checkSessionAndAccess();
+  });
+
+  return () => {
+    subscription.unsubscribe();
+  };
+}, []);
+
     // Set up auth state listener FIRST
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       (event, newSession) => {
@@ -253,38 +296,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
     );
 
     // THEN check for existing session
-    supabase.auth.getSession().then(async ({ data: { session: existingSession } }) => {
-  if (!existingSession?.user?.email) {
-    setSession(null);
-    setUser(null);
-    setIsLoading(false);
-    return;
-  }
-
-  const email = existingSession.user.email;
-
-  const { data: accessData, error } = await supabase
-    .from('access')
-    .select('active')
-    .eq('email', email)
-    .single();
-
-  // ❌ NO está en access o está inactivo
-  if (error || !accessData || accessData.active !== true) {
-    await supabase.auth.signOut();
-    setSession(null);
-    setUser(null);
-    setIsLoading(false);
-    return;
-  }
-
-  // ✅ Acceso permitido
-  setSession(existingSession);
-  await loadUserProfile(existingSession.user.id, email);
-  await loadUserData(existingSession.user.id);
-  setIsLoading(false);
-});
-
+    supabase.auth.getSession().then(({ data: { session: existingSession } }) => {
       setSession(existingSession);
       
       if (existingSession?.user) {
