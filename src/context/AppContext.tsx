@@ -257,7 +257,11 @@ export function AppProvider({ children }: { children: ReactNode }) {
     });
 
     // THEN check for existing session
-    supabase.auth.getSession().then(({ data: { session: existingSession } }) => {
+    const loadSession = async () => {
+      const {
+        data: { session: existingSession },
+      } = await supabase.auth.getSession();
+
       setSession(existingSession);
 
       if (existingSession?.user?.email) {
@@ -283,7 +287,9 @@ export function AppProvider({ children }: { children: ReactNode }) {
       }
 
       setIsLoading(false);
-    });
+    };
+
+    loadSession();
 
     return () => subscription.unsubscribe();
   }, []);
