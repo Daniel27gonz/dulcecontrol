@@ -31,145 +31,47 @@ const queryClient = new QueryClient();
 // Protected Route wrapper
 function ProtectedRoute({ children }: { children: React.ReactNode }) {
   const { isAuthenticated, settings } = useApp();
-
+  
   if (!isAuthenticated) {
     return <Navigate to="/login" replace />;
   }
-
+  
   if (!settings.hasCompletedOnboarding) {
     return <Navigate to="/onboarding" replace />;
   }
-
+  
   return <>{children}</>;
 }
 
 // Public Route wrapper (redirects to dashboard if logged in)
 function PublicRoute({ children }: { children: React.ReactNode }) {
   const { isAuthenticated, settings } = useApp();
-
+  
   if (isAuthenticated && settings.hasCompletedOnboarding) {
     return <Navigate to="/dashboard" replace />;
   }
-
+  
   return <>{children}</>;
 }
 
 function AppRoutes() {
   return (
     <Routes>
-      <Route
-        path="/"
-        element={
-          <PublicRoute>
-            <WelcomePage />
-          </PublicRoute>
-        }
-      />
-      <Route
-        path="/login"
-        element={
-          <PublicRoute>
-            <LoginPage />
-          </PublicRoute>
-        }
-      />
-      <Route
-        path="/register"
-        element={
-          <PublicRoute>
-            <RegisterPage />
-          </PublicRoute>
-        }
-      />
+      <Route path="/" element={<PublicRoute><WelcomePage /></PublicRoute>} />
+      <Route path="/login" element={<PublicRoute><LoginPage /></PublicRoute>} />
+      <Route path="/register" element={<PublicRoute><RegisterPage /></PublicRoute>} />
       <Route path="/onboarding" element={<OnboardingPage />} />
-      <Route
-        path="/dashboard"
-        element={
-          <ProtectedRoute>
-            <DashboardPage />
-          </ProtectedRoute>
-        }
-      />
-      <Route
-        path="/calculator"
-        element={
-          <ProtectedRoute>
-            <CalculatorPage />
-          </ProtectedRoute>
-        }
-      />
-      <Route
-        path="/recipes"
-        element={
-          <ProtectedRoute>
-            <RecipesPage />
-          </ProtectedRoute>
-        }
-      />
-      <Route
-        path="/orders"
-        element={
-          <ProtectedRoute>
-            <OrdersPage />
-          </ProtectedRoute>
-        }
-      />
-      <Route
-        path="/quotations"
-        element={
-          <ProtectedRoute>
-            <QuotationsPage />
-          </ProtectedRoute>
-        }
-      />
-      <Route
-        path="/ingredients"
-        element={
-          <ProtectedRoute>
-            <IngredientsPage />
-          </ProtectedRoute>
-        }
-      />
-      <Route
-        path="/labor"
-        element={
-          <ProtectedRoute>
-            <LaborPage />
-          </ProtectedRoute>
-        }
-      />
-      <Route
-        path="/indirect-costs"
-        element={
-          <ProtectedRoute>
-            <IndirectCostsPage />
-          </ProtectedRoute>
-        }
-      />
-      <Route
-        path="/finances"
-        element={
-          <ProtectedRoute>
-            <FinancesPage />
-          </ProtectedRoute>
-        }
-      />
-      <Route
-        path="/settings"
-        element={
-          <ProtectedRoute>
-            <SettingsPage />
-          </ProtectedRoute>
-        }
-      />
-      <Route
-        path="/help"
-        element={
-          <ProtectedRoute>
-            <HelpPage />
-          </ProtectedRoute>
-        }
-      />
+      <Route path="/dashboard" element={<ProtectedRoute><DashboardPage /></ProtectedRoute>} />
+      <Route path="/calculator" element={<ProtectedRoute><CalculatorPage /></ProtectedRoute>} />
+      <Route path="/recipes" element={<ProtectedRoute><RecipesPage /></ProtectedRoute>} />
+      <Route path="/orders" element={<ProtectedRoute><OrdersPage /></ProtectedRoute>} />
+      <Route path="/quotations" element={<ProtectedRoute><QuotationsPage /></ProtectedRoute>} />
+      <Route path="/ingredients" element={<ProtectedRoute><IngredientsPage /></ProtectedRoute>} />
+      <Route path="/labor" element={<ProtectedRoute><LaborPage /></ProtectedRoute>} />
+      <Route path="/indirect-costs" element={<ProtectedRoute><IndirectCostsPage /></ProtectedRoute>} />
+      <Route path="/finances" element={<ProtectedRoute><FinancesPage /></ProtectedRoute>} />
+      <Route path="/settings" element={<ProtectedRoute><SettingsPage /></ProtectedRoute>} />
+      <Route path="/help" element={<ProtectedRoute><HelpPage /></ProtectedRoute>} />
       <Route path="*" element={<NotFound />} />
     </Routes>
   );
