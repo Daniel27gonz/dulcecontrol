@@ -199,4 +199,3 @@ const App = () => (
 );
 
 export default App;
-supabase.auth.getSession();

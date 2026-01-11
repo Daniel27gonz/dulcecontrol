@@ -233,7 +233,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
 
   // Initialize auth state
   useEffect(() => {
-    const checkSessionAndAccess = async () => {
+    const initializeSession = async () => {
       const {
         data: { session: existingSession },
       } = await supabase.auth.getSession();
@@ -245,30 +245,26 @@ export function AppProvider({ children }: { children: ReactNode }) {
         return;
       }
 
-      const email = existingSession.user.email;
-
-      const { data: accessData, error } = await supabase.from("access").select("active").eq("email", email).single();
-
-      if (error || !accessData || accessData.active !== true) {
-        await supabase.auth.signOut();
-        setSession(null);
-        setUser(null);
-        setIsLoading(false);
-        return;
-      }
-
       setSession(existingSession);
-      await loadUserProfile(existingSession.user.id, email);
+      await loadUserProfile(existingSession.user.id, existingSession.user.email);
       await loadUserData(existingSession.user.id);
       setIsLoading(false);
     };
 
-    checkSessionAndAccess();
+    initializeSession();
 
     const {
       data: { subscription },
-    } = supabase.auth.onAuthStateChange(() => {
-      checkSessionAndAccess();
+    } = supabase.auth.onAuthStateChange(async (_event, newSession) => {
+      if (newSession?.user?.email) {
+        setSession(newSession);
+        await loadUserProfile(newSession.user.id, newSession.user.email);
+        await loadUserData(newSession.user.id);
+      } else {
+        setSession(null);
+        setUser(null);
+      }
+      setIsLoading(false);
     });
 
     return () => {
