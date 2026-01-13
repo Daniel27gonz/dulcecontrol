@@ -31,6 +31,8 @@ import { es } from 'date-fns/locale';
 import { cn } from '@/lib/utils';
 import { useApp } from '@/context/AppContext';
 import { useQuotations } from '@/hooks/useQuotations';
+import { useIndirectCosts } from '@/context/IndirectCostsContext';
+import { useLabor } from '@/context/LaborContext';
 import { QuotationItem, Quotation } from '@/types/quotation';
 import { toast } from '@/hooks/use-toast';
 
@@ -44,6 +46,8 @@ interface QuotationFormProps {
 export function QuotationForm({ quotation, trigger, onClose, onSave }: QuotationFormProps) {
   const { recipes, calculateRecipeCost, settings } = useApp();
   const { addQuotation, updateQuotation, calculateTotals } = useQuotations();
+  const { getTotalIndirectCosts } = useIndirectCosts();
+  const { getTotalMonthlyHours, getLaborCostPerHour } = useLabor();
   const [open, setOpen] = useState(false);
   
   // Form state
@@ -104,14 +108,32 @@ export function QuotationForm({ quotation, trigger, onClose, onSave }: Quotation
     if (!recipe) return;
 
     const cost = calculateRecipeCost(recipe);
+    
+    // Calculate proportional global indirect costs
+    // Based on labor hours assigned to the recipe
+    const totalMonthlyHours = getTotalMonthlyHours();
+    const totalIndirectCosts = getTotalIndirectCosts();
+    const laborCostPerHour = getLaborCostPerHour();
+    
+    // Get labor hours from recipe's indirect costs (if exists)
+    const recipeLaborCost = recipe.indirectCosts?.labor || 0;
+    const estimatedLaborHours = laborCostPerHour > 0 ? recipeLaborCost / laborCostPerHour : 0;
+    
+    // Calculate indirect cost per hour and apply to recipe
+    const indirectCostPerHour = totalMonthlyHours > 0 ? totalIndirectCosts / totalMonthlyHours : 0;
+    const proportionalIndirectCost = Math.round(estimatedLaborHours * indirectCostPerHour * 100) / 100;
+    
+    // Total cost = recipe cost (ingredients + recipe-specific indirect) + proportional global indirect costs
+    const totalCostWithIndirect = Math.round((cost.totalCost + proportionalIndirectCost) * 100) / 100;
+    
     const newItem: QuotationItem = {
       id: crypto.randomUUID(),
       name: recipe.name,
       description: recipe.category,
       quantity: 1,
-      unitPrice: cost.totalCost, // Use base cost, margin will be applied separately
-      total: cost.totalCost,
-      baseCost: cost.totalCost,
+      unitPrice: totalCostWithIndirect, // Use complete cost including indirect costs
+      total: totalCostWithIndirect,
+      baseCost: totalCostWithIndirect,
     };
     setItems([...items, newItem]);
   };
