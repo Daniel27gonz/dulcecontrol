@@ -44,7 +44,7 @@ interface QuotationFormProps {
 }
 
 export function QuotationForm({ quotation, trigger, onClose, onSave }: QuotationFormProps) {
-  const { recipes, calculateRecipeCost, settings } = useApp();
+  const { recipes, settings } = useApp();
   const { addQuotation, updateQuotation, calculateTotals } = useQuotations();
   const { getTotalIndirectCosts } = useIndirectCosts();
   const { getTotalMonthlyHours, getLaborCostPerHour } = useLabor();
@@ -110,36 +110,63 @@ export function QuotationForm({ quotation, trigger, onClose, onSave }: Quotation
     const round2 = (n: number) => Math.round(n * 100) / 100;
     const WASTE_PERCENTAGE = 0.05; // merma fija 5%
 
-    const cost = calculateRecipeCost(recipe);
+    // === FUENTE ÚNICA DE VERDAD: costo_total_con_merma ===
+    // Replica exactamente la lógica de CalculatorPage
 
-    // Calculate proportional global indirect costs
-    // Based on labor hours assigned to the recipe
+    // 1. Costo de ingredientes
+    const ingredientsCost = recipe.ingredients.reduce(
+      (sum, ing) => sum + (ing.pricePerUnit * ing.quantityUsed),
+      0
+    );
+
+    // 2. Horas totales del producto (preparación + horneado + decoración + empaque)
+    const elaborationTime = recipe.elaborationTime || { preparation: 0, baking: 0, decoration: 0, packaging: 0 };
+    const totalElaborationTimeMinutes = elaborationTime.preparation + elaborationTime.baking + elaborationTime.decoration + elaborationTime.packaging;
+    const totalProductHours = Math.max(0, totalElaborationTimeMinutes / 60);
+
+    // 3. Obtener costos globales por hora
+    const laborCostPerHour = getLaborCostPerHour();
     const totalMonthlyHours = getTotalMonthlyHours();
     const totalIndirectCosts = getTotalIndirectCosts();
-    const laborCostPerHour = getLaborCostPerHour();
-
-    // Get labor hours from recipe's indirect costs (if exists)
-    const recipeLaborCost = recipe.indirectCosts?.labor || 0;
-    const estimatedLaborHours = laborCostPerHour > 0 ? recipeLaborCost / laborCostPerHour : 0;
-
-    // Calculate indirect cost per hour and apply to recipe
     const indirectCostPerHour = totalMonthlyHours > 0 ? totalIndirectCosts / totalMonthlyHours : 0;
-    const proportionalIndirectCost = round2(estimatedLaborHours * indirectCostPerHour);
 
-    // Base total cost (ingredientes + indirectos de receta) + indirectos globales proporcionales
-    const totalCostWithIndirect = round2(cost.totalCost + proportionalIndirectCost);
+    // 4. Mano de obra final (horas reales × costo por hora)
+    const laborFinalCost = totalProductHours * laborCostPerHour;
 
-    // Apply merma (5%) as the final step for the value shown in “Precio”
-    const totalCostWithWaste = round2(totalCostWithIndirect * (1 + WASTE_PERCENTAGE));
+    // 5. Costos indirectos finales (horas reales × costo indirecto por hora)
+    const indirectFinalCost = totalProductHours * indirectCostPerHour;
+
+    // 6. Costo de extras (materiales de decoración y empaque)
+    const extras = recipe.extras || [];
+    const extrasCost = extras.reduce(
+      (sum, extra) => sum + (extra.quantity * extra.unitCost),
+      0
+    );
+
+    // 7. Mano de obra adicional de decoración (horas extra específicas)
+    const decorationHours = recipe.decorationHours || 0;
+    const laborDecorationCost = decorationHours * laborCostPerHour;
+
+    // 8. COSTO BASE DEL PRODUCTO — consolidación correcta
+    const baseCost = ingredientsCost + laborFinalCost + indirectFinalCost + extrasCost + laborDecorationCost;
+
+    // 9. Merma (5%)
+    const wasteCost = baseCost * WASTE_PERCENTAGE;
+
+    // 10. COSTO TOTAL CON MERMA — FUENTE ÚNICA DE VERDAD
+    const totalCostWithWaste = round2(baseCost + wasteCost);
+
+    // Validaciones: no negativo, no nulo, 2 decimales
+    const validatedCost = round2(Math.max(0, totalCostWithWaste || 0));
 
     const newItem: QuotationItem = {
       id: crypto.randomUUID(),
       name: recipe.name,
       description: recipe.category,
       quantity: 1,
-      unitPrice: totalCostWithWaste,
-      total: totalCostWithWaste,
-      baseCost: totalCostWithWaste,
+      unitPrice: validatedCost,
+      total: validatedCost,
+      baseCost: validatedCost,
     };
     setItems([...items, newItem]);
   };
