@@ -107,33 +107,39 @@ export function QuotationForm({ quotation, trigger, onClose, onSave }: Quotation
     const recipe = recipes.find(r => r.id === recipeId);
     if (!recipe) return;
 
+    const round2 = (n: number) => Math.round(n * 100) / 100;
+    const WASTE_PERCENTAGE = 0.05; // merma fija 5%
+
     const cost = calculateRecipeCost(recipe);
-    
+
     // Calculate proportional global indirect costs
     // Based on labor hours assigned to the recipe
     const totalMonthlyHours = getTotalMonthlyHours();
     const totalIndirectCosts = getTotalIndirectCosts();
     const laborCostPerHour = getLaborCostPerHour();
-    
+
     // Get labor hours from recipe's indirect costs (if exists)
     const recipeLaborCost = recipe.indirectCosts?.labor || 0;
     const estimatedLaborHours = laborCostPerHour > 0 ? recipeLaborCost / laborCostPerHour : 0;
-    
+
     // Calculate indirect cost per hour and apply to recipe
     const indirectCostPerHour = totalMonthlyHours > 0 ? totalIndirectCosts / totalMonthlyHours : 0;
-    const proportionalIndirectCost = Math.round(estimatedLaborHours * indirectCostPerHour * 100) / 100;
-    
-    // Total cost = recipe cost (ingredients + recipe-specific indirect) + proportional global indirect costs
-    const totalCostWithIndirect = Math.round((cost.totalCost + proportionalIndirectCost) * 100) / 100;
-    
+    const proportionalIndirectCost = round2(estimatedLaborHours * indirectCostPerHour);
+
+    // Base total cost (ingredientes + indirectos de receta) + indirectos globales proporcionales
+    const totalCostWithIndirect = round2(cost.totalCost + proportionalIndirectCost);
+
+    // Apply merma (5%) as the final step for the value shown in “Precio”
+    const totalCostWithWaste = round2(totalCostWithIndirect * (1 + WASTE_PERCENTAGE));
+
     const newItem: QuotationItem = {
       id: crypto.randomUUID(),
       name: recipe.name,
       description: recipe.category,
       quantity: 1,
-      unitPrice: totalCostWithIndirect, // Use complete cost including indirect costs
-      total: totalCostWithIndirect,
-      baseCost: totalCostWithIndirect,
+      unitPrice: totalCostWithWaste,
+      total: totalCostWithWaste,
+      baseCost: totalCostWithWaste,
     };
     setItems([...items, newItem]);
   };
