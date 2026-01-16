@@ -43,16 +43,75 @@ import {
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
 import { useApp, Recipe } from '@/context/AppContext';
+import { useLabor } from '@/context/LaborContext';
+import { useIndirectCosts } from '@/context/IndirectCostsContext';
 import { BottomNav } from '@/components/BottomNav';
 import { AppHeader } from '@/components/AppHeader';
 import { toast } from '@/hooks/use-toast';
 
 export default function RecipesPage() {
   const navigate = useNavigate();
-  const { recipes, settings, calculateRecipeCost, deleteRecipe } = useApp();
+  const { recipes, settings, deleteRecipe } = useApp();
+  const { getLaborCostPerHour, getTotalMonthlyHours } = useLabor();
+  const { getTotalIndirectCosts } = useIndirectCosts();
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedRecipe, setSelectedRecipe] = useState<Recipe | null>(null);
   const [recipeToDelete, setRecipeToDelete] = useState<Recipe | null>(null);
+
+  const round2 = (n: number) => Math.round(n * 100) / 100;
+
+  // Fuente única del costo mostrado aquí: costo_total_con_merma (mismo criterio que calculadora/cotización)
+  const calculateRecipeCost = (recipe: Recipe) => {
+    const WASTE_PERCENTAGE = 0.05;
+
+    const ingredientsCost = recipe.ingredients.reduce(
+      (sum, ing) => sum + ing.pricePerUnit * ing.quantityUsed,
+      0
+    );
+
+    const elaborationTime = recipe.elaborationTime || { preparation: 0, baking: 0, decoration: 0, packaging: 0 };
+    const totalElaborationTimeMinutes =
+      elaborationTime.preparation +
+      elaborationTime.baking +
+      elaborationTime.decoration +
+      elaborationTime.packaging;
+
+    const totalProductHours = Math.max(0, totalElaborationTimeMinutes / 60);
+
+    const laborCostPerHour = getLaborCostPerHour();
+    const totalMonthlyHours = getTotalMonthlyHours();
+    const totalIndirectCosts = getTotalIndirectCosts();
+    const indirectCostPerHour = totalMonthlyHours > 0 ? totalIndirectCosts / totalMonthlyHours : 0;
+
+    const laborFinalCost = totalProductHours * laborCostPerHour;
+    const indirectFinalCost = totalProductHours * indirectCostPerHour;
+
+    const extras = recipe.extras || [];
+    const extrasCost = extras.reduce((sum, extra) => sum + extra.quantity * extra.unitCost, 0);
+
+    const decorationHours = recipe.decorationHours || 0;
+    const laborDecorationCost = decorationHours * laborCostPerHour;
+
+    const baseCost = ingredientsCost + laborFinalCost + indirectFinalCost + extrasCost + laborDecorationCost;
+    const wasteCost = baseCost * WASTE_PERCENTAGE;
+
+    const totalCostWithWaste = round2(Math.max(0, baseCost + wasteCost));
+
+    // Para mantener la UI intacta (2 líneas), mostramos "Gastos indirectos" como TODO lo que no es ingredientes
+    const indirectCost = round2(Math.max(0, totalCostWithWaste - ingredientsCost));
+
+    const marginMultiplier = 1 + (recipe.marginPercentage || 0) / 100;
+    const suggestedPrice = round2(Math.max(0, totalCostWithWaste * marginMultiplier));
+    const profit = round2(Math.max(0, suggestedPrice - totalCostWithWaste));
+
+    return {
+      ingredientsCost: round2(Math.max(0, ingredientsCost)),
+      indirectCost,
+      totalCost: totalCostWithWaste,
+      suggestedPrice,
+      profit,
+    };
+  };
 
   const filteredRecipes = recipes.filter(recipe =>
     recipe.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
