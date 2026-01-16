@@ -183,6 +183,10 @@ export function AppProvider({ children }: { children: ReactNode }) {
         ingredients: (r.ingredients as unknown) as Ingredient[],
         indirectCosts: (r.indirect_costs as unknown) as IndirectCost,
         marginPercentage: Number(r.margin_percentage),
+        portions: r.portions ?? 1,
+        elaborationTime: (r.elaboration_time as unknown) as RecipeElaborationTime ?? { preparation: 0, baking: 0, decoration: 0, packaging: 0 },
+        extras: (r.extras as unknown) as RecipeExtra[] ?? [],
+        decorationHours: Number(r.decoration_hours ?? 0),
         createdAt: r.created_at,
       })));
     }
@@ -330,6 +334,10 @@ export function AppProvider({ children }: { children: ReactNode }) {
         ingredients: JSON.parse(JSON.stringify(recipe.ingredients)),
         indirect_costs: JSON.parse(JSON.stringify(recipe.indirectCosts)),
         margin_percentage: recipe.marginPercentage,
+        portions: recipe.portions ?? 1,
+        elaboration_time: JSON.parse(JSON.stringify(recipe.elaborationTime ?? { preparation: 0, baking: 0, decoration: 0, packaging: 0 })),
+        extras: JSON.parse(JSON.stringify(recipe.extras ?? [])),
+        decoration_hours: recipe.decorationHours ?? 0,
       }])
       .select()
       .single();
@@ -343,6 +351,10 @@ export function AppProvider({ children }: { children: ReactNode }) {
         ingredients: (data.ingredients as unknown) as Ingredient[],
         indirectCosts: (data.indirect_costs as unknown) as IndirectCost,
         marginPercentage: Number(data.margin_percentage),
+        portions: data.portions ?? 1,
+        elaborationTime: (data.elaboration_time as unknown) as RecipeElaborationTime ?? { preparation: 0, baking: 0, decoration: 0, packaging: 0 },
+        extras: (data.extras as unknown) as RecipeExtra[] ?? [],
+        decorationHours: Number(data.decoration_hours ?? 0),
         createdAt: data.created_at,
       }, ...prev]);
     }
@@ -358,6 +370,10 @@ export function AppProvider({ children }: { children: ReactNode }) {
     if (updates.ingredients !== undefined) updateData.ingredients = updates.ingredients;
     if (updates.indirectCosts !== undefined) updateData.indirect_costs = updates.indirectCosts;
     if (updates.marginPercentage !== undefined) updateData.margin_percentage = updates.marginPercentage;
+    if (updates.portions !== undefined) updateData.portions = updates.portions;
+    if (updates.elaborationTime !== undefined) updateData.elaboration_time = updates.elaborationTime;
+    if (updates.extras !== undefined) updateData.extras = updates.extras;
+    if (updates.decorationHours !== undefined) updateData.decoration_hours = updates.decorationHours;
 
     await supabase
       .from('recipes')
