@@ -227,36 +227,48 @@ export type Database = {
         Row: {
           category: string
           created_at: string
+          decoration_hours: number
+          elaboration_time: Json
+          extras: Json
           id: string
           image: string | null
           indirect_costs: Json
           ingredients: Json
           margin_percentage: number
           name: string
+          portions: number
           updated_at: string
           user_id: string
         }
         Insert: {
           category: string
           created_at?: string
+          decoration_hours?: number
+          elaboration_time?: Json
+          extras?: Json
           id?: string
           image?: string | null
           indirect_costs?: Json
           ingredients?: Json
           margin_percentage?: number
           name: string
+          portions?: number
           updated_at?: string
           user_id: string
         }
         Update: {
           category?: string
           created_at?: string
+          decoration_hours?: number
+          elaboration_time?: Json
+          extras?: Json
           id?: string
           image?: string | null
           indirect_costs?: Json
           ingredients?: Json
           margin_percentage?: number
           name?: string
+          portions?: number
           updated_at?: string
           user_id?: string
         }
