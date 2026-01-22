@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { motion } from 'framer-motion';
-import { Palette, Building2, Phone, Mail, Check } from 'lucide-react';
+import { Palette, Building2, Phone, Mail, Check, ImageIcon } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Button } from '@/components/ui/button';
@@ -12,6 +12,7 @@ import {
   COLOR_PRESETS,
 } from '@/types/pdfSettings';
 import { cn } from '@/lib/utils';
+import { LogoUpload } from './LogoUpload';
 
 interface PDFSettingsFormProps {
   settings: PDFSettings;
@@ -55,6 +56,18 @@ export function PDFSettingsForm({
               onChange={(e) => onSettingsChange({ businessName: e.target.value.slice(0, 100) })}
               className="mt-1"
               maxLength={100}
+            />
+          </div>
+
+          {/* Logo upload */}
+          <div>
+            <Label className="flex items-center gap-1 mb-2">
+              <ImageIcon className="w-3 h-3" />
+              Logo del negocio
+            </Label>
+            <LogoUpload
+              logoUrl={settings.logoUrl}
+              onLogoChange={(url) => onSettingsChange({ logoUrl: url })}
             />
           </div>
 

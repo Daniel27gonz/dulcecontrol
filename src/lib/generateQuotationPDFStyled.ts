@@ -9,6 +9,23 @@ interface StyledPDFOptions {
   pdfSettings: PDFSettings;
 }
 
+// Helper to load image as base64
+async function loadImageAsBase64(url: string): Promise<string | null> {
+  try {
+    const response = await fetch(url);
+    const blob = await response.blob();
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onloadend = () => resolve(reader.result as string);
+      reader.onerror = reject;
+      reader.readAsDataURL(blob);
+    });
+  } catch (error) {
+    console.error('Error loading image:', error);
+    return null;
+  }
+}
+
 function hexToRGB(hex: string): [number, number, number] {
   const result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
   return result
@@ -85,10 +102,10 @@ function getStyleConfig(style: PDFStyle, primaryColor: [number, number, number])
   }
 }
 
-export function generateStyledQuotationPDF(
+export async function generateStyledQuotationPDF(
   quotation: Quotation,
   options: StyledPDFOptions
-): jsPDF {
+): Promise<jsPDF> {
   const { currencySymbol, pdfSettings } = options;
   const doc = new jsPDF();
   const pageWidth = doc.internal.pageSize.getWidth();
@@ -118,11 +135,27 @@ export function generateStyledQuotationPDF(
     doc.line(margin, styleConfig.headerHeight - 5, pageWidth - margin, styleConfig.headerHeight - 5);
   }
 
+  // Logo (if available)
+  let logoOffset = 0;
+  if (pdfSettings.logoUrl) {
+    try {
+      const logoData = await loadImageAsBase64(pdfSettings.logoUrl);
+      if (logoData) {
+        const logoHeight = 18;
+        const logoWidth = 30; // Will be adjusted by aspect ratio
+        doc.addImage(logoData, 'PNG', margin, y + 3, logoWidth, logoHeight);
+        logoOffset = logoWidth + 5;
+      }
+    } catch (error) {
+      console.error('Error loading logo:', error);
+    }
+  }
+
   // Business name
   doc.setTextColor(...styleConfig.headerTextColor);
   doc.setFontSize(styleConfig.titleFontSize);
   doc.setFont('helvetica', 'bold');
-  doc.text(pdfSettings.businessName || 'Mi Negocio de Postres', margin, y + 12);
+  doc.text(pdfSettings.businessName || 'Mi Negocio de Postres', margin + logoOffset, y + 12);
 
   // Quotation label
   doc.setFontSize(12);
@@ -321,17 +354,17 @@ export function generateStyledQuotationPDF(
   return doc;
 }
 
-export function downloadStyledQuotationPDF(quotation: Quotation, options: StyledPDFOptions): void {
-  const doc = generateStyledQuotationPDF(quotation, options);
+export async function downloadStyledQuotationPDF(quotation: Quotation, options: StyledPDFOptions): Promise<void> {
+  const doc = await generateStyledQuotationPDF(quotation, options);
   doc.save(`cotizacion-${quotation.number}.pdf`);
 }
 
-export function getStyledQuotationPDFBlob(quotation: Quotation, options: StyledPDFOptions): Blob {
-  const doc = generateStyledQuotationPDF(quotation, options);
+export async function getStyledQuotationPDFBlob(quotation: Quotation, options: StyledPDFOptions): Promise<Blob> {
+  const doc = await generateStyledQuotationPDF(quotation, options);
   return doc.output('blob');
 }
 
-export function getStyledQuotationPDFDataUrl(quotation: Quotation, options: StyledPDFOptions): string {
-  const doc = generateStyledQuotationPDF(quotation, options);
+export async function getStyledQuotationPDFDataUrl(quotation: Quotation, options: StyledPDFOptions): Promise<string> {
+  const doc = await generateStyledQuotationPDF(quotation, options);
   return doc.output('dataurlstring');
 }

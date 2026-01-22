@@ -35,7 +35,7 @@ export function PDFPreview({ quotation, pdfSettings, currencySymbol }: PDFPrevie
       // Small delay to prevent excessive regeneration
       await new Promise((resolve) => setTimeout(resolve, 100));
 
-      const dataUrl = getStyledQuotationPDFDataUrl(quotation, {
+      const dataUrl = await getStyledQuotationPDFDataUrl(quotation, {
         currencySymbol,
         pdfSettings,
       });

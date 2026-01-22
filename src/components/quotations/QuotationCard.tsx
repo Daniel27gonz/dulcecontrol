@@ -11,7 +11,6 @@ import {
   ShoppingCart,
   Clock,
   Copy,
-  Settings2
 } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -38,7 +37,6 @@ import { useApp } from '@/context/AppContext';
 import { useQuotations } from '@/hooks/useQuotations';
 import { QuotationForm } from './QuotationForm';
 import { PDFCustomizeDialog } from './PDFCustomizeDialog';
-import { downloadQuotationPDF, getQuotationPDFBlob } from '@/lib/generateQuotationPDF';
 import { format, parseISO, isPast } from 'date-fns';
 import { es } from 'date-fns/locale';
 import { toast } from '@/hooks/use-toast';
@@ -68,17 +66,6 @@ export function QuotationCard({ quotation, onUpdate }: QuotationCardProps) {
 
   const formatCurrency = (amount: number) => {
     return `${settings.currencySymbol}${amount.toLocaleString('es-MX', { minimumFractionDigits: 2 })}`;
-  };
-
-  const handleDownloadPDF = () => {
-    downloadQuotationPDF(quotation, {
-      businessName: settings.userName || 'Mi Negocio de Postres',
-      currencySymbol: settings.currencySymbol,
-    });
-    toast({
-      title: 'PDF descargado',
-      description: `Cotización #${quotation.number} guardada`,
-    });
   };
 
   const handleSendWhatsApp = async () => {
@@ -286,19 +273,12 @@ ${quotation.notes ? `\n📝 ${quotation.notes}` : ''}
                 <PDFCustomizeDialog
                   quotation={quotation}
                   trigger={
-                    <Button variant="outline" size="sm" title="Personalizar y descargar PDF">
-                      <Settings2 className="w-4 h-4" />
+                    <Button variant="outline" size="sm" title="Descargar PDF">
+                      <Download className="w-4 h-4 mr-1" />
+                      PDF
                     </Button>
                   }
                 />
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={handleDownloadPDF}
-                  title="Descarga rápida"
-                >
-                  <Download className="w-4 h-4" />
-                </Button>
                 <Button
                   variant="warm"
                   size="sm"
