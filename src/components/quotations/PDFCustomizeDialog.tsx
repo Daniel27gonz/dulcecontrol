@@ -53,7 +53,7 @@ export function PDFCustomizeDialog({ quotation, trigger }: PDFCustomizeDialogPro
     return success;
   };
 
-  const handleDownload = () => {
+  const handleDownload = async () => {
     if (!localSettings.businessName.trim()) {
       toast({
         title: 'Nombre requerido',
@@ -64,19 +64,28 @@ export function PDFCustomizeDialog({ quotation, trigger }: PDFCustomizeDialogPro
       return;
     }
 
-    downloadStyledQuotationPDF(quotation, {
-      currencySymbol: appSettings.currencySymbol,
-      pdfSettings: localSettings,
-    });
+    try {
+      await downloadStyledQuotationPDF(quotation, {
+        currencySymbol: appSettings.currencySymbol,
+        pdfSettings: localSettings,
+      });
 
-    toast({
-      title: 'PDF descargado',
-      description: `Cotización #${quotation.number} guardada`,
-    });
+      toast({
+        title: 'PDF descargado',
+        description: `Cotización #${quotation.number} guardada`,
+      });
 
-    // Save settings after successful download
-    saveSettings(localSettings);
-    setIsOpen(false);
+      // Save settings after successful download
+      saveSettings(localSettings);
+      setIsOpen(false);
+    } catch (error) {
+      console.error('Error downloading PDF:', error);
+      toast({
+        title: 'Error',
+        description: 'No se pudo descargar el PDF',
+        variant: 'destructive',
+      });
+    }
   };
 
   return (
