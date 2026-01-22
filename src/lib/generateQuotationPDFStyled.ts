@@ -151,26 +151,11 @@ export async function generateStyledQuotationPDF(
     }
   }
 
-  // Business name
+  // Business name - centered
   doc.setTextColor(...styleConfig.headerTextColor);
   doc.setFontSize(styleConfig.titleFontSize);
   doc.setFont('helvetica', 'bold');
-  doc.text(pdfSettings.businessName || 'Mi Negocio de Postres', margin + logoOffset, y + 12);
-
-  // Quotation label
-  doc.setFontSize(12);
-  doc.setFont('helvetica', 'normal');
-  doc.text('COTIZACIÓN', pageWidth - margin, y + 8, { align: 'right' });
-
-  doc.setFontSize(16);
-  doc.setFont('helvetica', 'bold');
-  doc.text(`#${quotation.number}`, pageWidth - margin, y + 18, { align: 'right' });
-
-  // Date
-  doc.setFontSize(10);
-  doc.setFont('helvetica', 'normal');
-  const createdDate = format(parseISO(quotation.createdAt), "d 'de' MMMM, yyyy", { locale: es });
-  doc.text(`Fecha: ${createdDate}`, pageWidth - margin, y + 28, { align: 'right' });
+  doc.text(pdfSettings.businessName || 'Mi Negocio de Postres', pageWidth / 2, y + 15, { align: 'center' });
 
   y = styleConfig.headerHeight + 10;
 
