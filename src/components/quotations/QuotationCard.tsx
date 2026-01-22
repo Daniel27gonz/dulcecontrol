@@ -10,7 +10,8 @@ import {
   CheckCircle,
   ShoppingCart,
   Clock,
-  Copy
+  Copy,
+  Settings2
 } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -36,6 +37,7 @@ import { Quotation } from '@/types/quotation';
 import { useApp } from '@/context/AppContext';
 import { useQuotations } from '@/hooks/useQuotations';
 import { QuotationForm } from './QuotationForm';
+import { PDFCustomizeDialog } from './PDFCustomizeDialog';
 import { downloadQuotationPDF, getQuotationPDFBlob } from '@/lib/generateQuotationPDF';
 import { format, parseISO, isPast } from 'date-fns';
 import { es } from 'date-fns/locale';
@@ -281,10 +283,19 @@ ${quotation.notes ? `\n📝 ${quotation.notes}` : ''}
                 </div>
               </div>
               <div className="flex gap-2">
+                <PDFCustomizeDialog
+                  quotation={quotation}
+                  trigger={
+                    <Button variant="outline" size="sm" title="Personalizar y descargar PDF">
+                      <Settings2 className="w-4 h-4" />
+                    </Button>
+                  }
+                />
                 <Button
                   variant="outline"
                   size="sm"
                   onClick={handleDownloadPDF}
+                  title="Descarga rápida"
                 >
                   <Download className="w-4 h-4" />
                 </Button>
