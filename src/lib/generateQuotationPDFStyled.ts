@@ -150,7 +150,13 @@ export async function generateStyledQuotationPDF(
   doc.setTextColor(...styleConfig.headerTextColor);
   doc.setFontSize(styleConfig.titleFontSize);
   doc.setFont('helvetica', 'bold');
-  doc.text(pdfSettings.businessName || 'Mi Negocio de Postres', pageWidth / 2, y + 15, { align: 'center' });
+  doc.text(pdfSettings.businessName || 'Mi Negocio de Postres', pageWidth / 2, y + 12, { align: 'center' });
+
+  // Creation date - centered below business name
+  doc.setFontSize(10);
+  doc.setFont('helvetica', 'normal');
+  const creationDate = format(parseISO(quotation.createdAt), "d 'de' MMMM, yyyy", { locale: es });
+  doc.text(creationDate, pageWidth / 2, y + 22, { align: 'center' });
 
   y = styleConfig.headerHeight + 10;
 
