@@ -128,12 +128,7 @@ export async function generateStyledQuotationPDF(
     doc.rect(0, 0, pageWidth, styleConfig.headerHeight, 'F');
   }
 
-  // Border for minimal style
-  if (pdfSettings.style === 'minimal') {
-    doc.setDrawColor(...primaryColor);
-    doc.setLineWidth(2);
-    doc.line(margin, styleConfig.headerHeight - 5, pageWidth - margin, styleConfig.headerHeight - 5);
-  }
+  // No decorative borders - clean header
 
   // Logo (if available)
   let logoOffset = 0;
