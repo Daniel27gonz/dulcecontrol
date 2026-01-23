@@ -216,6 +216,12 @@ export function QuotationHTMLPreview({
               <p className="flex items-baseline gap-2">
                 <span className="font-medium whitespace-nowrap">{pdfSettings.eventDateLabel}:</span>
                 <span className="border-b border-dashed border-gray-400 flex-1">
+                  {quotation.deliveryDate ? format(parseISO(quotation.deliveryDate), "d 'de' MMMM, yyyy", { locale: es }) : ''}
+                </span>
+              </p>
+              <p className="flex items-baseline gap-2">
+                <span className="font-medium whitespace-nowrap">{pdfSettings.validUntilLabel || 'Válida hasta'}:</span>
+                <span className="border-b border-dashed border-gray-400 flex-1">
                   {quotation.validUntil ? format(parseISO(quotation.validUntil), "d 'de' MMMM, yyyy", { locale: es }) : ''}
                 </span>
               </p>
