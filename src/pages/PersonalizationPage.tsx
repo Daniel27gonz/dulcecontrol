@@ -12,6 +12,7 @@ import {
   Sparkles,
   Edit3,
   Save,
+  Cake,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -26,6 +27,7 @@ import { PDFSettings, PDFStyle, DEFAULT_PDF_SETTINGS, PDF_STYLE_OPTIONS, COLOR_P
 import { usePDFSettings } from '@/hooks/usePDFSettings';
 import { useApp } from '@/context/AppContext';
 import { LogoUpload } from '@/components/quotations/LogoUpload';
+import { ReferenceImageUpload } from '@/components/quotations/ReferenceImageUpload';
 import { QuotationHTMLPreview } from '@/components/quotations/QuotationHTMLPreview';
 import { toast } from '@/hooks/use-toast';
 import { cn } from '@/lib/utils';
@@ -201,6 +203,21 @@ export default function PersonalizationPage() {
                         </div>
                       </div>
                     </div>
+                  </div>
+
+                  {/* Reference Image */}
+                  <div className="space-y-4">
+                    <div className="flex items-center gap-2 text-primary">
+                      <Cake className="w-5 h-5" />
+                      <h3 className="font-semibold">Imagen de referencia</h3>
+                    </div>
+                    <p className="text-xs text-muted-foreground">
+                      Sube una imagen de postre predeterminada que se usará en las cotizaciones cuando no tengan imagen propia.
+                    </p>
+                    <ReferenceImageUpload
+                      imageUrl={localSettings.referenceImageUrl}
+                      onImageChange={(url) => handleSettingsChange({ referenceImageUrl: url })}
+                    />
                   </div>
 
                   {/* Style Selector */}

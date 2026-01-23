@@ -7,6 +7,7 @@ export interface PDFSettings {
   businessPhone: string;
   businessEmail: string;
   logoUrl: string | null;
+  referenceImageUrl: string | null;
   primaryColor: string;
   secondaryColor: string;
   style: PDFStyle;
@@ -26,6 +27,7 @@ export const DEFAULT_PDF_SETTINGS: PDFSettings = {
   businessPhone: '',
   businessEmail: '',
   logoUrl: null,
+  referenceImageUrl: null,
   primaryColor: '#F8BBD9', // Rosa pastel
   secondaryColor: '#FFF0F5', // Lavanda muy claro
   style: 'pastel',
