@@ -114,7 +114,7 @@ export function QuotationHTMLPreview({
     <motion.div
       initial={{ opacity: 0, scale: 0.95 }}
       animate={{ opacity: 1, scale: 1 }}
-      className="w-full max-w-2xl mx-auto px-1 sm:px-0"
+      className="w-full max-w-md sm:max-w-lg md:max-w-xl lg:max-w-2xl mx-auto"
     >
       <div 
         className={`relative shadow-xl rounded-lg overflow-hidden ${styles.container}`}
@@ -137,15 +137,15 @@ export function QuotationHTMLPreview({
         />
 
         {/* Contenido principal */}
-        <div className="relative z-10 p-3 sm:p-4 md:p-6 h-full flex flex-col">
+        <div className="relative z-10 p-4 sm:p-5 md:p-6 h-full flex flex-col text-[11px] sm:text-xs md:text-sm">
           {/* Header con título y logo */}
-          <div className="text-center mb-3 sm:mb-4 md:mb-6">
+          <div className="text-center mb-3 sm:mb-4 md:mb-5">
             {pdfSettings.logoUrl && (
               <div className="flex justify-center mb-2 sm:mb-3">
                 <img 
                   src={pdfSettings.logoUrl} 
                   alt="Logo" 
-                  className="h-8 sm:h-10 md:h-12 w-auto object-contain"
+                  className="h-10 sm:h-12 md:h-14 w-auto object-contain"
                 />
               </div>
             )}
@@ -154,17 +154,17 @@ export function QuotationHTMLPreview({
               field="quotationTitle"
               value={pdfSettings.quotationTitle}
               as="h1"
-              className="text-sm sm:text-lg md:text-xl font-bold tracking-wide"
+              className="text-base sm:text-lg md:text-xl font-bold tracking-wide"
               style={{ color: pdfSettings.primaryColor }}
             />
             
             {pdfSettings.businessName && (
-              <p className="text-[10px] sm:text-xs md:text-sm mt-0.5 sm:mt-1 font-medium opacity-80">
+              <p className="text-xs sm:text-sm mt-1 font-medium opacity-80">
                 {pdfSettings.businessName}
               </p>
             )}
             
-            <p className="text-[10px] sm:text-xs md:text-sm mt-1 sm:mt-2 text-gray-600">
+            <p className="text-xs sm:text-sm mt-1.5 text-gray-600">
               Fecha: {creationDate}
             </p>
           </div>
@@ -172,7 +172,7 @@ export function QuotationHTMLPreview({
           {/* Línea decorativa ondulada */}
           {styles.decorative && (
             <div 
-              className="h-1.5 sm:h-2 md:h-3 w-full mb-2 sm:mb-3 md:mb-4 rounded-full"
+              className="h-2 sm:h-2.5 w-full mb-3 sm:mb-4 rounded-full"
               style={{
                 background: `repeating-linear-gradient(
                   90deg,
@@ -187,11 +187,11 @@ export function QuotationHTMLPreview({
 
           {/* Datos del cliente */}
           <div 
-            className="rounded-md sm:rounded-lg p-2 sm:p-3 md:p-4 mb-2 sm:mb-3 md:mb-4"
+            className="rounded-lg p-3 sm:p-4 mb-3 sm:mb-4"
             style={{ backgroundColor: `${pdfSettings.primaryColor}30` }}
           >
             <div 
-              className="inline-block px-2 sm:px-3 py-0.5 sm:py-1 rounded-full text-[9px] sm:text-xs md:text-sm font-semibold mb-2 sm:mb-3"
+              className="inline-block px-3 py-1 rounded-full text-[10px] sm:text-xs font-semibold mb-2 sm:mb-3"
               style={{ 
                 backgroundColor: pdfSettings.primaryColor,
                 color: '#fff',
@@ -200,40 +200,40 @@ export function QuotationHTMLPreview({
               DATOS DEL CLIENTE:
             </div>
             
-            <div className="space-y-1 sm:space-y-1.5 md:space-y-2 text-[9px] sm:text-xs md:text-sm">
-              <p className="flex flex-wrap items-baseline gap-1">
+            <div className="space-y-1.5 sm:space-y-2">
+              <p className="flex items-baseline gap-2">
                 <span className="font-medium whitespace-nowrap">Nombre:</span>
-                <span className="border-b border-dashed border-gray-400 flex-1 min-w-[60px] sm:min-w-[100px] md:min-w-[150px] truncate">
+                <span className="border-b border-dashed border-gray-400 flex-1 truncate">
                   {quotation.clientName}
                 </span>
               </p>
-              <p className="flex flex-wrap items-baseline gap-1">
+              <p className="flex items-baseline gap-2">
                 <span className="font-medium whitespace-nowrap">Teléfono:</span>
-                <span className="border-b border-dashed border-gray-400 flex-1 min-w-[60px] sm:min-w-[100px] md:min-w-[150px]">
+                <span className="border-b border-dashed border-gray-400 flex-1">
                   {quotation.clientPhone || ''}
                 </span>
               </p>
-              <p className="flex flex-wrap items-baseline gap-1">
+              <p className="flex items-baseline gap-2">
                 <span className="font-medium whitespace-nowrap">{pdfSettings.eventDateLabel}:</span>
-                <span className="border-b border-dashed border-gray-400 flex-1 min-w-[60px] sm:min-w-[100px] md:min-w-[150px]">
+                <span className="border-b border-dashed border-gray-400 flex-1">
                   {quotation.validUntil ? format(parseISO(quotation.validUntil), "d 'de' MMMM, yyyy", { locale: es }) : ''}
                 </span>
               </p>
-              <p className="flex flex-wrap items-baseline gap-1">
+              <p className="flex items-baseline gap-2">
                 <span className="font-medium whitespace-nowrap">{pdfSettings.eventTypeLabel}:</span>
-                <span className="border-b border-dashed border-gray-400 flex-1 min-w-[60px] sm:min-w-[100px] md:min-w-[150px]"></span>
+                <span className="border-b border-dashed border-gray-400 flex-1"></span>
               </p>
             </div>
           </div>
 
           {/* Tabla de productos */}
-          <div className="mb-2 sm:mb-3 md:mb-4 flex-1 min-h-0">
+          <div className="mb-3 sm:mb-4 flex-1 min-h-0">
             {/* Header de tabla */}
             <div 
-              className="rounded-t-md sm:rounded-t-lg overflow-hidden"
+              className="rounded-t-lg overflow-hidden"
               style={{ backgroundColor: pdfSettings.primaryColor }}
             >
-              <div className="grid grid-cols-12 gap-1 sm:gap-2 p-1.5 sm:p-2 text-white text-[8px] sm:text-[10px] md:text-xs font-semibold">
+              <div className="grid grid-cols-12 gap-2 p-2 sm:p-2.5 text-white text-[10px] sm:text-xs font-semibold">
                 <div className="col-span-6">DETALLE</div>
                 <div className="col-span-3 text-center">CANT.</div>
                 <div className="col-span-3 text-right">PRECIO</div>
@@ -248,7 +248,7 @@ export function QuotationHTMLPreview({
               {quotation.items.map((item, index) => (
                 <div 
                   key={item.id}
-                  className="grid grid-cols-12 gap-1 sm:gap-2 p-1 sm:p-1.5 md:p-2 text-[8px] sm:text-[10px] md:text-sm border-b border-dashed"
+                  className="grid grid-cols-12 gap-2 p-2 sm:p-2.5 border-b border-dashed"
                   style={{ 
                     borderColor: `${pdfSettings.primaryColor}50`,
                     backgroundColor: index % 2 === 0 ? 'transparent' : `${pdfSettings.primaryColor}10`,
@@ -262,59 +262,59 @@ export function QuotationHTMLPreview({
                 </div>
               ))}
               
-              {/* Filas vacías para completar - menos en móvil */}
+              {/* Filas vacías para completar */}
               {Array.from({ length: Math.max(0, 2 - quotation.items.length) }).map((_, i) => (
                 <div 
                   key={`empty-${i}`}
-                  className="grid grid-cols-12 gap-1 sm:gap-2 p-1 sm:p-1.5 md:p-2 text-[8px] sm:text-[10px] md:text-sm border-b border-dashed h-4 sm:h-6 md:h-8"
+                  className="grid grid-cols-12 gap-2 p-2 sm:p-2.5 border-b border-dashed h-6 sm:h-8"
                   style={{ borderColor: `${pdfSettings.primaryColor}50` }}
                 />
               ))}
             </div>
             
             <div 
-              className="h-1 sm:h-1.5 md:h-2 rounded-b-md sm:rounded-b-lg"
+              className="h-1.5 sm:h-2 rounded-b-lg"
               style={{ backgroundColor: pdfSettings.primaryColor }}
             />
           </div>
 
           {/* Total */}
-          <div className="text-right mb-2 sm:mb-3 md:mb-4">
-            <p className="text-xs sm:text-sm md:text-lg font-bold">
+          <div className="text-right mb-3 sm:mb-4">
+            <p className="text-sm sm:text-base md:text-lg font-bold">
               TOTAL: {formatCurrency(quotation.total)}
             </p>
           </div>
 
           {/* Observaciones */}
-          <div className="mb-2 sm:mb-3 md:mb-4">
-            <p className="text-[8px] sm:text-[10px] md:text-sm">
+          <div className="mb-3 sm:mb-4">
+            <p>
               <span className="font-medium">Obs:</span>{' '}
-              <span className="border-b border-dashed border-gray-400 inline-block min-w-full truncate">
+              <span className="border-b border-dashed border-gray-400 inline-block min-w-full">
                 {pdfSettings.observationsText || quotation.notes || ''}
               </span>
             </p>
           </div>
 
           {/* Footer con mensaje */}
-          <div className="mt-auto text-center space-y-1 sm:space-y-1.5 md:space-y-2">
+          <div className="mt-auto text-center space-y-1.5 sm:space-y-2">
             <EditableField
               field="footerMessage"
               value={pdfSettings.footerMessage}
               as="p"
-              className="text-[7px] sm:text-[9px] md:text-xs text-gray-600 italic line-clamp-2"
+              className="text-[10px] sm:text-xs text-gray-600 italic line-clamp-2"
             />
             
             <EditableField
               field="thankYouMessage"
               value={pdfSettings.thankYouMessage}
               as="p"
-              className="text-[9px] sm:text-xs md:text-sm font-script"
+              className="text-xs sm:text-sm font-script"
               style={{ color: pdfSettings.primaryColor }}
             />
 
             {/* Decoración de corazones */}
             {styles.decorative && (
-              <div className="flex justify-center gap-1 sm:gap-2 text-[8px] sm:text-[10px] md:text-xs" style={{ color: pdfSettings.primaryColor }}>
+              <div className="flex justify-center gap-2 text-xs" style={{ color: pdfSettings.primaryColor }}>
                 ♥ ♥ ♥
               </div>
             )}

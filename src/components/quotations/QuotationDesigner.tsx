@@ -160,37 +160,37 @@ export function QuotationDesigner({ quotation, trigger, onClose }: QuotationDesi
         {trigger || defaultTrigger}
       </DialogTrigger>
 
-      <DialogContent className="w-[95vw] max-w-6xl h-[90vh] sm:h-[95vh] max-h-[90vh] sm:max-h-[95vh] overflow-hidden bg-background p-0">
+      <DialogContent className="w-[98vw] sm:w-[95vw] max-w-6xl h-[95vh] max-h-[95vh] overflow-hidden bg-background p-0">
         <div className="flex flex-col h-full">
           {/* Header */}
-          <DialogHeader className="p-3 sm:p-4 border-b shrink-0">
-            <DialogTitle className="flex items-center gap-2 text-base sm:text-lg">
+          <DialogHeader className="p-2 sm:p-3 md:p-4 border-b shrink-0">
+            <DialogTitle className="flex items-center gap-2 text-sm sm:text-base md:text-lg">
               <Sparkles className="w-4 h-4 sm:w-5 sm:h-5 text-primary" />
               Diseñador de Cotización
             </DialogTitle>
           </DialogHeader>
 
           {/* Main content */}
-          <div className="flex flex-col md:flex-row flex-1 overflow-hidden min-h-0">
+          <div className="flex flex-col lg:flex-row flex-1 overflow-hidden min-h-0">
             {/* Left panel - Settings */}
-            <div className="w-full md:w-1/2 md:border-r flex flex-col min-h-0 flex-1 md:flex-initial">
+            <div className="w-full lg:w-1/2 lg:border-r flex flex-col min-h-0 flex-1 lg:flex-initial">
               <Tabs 
                 value={activeTab} 
                 onValueChange={(v) => setActiveTab(v as typeof activeTab)}
                 className="flex flex-col flex-1 min-h-0"
               >
-                <TabsList className="w-full grid grid-cols-3 rounded-none border-b bg-muted/50 shrink-0">
-                  <TabsTrigger value="design" className="gap-1 text-xs sm:text-sm py-2 sm:py-3">
-                    <Palette className="w-3 h-3 sm:w-4 sm:h-4" />
-                    <span className="hidden xs:inline">Diseño</span>
+                <TabsList className="w-full grid grid-cols-3 rounded-none border-b bg-muted/50 shrink-0 h-auto">
+                  <TabsTrigger value="design" className="gap-1.5 text-xs sm:text-sm py-2.5 sm:py-3 flex-col sm:flex-row">
+                    <Palette className="w-4 h-4" />
+                    <span>Diseño</span>
                   </TabsTrigger>
-                  <TabsTrigger value="content" className="gap-1 text-xs sm:text-sm py-2 sm:py-3">
-                    <Type className="w-3 h-3 sm:w-4 sm:h-4" />
-                    <span className="hidden xs:inline">Contenido</span>
+                  <TabsTrigger value="content" className="gap-1.5 text-xs sm:text-sm py-2.5 sm:py-3 flex-col sm:flex-row">
+                    <Type className="w-4 h-4" />
+                    <span>Contenido</span>
                   </TabsTrigger>
-                  <TabsTrigger value="preview" className="gap-1 md:hidden text-xs sm:text-sm py-2 sm:py-3">
-                    <Eye className="w-3 h-3 sm:w-4 sm:h-4" />
-                    <span className="hidden xs:inline">Vista</span>
+                  <TabsTrigger value="preview" className="gap-1.5 lg:hidden text-xs sm:text-sm py-2.5 sm:py-3 flex-col sm:flex-row">
+                    <Eye className="w-4 h-4" />
+                    <span>Vista</span>
                   </TabsTrigger>
                 </TabsList>
 
@@ -264,13 +264,13 @@ export function QuotationDesigner({ quotation, trigger, onClose }: QuotationDesi
                     </div>
 
                     {/* Style Selector */}
-                    <div className="space-y-3 sm:space-y-4">
+                    <div className="space-y-3">
                       <div className="flex items-center gap-2 text-primary">
                         <Sparkles className="w-4 h-4 sm:w-5 sm:h-5" />
                         <h3 className="font-semibold text-sm sm:text-base">Estilo base</h3>
                       </div>
 
-                      <div className="grid grid-cols-3 gap-1.5 sm:gap-2">
+                      <div className="grid grid-cols-1 xs:grid-cols-3 gap-2">
                         {PDF_STYLE_OPTIONS.map((option) => (
                           <motion.button
                             key={option.value}
@@ -279,19 +279,19 @@ export function QuotationDesigner({ quotation, trigger, onClose }: QuotationDesi
                             whileTap={{ scale: 0.98 }}
                             onClick={() => handleStyleChange(option.value)}
                             className={cn(
-                              'relative flex flex-col items-center p-2 sm:p-3 rounded-lg sm:rounded-xl border-2 transition-all',
+                              'relative flex flex-row xs:flex-col items-center gap-2 xs:gap-1 p-3 rounded-xl border-2 transition-all text-left xs:text-center',
                               localSettings.style === option.value
                                 ? 'border-primary bg-primary/10'
                                 : 'border-muted hover:border-primary/50'
                             )}
                           >
                             {localSettings.style === option.value && (
-                              <div className="absolute -top-1 -right-1 w-4 h-4 sm:w-5 sm:h-5 bg-primary rounded-full flex items-center justify-center">
-                                <Check className="w-2.5 h-2.5 sm:w-3 sm:h-3 text-white" />
+                              <div className="absolute -top-1.5 -right-1.5 w-5 h-5 bg-primary rounded-full flex items-center justify-center">
+                                <Check className="w-3 h-3 text-white" />
                               </div>
                             )}
-                            <span className="font-medium text-xs sm:text-sm">{option.label}</span>
-                            <span className="text-[10px] sm:text-xs text-muted-foreground text-center mt-0.5 sm:mt-1 line-clamp-2">
+                            <span className="font-medium text-sm">{option.label}</span>
+                            <span className="text-xs text-muted-foreground flex-1 xs:flex-none">
                               {option.description}
                             </span>
                           </motion.button>
@@ -300,13 +300,14 @@ export function QuotationDesigner({ quotation, trigger, onClose }: QuotationDesi
                     </div>
 
                     {/* Color Selector */}
-                    <div className="space-y-3 sm:space-y-4">
+                    <div className="space-y-3">
                       <div className="flex items-center gap-2 text-primary">
                         <Palette className="w-4 h-4 sm:w-5 sm:h-5" />
                         <h3 className="font-semibold text-sm sm:text-base">Paleta de colores</h3>
                       </div>
 
-                      <div className="grid grid-cols-4 gap-1.5 sm:gap-2">
+                      {/* Color presets - responsive grid */}
+                      <div className="grid grid-cols-4 xs:grid-cols-8 gap-2">
                         {COLOR_PRESETS.map((preset) => (
                           <motion.button
                             key={preset.color}
@@ -315,7 +316,7 @@ export function QuotationDesigner({ quotation, trigger, onClose }: QuotationDesi
                             whileTap={{ scale: 0.95 }}
                             onClick={() => handleColorPresetChange(preset)}
                             className={cn(
-                              'relative h-10 sm:h-12 rounded-md sm:rounded-lg overflow-hidden transition-all ring-2 ring-offset-1 sm:ring-offset-2 ring-offset-background',
+                              'relative aspect-square rounded-lg overflow-hidden transition-all ring-2 ring-offset-2 ring-offset-background',
                               localSettings.primaryColor === preset.color
                                 ? 'ring-primary'
                                 : 'ring-transparent hover:ring-muted-foreground/30'
@@ -330,45 +331,45 @@ export function QuotationDesigner({ quotation, trigger, onClose }: QuotationDesi
                             />
                             {localSettings.primaryColor === preset.color && (
                               <div className="absolute inset-0 flex items-center justify-center bg-black/20">
-                                <Check className="w-4 h-4 sm:w-5 sm:h-5 text-white drop-shadow-md" />
+                                <Check className="w-4 h-4 text-white drop-shadow-md" />
                               </div>
                             )}
                           </motion.button>
                         ))}
                       </div>
 
-                      {/* Custom color pickers */}
-                      <div className="grid grid-cols-2 gap-2 sm:gap-3">
-                        <div>
-                          <Label className="text-[10px] sm:text-xs">Color principal</Label>
-                          <div className="flex items-center gap-1.5 sm:gap-2 mt-1">
+                      {/* Custom color pickers - always visible */}
+                      <div className="grid grid-cols-2 gap-3 pt-2 border-t border-dashed">
+                        <div className="space-y-1.5">
+                          <Label className="text-xs font-medium">Color principal</Label>
+                          <div className="flex items-center gap-2">
                             <input
                               type="color"
                               value={localSettings.primaryColor}
                               onChange={(e) => handleSettingsChange({ primaryColor: e.target.value })}
-                              className="w-8 h-8 sm:w-10 sm:h-10 rounded cursor-pointer border-0"
+                              className="w-10 h-10 rounded-lg cursor-pointer border-0 shrink-0"
                             />
                             <Input
                               value={localSettings.primaryColor}
                               onChange={(e) => handleSettingsChange({ primaryColor: e.target.value })}
-                              className="flex-1 font-mono text-[10px] sm:text-xs h-8 sm:h-10"
+                              className="flex-1 font-mono text-xs h-10"
                               maxLength={7}
                             />
                           </div>
                         </div>
-                        <div>
-                          <Label className="text-[10px] sm:text-xs">Color secundario</Label>
-                          <div className="flex items-center gap-1.5 sm:gap-2 mt-1">
+                        <div className="space-y-1.5">
+                          <Label className="text-xs font-medium">Color secundario</Label>
+                          <div className="flex items-center gap-2">
                             <input
                               type="color"
                               value={localSettings.secondaryColor}
                               onChange={(e) => handleSettingsChange({ secondaryColor: e.target.value })}
-                              className="w-8 h-8 sm:w-10 sm:h-10 rounded cursor-pointer border-0"
+                              className="w-10 h-10 rounded-lg cursor-pointer border-0 shrink-0"
                             />
                             <Input
                               value={localSettings.secondaryColor}
                               onChange={(e) => handleSettingsChange({ secondaryColor: e.target.value })}
-                              className="flex-1 font-mono text-[10px] sm:text-xs h-8 sm:h-10"
+                              className="flex-1 font-mono text-xs h-10"
                               maxLength={7}
                             />
                           </div>
@@ -459,13 +460,15 @@ export function QuotationDesigner({ quotation, trigger, onClose }: QuotationDesi
                     </div>
                   </TabsContent>
 
-                  {/* Mobile Preview Tab */}
-                  <TabsContent value="preview" className="mt-0 md:hidden">
-                    <QuotationHTMLPreview
-                      quotation={quotation}
-                      pdfSettings={localSettings}
-                      currencySymbol={appSettings.currencySymbol}
-                    />
+                  {/* Mobile/Tablet Preview Tab */}
+                  <TabsContent value="preview" className="mt-0 lg:hidden">
+                    <div className="p-2">
+                      <QuotationHTMLPreview
+                        quotation={quotation}
+                        pdfSettings={localSettings}
+                        currencySymbol={appSettings.currencySymbol}
+                      />
+                    </div>
                   </TabsContent>
                   </div>
                 </ScrollArea>
@@ -473,8 +476,8 @@ export function QuotationDesigner({ quotation, trigger, onClose }: QuotationDesi
             </div>
 
             {/* Right panel - Live Preview (desktop only) */}
-            <div className="hidden md:flex md:w-1/2 flex-col bg-muted/30 min-h-0">
-              <div className="flex items-center gap-2 px-4 py-2 border-b bg-muted/50 shrink-0">
+            <div className="hidden lg:flex lg:w-1/2 flex-col bg-muted/30 min-h-0">
+              <div className="flex items-center gap-2 px-4 py-3 border-b bg-muted/50 shrink-0">
                 <Eye className="w-4 h-4 text-muted-foreground" />
                 <span className="text-sm font-medium">Vista previa en tiempo real</span>
               </div>
