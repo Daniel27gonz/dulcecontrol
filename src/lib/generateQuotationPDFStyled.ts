@@ -332,7 +332,7 @@ export async function generateStyledQuotationPDF(
 
   y += 10;
 
-  // Reference image (if available)
+  // Reference image (if available) - positioned in a dedicated section
   if (quotation.referenceImage) {
     try {
       const referenceImageData = await loadImageAsBase64(quotation.referenceImage);
@@ -349,21 +349,22 @@ export async function generateStyledQuotationPDF(
         const imgHeight = img.height || 100;
         const aspectRatio = imgWidth / imgHeight;
         
-        // Calculate available space for the image
-        const availableHeight = pageHeight - y - 55; // Leave space for footer
-        const maxContainerHeight = Math.min(55, availableHeight);
-        const maxContainerWidth = contentWidth * 0.65;
+        // Calculate available space for the image (between observations and footer)
+        const footerReserved = 45; // Space for footer messages
+        const availableHeight = pageHeight - y - footerReserved - 15;
+        const maxContainerHeight = Math.min(50, Math.max(30, availableHeight));
+        const maxContainerWidth = contentWidth * 0.5;
         
         // Calculate actual image dimensions maintaining aspect ratio
         let finalWidth: number;
         let finalHeight: number;
         
         if (aspectRatio > 1) {
-          // Horizontal image
+          // Horizontal image - fit to width
           finalWidth = Math.min(maxContainerWidth, maxContainerHeight * aspectRatio);
           finalHeight = finalWidth / aspectRatio;
         } else {
-          // Vertical image
+          // Vertical image - fit to height
           finalHeight = Math.min(maxContainerHeight, maxContainerWidth / aspectRatio);
           finalWidth = finalHeight * aspectRatio;
         }
@@ -378,36 +379,39 @@ export async function generateStyledQuotationPDF(
           finalWidth = finalHeight * aspectRatio;
         }
         
-        // Add section label
-        doc.setFontSize(9);
+        // Add spacing before image section
+        y += 5;
+        
+        // Add centered section label
+        doc.setFontSize(8);
         doc.setFont('helvetica', 'bold');
         doc.setTextColor(...primaryColor);
-        doc.text('Imagen de referencia:', margin, y + 5);
-        y += 10;
-        
-        // Draw a decorative border for the image
-        doc.setFillColor(...veryLightPrimary);
-        doc.setDrawColor(...primaryColor);
-        doc.setLineWidth(0.5);
+        doc.text('Imagen de referencia:', pageWidth / 2, y, { align: 'center' });
+        y += 6;
         
         // Container dimensions with padding
-        const padding = 5;
+        const padding = 4;
         const containerWidth = finalWidth + padding * 2;
         const containerHeight = finalHeight + padding * 2;
         const containerX = (pageWidth - containerWidth) / 2;
         
+        // Draw a decorative border for the image - centered
+        doc.setFillColor(...veryLightPrimary);
+        doc.setDrawColor(...primaryColor);
+        doc.setLineWidth(0.5);
+        
         if (styleConfig.useRoundedCorners) {
-          doc.roundedRect(containerX, y, containerWidth, containerHeight, 4, 4, 'FD');
+          doc.roundedRect(containerX, y, containerWidth, containerHeight, 3, 3, 'FD');
         } else {
           doc.rect(containerX, y, containerWidth, containerHeight, 'FD');
         }
         
-        // Add the image centered within the container
+        // Add the image perfectly centered within the container
         const imageX = containerX + padding;
         const imageY = y + padding;
         doc.addImage(referenceImageData, 'JPEG', imageX, imageY, finalWidth, finalHeight);
         
-        y += containerHeight + 10;
+        y += containerHeight + 8;
       }
     } catch (error) {
       console.error('Error loading reference image:', error);
