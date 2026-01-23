@@ -30,7 +30,7 @@ export const DEFAULT_PDF_SETTINGS: PDFSettings = {
   secondaryColor: '#FFF0F5', // Lavanda muy claro
   style: 'pastel',
   quotationTitle: 'COTIZACIÓN DE POSTRES ARTESANALES',
-  eventDateLabel: 'Fecha del evento / entrega',
+  eventDateLabel: 'Fecha de entrega',
   eventTypeLabel: 'Tipo de evento (opcional)',
   observationsText: '',
   footerMessage: 'Esta cotización ha sido elaborada considerando ingredientes de calidad, tiempo de preparación y dedicación artesanal para brindarte un resultado delicioso.',
