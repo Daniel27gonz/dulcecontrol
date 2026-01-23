@@ -418,8 +418,10 @@ export async function generateStyledQuotationPDF(
     }
   }
 
-  // Footer messages
-  const footerY = pageHeight - 35;
+  // Footer messages - position based on content above, not fixed
+  const minFooterY = y + 5; // Minimum position after content
+  const fixedFooterY = pageHeight - 35; // Preferred fixed position
+  const footerY = Math.max(minFooterY, fixedFooterY); // Use whichever is lower on the page
   
   // Footer message
   const footerMessage = pdfSettings.footerMessage || 'Esta cotización ha sido elaborada considerando ingredientes de calidad, tiempo de preparación y dedicación artesanal para brindarte un resultado delicioso.';
