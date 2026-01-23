@@ -3,7 +3,7 @@ import { motion } from 'framer-motion';
 import { 
   FileText, 
   Download, 
-  Share2, 
+  MessageCircle, 
   MoreVertical, 
   Pencil, 
   Trash2, 
@@ -100,7 +100,7 @@ export function QuotationCard({ quotation, onUpdate }: QuotationCardProps) {
     }
   };
 
-  const handleSharePDF = async () => {
+  const handleShareWhatsApp = async () => {
     setIsSharing(true);
     try {
       const { getStyledQuotationPDFBlob } = await import('@/lib/generateQuotationPDFStyled');
@@ -116,32 +116,45 @@ export function QuotationCard({ quotation, onUpdate }: QuotationCardProps) {
 
       const file = new File([pdfBlob], `Cotizacion-${quotation.number}.pdf`, { type: 'application/pdf' });
 
+      // Check if Web Share API supports sharing files (works on mobile)
       if (navigator.share && navigator.canShare({ files: [file] })) {
         await navigator.share({
           files: [file],
           title: `Cotización #${quotation.number}`,
-          text: `Cotización para ${quotation.clientName}`,
+          text: `🧁 Cotización para ${quotation.clientName} - Total: ${formatCurrency(quotation.total)}`,
         });
         
         updateQuotation(quotation.id, { status: 'sent' });
         toast({
-          title: '¡PDF compartido!',
-          description: 'La cotización se compartió correctamente',
+          title: '¡PDF enviado!',
+          description: 'La cotización se compartió por WhatsApp',
         });
         onUpdate?.();
       } else {
-        // Fallback: download the PDF
+        // Fallback for desktop: download PDF and open WhatsApp with message
         const url = URL.createObjectURL(pdfBlob);
         const a = document.createElement('a');
         a.href = url;
         a.download = `Cotizacion-${quotation.number}.pdf`;
         a.click();
         URL.revokeObjectURL(url);
+
+        // Open WhatsApp with a message
+        const message = `🧁 *Cotización #${quotation.number}*\n\nHola ${quotation.clientName}!\n\nTe envío la cotización adjunta.\n\n💰 Total: ${formatCurrency(quotation.total)}\n📅 Válida hasta: ${format(parseISO(quotation.validUntil), "d 'de' MMMM", { locale: es })}\n\n¡Gracias por tu preferencia! 🎂`;
         
+        const phone = quotation.clientPhone?.replace(/\D/g, '') || '';
+        const whatsappUrl = phone 
+          ? `https://wa.me/${phone}?text=${encodeURIComponent(message)}`
+          : `https://wa.me/?text=${encodeURIComponent(message)}`;
+        
+        window.open(whatsappUrl, '_blank');
+        
+        updateQuotation(quotation.id, { status: 'sent' });
         toast({
           title: 'PDF descargado',
-          description: 'Tu navegador no soporta compartir, se descargó el PDF',
+          description: 'Adjunta el PDF en WhatsApp para enviarlo',
         });
+        onUpdate?.();
       }
     } catch (error) {
       if ((error as Error).name !== 'AbortError') {
@@ -309,11 +322,11 @@ export function QuotationCard({ quotation, onUpdate }: QuotationCardProps) {
                 <Button
                   variant="warm"
                   size="sm"
-                  onClick={handleSharePDF}
+                  onClick={handleShareWhatsApp}
                   disabled={isSharing || isPdfSettingsLoading}
                 >
-                  <Share2 className="w-4 h-4 mr-1" />
-                  {isSharing ? '...' : 'Compartir'}
+                  <MessageCircle className="w-4 h-4 mr-1" />
+                  {isSharing ? '...' : 'WhatsApp'}
                 </Button>
               </div>
             </div>
