@@ -15,15 +15,9 @@ export function HeroSection() {
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.5 }}
-      className="relative overflow-hidden bg-gradient-to-b from-secondary via-background to-background rounded-2xl p-6 sm:p-8 text-center"
+      className="bg-gradient-to-b from-secondary via-background to-background rounded-2xl p-6 sm:p-8 text-center"
     >
-      {/* Decorative background elements */}
-      <div className="absolute inset-0 overflow-hidden pointer-events-none">
-        <div className="absolute -top-20 -right-20 w-40 h-40 bg-accent/20 rounded-full blur-3xl" />
-        <div className="absolute -bottom-10 -left-10 w-32 h-32 bg-caramel/10 rounded-full blur-2xl" />
-      </div>
-
-      <div className="relative z-10 space-y-5">
+      <div className="space-y-5">
         {/* Badge */}
         <motion.div
           initial={{ opacity: 0, scale: 0.9 }}
