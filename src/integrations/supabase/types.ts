@@ -139,45 +139,6 @@ export type Database = {
           },
         ]
       }
-      pdf_settings: {
-        Row: {
-          business_email: string | null
-          business_name: string | null
-          business_phone: string | null
-          created_at: string
-          id: string
-          logo_url: string | null
-          primary_color: string | null
-          style: string | null
-          updated_at: string
-          user_id: string
-        }
-        Insert: {
-          business_email?: string | null
-          business_name?: string | null
-          business_phone?: string | null
-          created_at?: string
-          id?: string
-          logo_url?: string | null
-          primary_color?: string | null
-          style?: string | null
-          updated_at?: string
-          user_id: string
-        }
-        Update: {
-          business_email?: string | null
-          business_name?: string | null
-          business_phone?: string | null
-          created_at?: string
-          id?: string
-          logo_url?: string | null
-          primary_color?: string | null
-          style?: string | null
-          updated_at?: string
-          user_id?: string
-        }
-        Relationships: []
-      }
       profiles: {
         Row: {
           created_at: string
