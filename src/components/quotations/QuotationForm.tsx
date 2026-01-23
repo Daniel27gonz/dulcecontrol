@@ -116,11 +116,11 @@ export function QuotationForm({ quotation, trigger, onClose, onSave }: Quotation
       return;
     }
 
-    // Validate file size (max 5MB)
-    if (file.size > 5 * 1024 * 1024) {
+    // Validate file size (max 2MB)
+    if (file.size > 2 * 1024 * 1024) {
       toast({
         title: 'Error',
-        description: 'La imagen no puede ser mayor a 5MB',
+        description: 'La imagen no puede ser mayor a 2MB',
         variant: 'destructive',
       });
       return;
