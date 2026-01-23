@@ -323,6 +323,52 @@ export async function generateStyledQuotationPDF(
   const observations = pdfSettings.observationsText || quotation.notes || '';
   doc.text(`Observaciones: ${observations || '_______________________________________________'}`, margin, y);
 
+  y += 10;
+
+  // Reference image (if available)
+  if (quotation.referenceImage) {
+    try {
+      const referenceImageData = await loadImageAsBase64(quotation.referenceImage);
+      if (referenceImageData) {
+        // Calculate available space for the image
+        const availableHeight = pageHeight - y - 55; // Leave space for footer
+        const maxImageHeight = Math.min(50, availableHeight);
+        const maxImageWidth = contentWidth * 0.6;
+        
+        // Add section label
+        doc.setFontSize(9);
+        doc.setFont('helvetica', 'bold');
+        doc.setTextColor(...primaryColor);
+        doc.text('Imagen de referencia:', margin, y + 5);
+        y += 10;
+        
+        // Draw a decorative border for the image
+        doc.setFillColor(...veryLightPrimary);
+        doc.setDrawColor(...primaryColor);
+        doc.setLineWidth(0.5);
+        
+        // Center the image container
+        const imageContainerWidth = maxImageWidth + 10;
+        const containerX = (pageWidth - imageContainerWidth) / 2;
+        
+        if (styleConfig.useRoundedCorners) {
+          doc.roundedRect(containerX, y, imageContainerWidth, maxImageHeight + 10, 4, 4, 'FD');
+        } else {
+          doc.rect(containerX, y, imageContainerWidth, maxImageHeight + 10, 'FD');
+        }
+        
+        // Add the image centered
+        const imageX = containerX + 5;
+        const imageY = y + 5;
+        doc.addImage(referenceImageData, 'JPEG', imageX, imageY, maxImageWidth, maxImageHeight);
+        
+        y += maxImageHeight + 15;
+      }
+    } catch (error) {
+      console.error('Error loading reference image:', error);
+    }
+  }
+
   // Footer messages
   const footerY = pageHeight - 35;
   
