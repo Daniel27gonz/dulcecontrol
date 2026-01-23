@@ -3,11 +3,9 @@ import { motion } from 'framer-motion';
 import { 
   FileText, 
   Download, 
-  Send, 
   MoreVertical, 
   Pencil, 
   Trash2, 
-  CheckCircle,
   ShoppingCart,
   Clock,
   Copy,
@@ -52,7 +50,6 @@ export function QuotationCard({ quotation, onUpdate }: QuotationCardProps) {
   const { updateQuotation, deleteQuotation, duplicateQuotation } = useQuotations();
   const { settings: pdfSettings, isLoading: isPdfSettingsLoading } = usePDFSettings();
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
-  const [isSending, setIsSending] = useState(false);
   const [isDownloading, setIsDownloading] = useState(false);
 
   const isExpired = isPast(parseISO(quotation.validUntil));
@@ -97,68 +94,6 @@ export function QuotationCard({ quotation, onUpdate }: QuotationCardProps) {
       });
     } finally {
       setIsDownloading(false);
-    }
-  };
-
-  const handleSendWhatsApp = async () => {
-    if (!quotation.clientPhone) {
-      toast({
-        title: 'Sin número de teléfono',
-        description: 'Agrega el teléfono del cliente para enviar por WhatsApp',
-        variant: 'destructive',
-      });
-      return;
-    }
-
-    setIsSending(true);
-
-    try {
-      // Generate summary message
-      const itemsList = quotation.items
-        .map(item => `• ${item.name} x${item.quantity} - ${formatCurrency(item.total)}`)
-        .join('\n');
-
-      const message = `
-🧁 *COTIZACIÓN #${quotation.number}*
-━━━━━━━━━━━━━━━━━━
-
-Hola ${quotation.clientName}! 👋
-
-Aquí está tu cotización:
-
-${itemsList}
-
-${quotation.discount > 0 ? `\n💫 Descuento: -${formatCurrency(quotation.subtotal - quotation.total)}\n` : ''}
-💰 *TOTAL: ${formatCurrency(quotation.total)}*
-
-📅 Válida hasta: ${format(parseISO(quotation.validUntil), "d 'de' MMMM", { locale: es })}
-${quotation.notes ? `\n📝 ${quotation.notes}` : ''}
-
-¡Gracias por tu preferencia! 🎂
-      `.trim();
-
-      // Clean phone number
-      const phone = quotation.clientPhone.replace(/\D/g, '');
-      const whatsappUrl = `https://wa.me/${phone}?text=${encodeURIComponent(message)}`;
-      
-      window.open(whatsappUrl, '_blank');
-
-      // Update status to sent
-      updateQuotation(quotation.id, { status: 'sent' });
-      
-      toast({
-        title: '¡Enviado a WhatsApp!',
-        description: 'La cotización se abrió en WhatsApp',
-      });
-      onUpdate?.();
-    } catch (error) {
-      toast({
-        title: 'Error',
-        description: 'No se pudo abrir WhatsApp',
-        variant: 'destructive',
-      });
-    } finally {
-      setIsSending(false);
     }
   };
 
@@ -301,27 +236,16 @@ ${quotation.notes ? `\n📝 ${quotation.notes}` : ''}
                   </span>
                 </div>
               </div>
-              <div className="flex gap-2">
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={handleQuickDownload}
-                  disabled={isDownloading || isPdfSettingsLoading}
-                  title="Descargar PDF"
-                >
-                  <Download className="w-4 h-4 mr-1" />
-                  {isDownloading ? '...' : 'PDF'}
-                </Button>
-                <Button
-                  variant="warm"
-                  size="sm"
-                  onClick={handleSendWhatsApp}
-                  disabled={isSending || !quotation.clientPhone}
-                >
-                  <Send className="w-4 h-4 mr-1" />
-                  WhatsApp
-                </Button>
-              </div>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={handleQuickDownload}
+                disabled={isDownloading || isPdfSettingsLoading}
+                title="Descargar PDF"
+              >
+                <Download className="w-4 h-4 mr-1" />
+                {isDownloading ? '...' : 'PDF'}
+              </Button>
             </div>
           </CardContent>
         </Card>
