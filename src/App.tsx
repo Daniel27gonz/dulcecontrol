@@ -9,8 +9,6 @@ import { BaseIngredientsProvider } from "@/context/BaseIngredientsContext";
 import { LaborProvider } from "@/context/LaborContext";
 import { IndirectCostsProvider } from "@/context/IndirectCostsContext";
 import { InstallPrompt } from "@/components/InstallPrompt";
-import { UpdatePrompt } from "@/components/UpdatePrompt";
-import { triggerAppUpdate } from "@/lib/pwaUpdater";
 import WelcomePage from "./pages/WelcomePage";
 import OnboardingPage from "./pages/OnboardingPage";
 import LoginPage from "./pages/LoginPage";
@@ -94,7 +92,6 @@ const App = () => (
                 <BrowserRouter>
                   <AppRoutes />
                   <InstallPrompt />
-                  <UpdatePrompt onUpdate={triggerAppUpdate} />
                 </BrowserRouter>
               </QuotationsProvider>
             </IndirectCostsProvider>
