@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { Settings, User, DollarSign, Save, Check, HelpCircle, ChevronRight, Package, Palette } from 'lucide-react';
+import { Settings, User, DollarSign, Save, Check, HelpCircle, ChevronRight, Package } from 'lucide-react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -214,33 +214,6 @@ export default function SettingsPage() {
                     <p className="text-sm text-muted-foreground">
                       {configuredIngredients} ingredientes con precio configurado
                     </p>
-                  </div>
-                </div>
-                <ChevronRight className="w-5 h-5 text-muted-foreground" />
-              </div>
-            </CardContent>
-          </Card>
-        </motion.div>
-
-        {/* Diseño de Cotización */}
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.35 }}
-        >
-          <Card 
-            className="border-border/50 shadow-warm cursor-pointer hover:border-primary/30 transition-colors"
-            onClick={() => navigate('/quotation-design')}
-          >
-            <CardContent className="p-4">
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-3">
-                  <div className="p-2 rounded-xl bg-rose/10">
-                    <Palette className="w-5 h-5 text-rose" />
-                  </div>
-                  <div>
-                    <p className="font-medium">Diseño de Cotización</p>
-                    <p className="text-sm text-muted-foreground">Personaliza tus PDFs</p>
                   </div>
                 </div>
                 <ChevronRight className="w-5 h-5 text-muted-foreground" />

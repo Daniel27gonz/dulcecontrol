@@ -1,6 +1,5 @@
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { motion } from 'framer-motion';
-import { supabase } from '@/integrations/supabase/client';
 import { 
   FileText, 
   Download, 
@@ -11,7 +10,8 @@ import {
   CheckCircle,
   ShoppingCart,
   Clock,
-  Copy
+  Copy,
+  Sparkles,
 } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -36,8 +36,10 @@ import {
 import { Quotation } from '@/types/quotation';
 import { useApp } from '@/context/AppContext';
 import { useQuotations } from '@/hooks/useQuotations';
+import { usePDFSettings } from '@/hooks/usePDFSettings';
 import { QuotationForm } from './QuotationForm';
-import { downloadQuotationPDF, getQuotationPDFBlob } from '@/lib/generateQuotationPDF';
+import { QuotationDesigner } from './QuotationDesigner';
+import { downloadStyledQuotationPDF } from '@/lib/generateQuotationPDFStyled';
 import { format, parseISO, isPast } from 'date-fns';
 import { es } from 'date-fns/locale';
 import { toast } from '@/hooks/use-toast';
@@ -48,47 +50,14 @@ interface QuotationCardProps {
 }
 
 export function QuotationCard({ quotation, onUpdate }: QuotationCardProps) {
-  const { settings, user, addOrder, recipes, calculateRecipeCost } = useApp();
+  const { settings, addOrder, recipes, calculateRecipeCost } = useApp();
   const { updateQuotation, deleteQuotation, duplicateQuotation } = useQuotations();
+  const { settings: pdfSettings, isLoading: isPdfSettingsLoading } = usePDFSettings();
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
   const [isSending, setIsSending] = useState(false);
-  const [pdfSettings, setPdfSettings] = useState<{
-    businessName?: string;
-    businessPhone?: string;
-    primaryColor?: string;
-    secondaryColor?: string;
-    logoUrl?: string | null;
-  } | null>(null);
+  const [isDownloading, setIsDownloading] = useState(false);
 
   const isExpired = isPast(parseISO(quotation.validUntil));
-
-  useEffect(() => {
-    loadPdfSettings();
-  }, [user?.id]);
-
-  const loadPdfSettings = async () => {
-    if (!user?.id) return;
-    
-    try {
-      const { data } = await supabase
-        .from('pdf_settings')
-        .select('business_name, business_phone, primary_color, secondary_color, logo_url')
-        .eq('user_id', user.id)
-        .maybeSingle();
-      
-      if (data) {
-        setPdfSettings({
-          businessName: data.business_name || undefined,
-          businessPhone: data.business_phone || undefined,
-          primaryColor: data.primary_color || undefined,
-          secondaryColor: data.secondary_color || undefined,
-          logoUrl: data.logo_url,
-        });
-      }
-    } catch (error) {
-      console.error('Error loading PDF settings:', error);
-    }
-  };
 
   const statusConfig = {
     draft: { label: 'Borrador', color: 'bg-muted text-muted-foreground' },
@@ -104,19 +73,33 @@ export function QuotationCard({ quotation, onUpdate }: QuotationCardProps) {
     return `${settings.currencySymbol}${amount.toLocaleString('es-MX', { minimumFractionDigits: 2 })}`;
   };
 
-  const handleDownloadPDF = () => {
-    downloadQuotationPDF(quotation, {
-      businessName: pdfSettings?.businessName || settings.userName || 'Mi Negocio de Postres',
-      currencySymbol: settings.currencySymbol,
-      businessPhone: pdfSettings?.businessPhone,
-      primaryColor: pdfSettings?.primaryColor,
-      secondaryColor: pdfSettings?.secondaryColor,
-      logoUrl: pdfSettings?.logoUrl,
-    });
-    toast({
-      title: 'PDF descargado',
-      description: `Cotización #${quotation.number} guardada`,
-    });
+  const handleQuickDownload = async () => {
+    // Use saved settings with fallback to user name
+    const effectiveSettings = {
+      ...pdfSettings,
+      businessName: pdfSettings.businessName || settings.userName || 'Mi Negocio de Postres',
+    };
+
+    setIsDownloading(true);
+    try {
+      await downloadStyledQuotationPDF(quotation, {
+        currencySymbol: settings.currencySymbol,
+        pdfSettings: effectiveSettings,
+      });
+      toast({
+        title: 'PDF descargado',
+        description: `Cotización #${quotation.number} guardada`,
+      });
+    } catch (error) {
+      console.error('Error downloading PDF:', error);
+      toast({
+        title: 'Error',
+        description: 'No se pudo descargar el PDF',
+        variant: 'destructive',
+      });
+    } finally {
+      setIsDownloading(false);
+    }
   };
 
   const handleSendWhatsApp = async () => {
@@ -324,10 +307,21 @@ ${quotation.notes ? `\n📝 ${quotation.notes}` : ''}
                 <Button
                   variant="outline"
                   size="sm"
-                  onClick={handleDownloadPDF}
+                  onClick={handleQuickDownload}
+                  disabled={isDownloading || isPdfSettingsLoading}
+                  title="Descargar PDF"
                 >
-                  <Download className="w-4 h-4" />
+                  <Download className="w-4 h-4 mr-1" />
+                  {isDownloading ? '...' : 'PDF'}
                 </Button>
+                <QuotationDesigner
+                  quotation={quotation}
+                  trigger={
+                    <Button variant="ghost" size="icon" className="h-8 w-8" title="Personalizar diseño">
+                      <Sparkles className="w-4 h-4" />
+                    </Button>
+                  }
+                />
                 <Button
                   variant="warm"
                   size="sm"

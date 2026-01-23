@@ -23,7 +23,6 @@ import IngredientsPage from "./pages/IngredientsPage";
 import LaborPage from "./pages/LaborPage";
 import IndirectCostsPage from "./pages/IndirectCostsPage";
 import SettingsPage from "./pages/SettingsPage";
-import QuotationDesignPage from "./pages/QuotationDesignPage";
 import HelpPage from "./pages/HelpPage";
 import NotFound from "./pages/NotFound";
 
@@ -72,7 +71,6 @@ function AppRoutes() {
       <Route path="/indirect-costs" element={<ProtectedRoute><IndirectCostsPage /></ProtectedRoute>} />
       <Route path="/finances" element={<ProtectedRoute><FinancesPage /></ProtectedRoute>} />
       <Route path="/settings" element={<ProtectedRoute><SettingsPage /></ProtectedRoute>} />
-      <Route path="/quotation-design" element={<ProtectedRoute><QuotationDesignPage /></ProtectedRoute>} />
       <Route path="/help" element={<ProtectedRoute><HelpPage /></ProtectedRoute>} />
       <Route path="*" element={<NotFound />} />
     </Routes>
