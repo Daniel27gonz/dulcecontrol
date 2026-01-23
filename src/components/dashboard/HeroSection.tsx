@@ -78,7 +78,7 @@ export function HeroSection() {
             className="w-full border-2 border-accent hover:bg-accent/20 transition-all duration-300"
           >
             <Users className="w-4 h-4" />
-            Únete a nuestra comunidad privada 🎀
+            Únete a nuestra comunidad privada 🧁
           </Button>
         </motion.div>
 
