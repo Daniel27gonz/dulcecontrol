@@ -34,14 +34,10 @@ export function HeroSection() {
           initial={{ opacity: 0, y: 10 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.2, duration: 0.5 }}
-          className="space-y-1"
         >
           <h1 className="text-2xl sm:text-3xl md:text-4xl font-extrabold text-foreground leading-tight tracking-tight">
-            Calculadora de Costos
+            Calculadora de Costos <span className="text-gradient">para Postres</span>
           </h1>
-          <h2 className="text-2xl sm:text-3xl md:text-4xl font-extrabold leading-tight tracking-tight">
-            <span className="text-gradient">para Postres</span>
-          </h2>
         </motion.div>
 
         {/* Subtitle */}
