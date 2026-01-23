@@ -223,6 +223,8 @@ export async function generateStyledQuotationPDF(
   const validDate = format(parseISO(quotation.validUntil), "d 'de' MMMM, yyyy", { locale: es });
   doc.text(`${eventDateLabel}: ${validDate}`, margin + 10, clientY + 14);
   
+  const eventTypeLabel = pdfSettings.eventTypeLabel || 'Tipo de evento (opcional)';
+  doc.text(`${eventTypeLabel}: _________________`, margin + 10, clientY + 21);
 
   y += 55;
 
