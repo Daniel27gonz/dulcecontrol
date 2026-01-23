@@ -72,7 +72,7 @@ export function HeroSection() {
           </Button>
 
           <Button
-            onClick={() => window.open('https://wa.me/?text=Quiero unirme a la comunidad de Postre Rentable 🎀', '_blank')}
+            onClick={() => window.open('https://chat.whatsapp.com/FiRIRAYs1G7KX8kLNFxYTL', '_blank')}
             variant="outline"
             size="lg"
             className="w-full border-2 border-accent hover:bg-accent/20 transition-all duration-300"
