@@ -10,7 +10,6 @@ import { LaborProvider } from "@/context/LaborContext";
 import { IndirectCostsProvider } from "@/context/IndirectCostsContext";
 import { InstallPrompt } from "@/components/InstallPrompt";
 import WelcomePage from "./pages/WelcomePage";
-import OnboardingPage from "./pages/OnboardingPage";
 import LoginPage from "./pages/LoginPage";
 import RegisterPage from "./pages/RegisterPage";
 import DashboardPage from "./pages/DashboardPage";
@@ -31,14 +30,10 @@ const queryClient = new QueryClient();
 
 // Protected Route wrapper
 function ProtectedRoute({ children }: { children: React.ReactNode }) {
-  const { isAuthenticated, settings } = useApp();
+  const { isAuthenticated } = useApp();
   
   if (!isAuthenticated) {
     return <Navigate to="/login" replace />;
-  }
-  
-  if (!settings.hasCompletedOnboarding) {
-    return <Navigate to="/onboarding" replace />;
   }
   
   return <>{children}</>;
@@ -46,9 +41,9 @@ function ProtectedRoute({ children }: { children: React.ReactNode }) {
 
 // Public Route wrapper (redirects to dashboard if logged in)
 function PublicRoute({ children }: { children: React.ReactNode }) {
-  const { isAuthenticated, settings } = useApp();
+  const { isAuthenticated } = useApp();
   
-  if (isAuthenticated && settings.hasCompletedOnboarding) {
+  if (isAuthenticated) {
     return <Navigate to="/dashboard" replace />;
   }
   
@@ -61,7 +56,6 @@ function AppRoutes() {
       <Route path="/" element={<PublicRoute><WelcomePage /></PublicRoute>} />
       <Route path="/login" element={<PublicRoute><LoginPage /></PublicRoute>} />
       <Route path="/register" element={<PublicRoute><RegisterPage /></PublicRoute>} />
-      <Route path="/onboarding" element={<OnboardingPage />} />
       <Route path="/dashboard" element={<ProtectedRoute><DashboardPage /></ProtectedRoute>} />
       <Route path="/calculator" element={<ProtectedRoute><CalculatorPage /></ProtectedRoute>} />
       <Route path="/recipes" element={<ProtectedRoute><RecipesPage /></ProtectedRoute>} />

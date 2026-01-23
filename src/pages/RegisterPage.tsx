@@ -68,7 +68,7 @@ const RegisterPage = () => {
     
     if (result.success) {
       toast.success('¡Cuenta creada exitosamente!');
-      navigate('/onboarding');
+      navigate('/dashboard');
     } else {
       toast.error(result.error || 'Error al crear la cuenta');
     }
