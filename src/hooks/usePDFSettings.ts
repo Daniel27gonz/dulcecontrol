@@ -28,14 +28,22 @@ export function usePDFSettings() {
 
       if (data) {
         setSettings({
+          ...DEFAULT_PDF_SETTINGS,
           id: data.id,
           userId: data.user_id,
           businessName: data.business_name || '',
           businessPhone: data.business_phone || '',
           businessEmail: data.business_email || '',
           logoUrl: data.logo_url,
-          primaryColor: data.primary_color || '#5D4037',
-          style: data.style as PDFSettings['style'],
+          primaryColor: data.primary_color || DEFAULT_PDF_SETTINGS.primaryColor,
+          secondaryColor: DEFAULT_PDF_SETTINGS.secondaryColor,
+          style: (data.style as PDFSettings['style']) || DEFAULT_PDF_SETTINGS.style,
+          quotationTitle: DEFAULT_PDF_SETTINGS.quotationTitle,
+          eventDateLabel: DEFAULT_PDF_SETTINGS.eventDateLabel,
+          eventTypeLabel: DEFAULT_PDF_SETTINGS.eventTypeLabel,
+          observationsText: DEFAULT_PDF_SETTINGS.observationsText,
+          footerMessage: DEFAULT_PDF_SETTINGS.footerMessage,
+          thankYouMessage: DEFAULT_PDF_SETTINGS.thankYouMessage,
           createdAt: data.created_at,
           updatedAt: data.updated_at,
         });
