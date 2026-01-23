@@ -8,6 +8,20 @@ interface PDFOptions {
   currencySymbol: string;
   businessPhone?: string;
   businessEmail?: string;
+  primaryColor?: string;
+  secondaryColor?: string;
+  logoUrl?: string | null;
+}
+
+function hexToRgb(hex: string): [number, number, number] {
+  const result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
+  return result
+    ? [parseInt(result[1], 16), parseInt(result[2], 16), parseInt(result[3], 16)]
+    : [93, 64, 55]; // Default brown
+}
+
+function getLuminance(r: number, g: number, b: number): number {
+  return (0.299 * r + 0.587 * g + 0.114 * b) / 255;
 }
 
 export function generateQuotationPDF(quotation: Quotation, options: PDFOptions): jsPDF {
@@ -17,18 +31,34 @@ export function generateQuotationPDF(quotation: Quotation, options: PDFOptions):
   const contentWidth = pageWidth - margin * 2;
   let y = margin;
 
-  // Colors
-  const primaryColor: [number, number, number] = [93, 64, 55]; // #5D4037
-  const accentColor: [number, number, number] = [200, 150, 120];
+  // Colors - use custom or defaults
+  const primaryColor: [number, number, number] = options.primaryColor 
+    ? hexToRgb(options.primaryColor) 
+    : [93, 64, 55]; // Default brown #5D4037
+  
+  const secondaryColor: [number, number, number] = options.secondaryColor
+    ? hexToRgb(options.secondaryColor)
+    : [250, 248, 245]; // Light beige
+  
+  const accentColor: [number, number, number] = [
+    Math.min(255, primaryColor[0] + 80),
+    Math.min(255, primaryColor[1] + 80),
+    Math.min(255, primaryColor[2] + 80),
+  ];
+  
   const textColor: [number, number, number] = [50, 50, 50];
   const mutedColor: [number, number, number] = [120, 120, 120];
+  
+  // Determine text color based on primary color luminance
+  const primaryLuminance = getLuminance(...primaryColor);
+  const headerTextColor: [number, number, number] = primaryLuminance > 0.5 ? [50, 50, 50] : [255, 255, 255];
 
   // Header background
   doc.setFillColor(...primaryColor);
   doc.rect(0, 0, pageWidth, 45, 'F');
 
   // Business name
-  doc.setTextColor(255, 255, 255);
+  doc.setTextColor(...headerTextColor);
   doc.setFontSize(22);
   doc.setFont('helvetica', 'bold');
   doc.text(options.businessName || 'Postres Rentables', margin, y + 12);
@@ -51,7 +81,7 @@ export function generateQuotationPDF(quotation: Quotation, options: PDFOptions):
   y = 55;
 
   // Client info section
-  doc.setFillColor(250, 248, 245);
+  doc.setFillColor(...secondaryColor);
   doc.roundedRect(margin, y, contentWidth, 35, 3, 3, 'F');
 
   doc.setTextColor(...textColor);
@@ -84,7 +114,7 @@ export function generateQuotationPDF(quotation: Quotation, options: PDFOptions):
   doc.setFillColor(...primaryColor);
   doc.rect(margin, y, contentWidth, 10, 'F');
   
-  doc.setTextColor(255, 255, 255);
+  doc.setTextColor(...headerTextColor);
   doc.setFontSize(9);
   doc.setFont('helvetica', 'bold');
   doc.text('PRODUCTO', margin + 5, y + 7);
@@ -104,7 +134,7 @@ export function generateQuotationPDF(quotation: Quotation, options: PDFOptions):
     
     // Alternating row background
     if (index % 2 === 0) {
-      doc.setFillColor(250, 248, 245);
+      doc.setFillColor(...secondaryColor);
       doc.rect(margin, y - 3, contentWidth, rowHeight, 'F');
     }
 
@@ -164,7 +194,7 @@ export function generateQuotationPDF(quotation: Quotation, options: PDFOptions):
   doc.setFillColor(...primaryColor);
   doc.roundedRect(pageWidth - margin - 80, y - 6, 80, 16, 2, 2, 'F');
   
-  doc.setTextColor(255, 255, 255);
+  doc.setTextColor(...headerTextColor);
   doc.setFontSize(11);
   doc.setFont('helvetica', 'bold');
   doc.text('TOTAL:', pageWidth - margin - 75, y + 4);
@@ -188,15 +218,16 @@ export function generateQuotationPDF(quotation: Quotation, options: PDFOptions):
 
   // Footer
   const footerY = doc.internal.pageSize.getHeight() - 20;
-  doc.setDrawColor(...accentColor);
+  doc.setDrawColor(...primaryColor);
   doc.line(margin, footerY - 10, pageWidth - margin, footerY - 10);
   
-  doc.setTextColor(...mutedColor);
+  doc.setTextColor(...primaryColor);
   doc.setFontSize(9);
   doc.setFont('helvetica', 'normal');
   doc.text('Gracias por su preferencia 🧁', pageWidth / 2, footerY, { align: 'center' });
   
   if (options.businessPhone) {
+    doc.setTextColor(...mutedColor);
     doc.text(`Tel: ${options.businessPhone}`, pageWidth / 2, footerY + 6, { align: 'center' });
   }
 
