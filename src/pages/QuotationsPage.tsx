@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { FileText, Search, Filter } from 'lucide-react';
+import { FileText, Search, Sparkles } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -8,6 +8,7 @@ import { AppHeader } from '@/components/AppHeader';
 import { BottomNav } from '@/components/BottomNav';
 import { QuotationForm } from '@/components/quotations/QuotationForm';
 import { QuotationCard } from '@/components/quotations/QuotationCard';
+import { QuotationDesigner } from '@/components/quotations/QuotationDesigner';
 import { useQuotations } from '@/hooks/useQuotations';
 
 type FilterStatus = 'all' | 'draft' | 'sent' | 'accepted' | 'converted';
@@ -44,8 +45,20 @@ export default function QuotationsPage() {
       <AppHeader title="Cotizaciones" />
 
       <div className="p-4 space-y-4">
-        {/* Create Button */}
-        <QuotationForm onSave={handleUpdate} />
+        {/* Action Buttons - Create & Designer */}
+        <div className="flex gap-2">
+          <div className="flex-1">
+            <QuotationForm onSave={handleUpdate} />
+          </div>
+          <QuotationDesigner
+            trigger={
+              <Button variant="outline" className="gap-2">
+                <Sparkles className="w-4 h-4" />
+                <span className="hidden sm:inline">Personalizar</span>
+              </Button>
+            }
+          />
+        </div>
 
         {/* Search */}
         <div className="relative">

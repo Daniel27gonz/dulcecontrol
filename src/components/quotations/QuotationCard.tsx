@@ -11,7 +11,6 @@ import {
   ShoppingCart,
   Clock,
   Copy,
-  Sparkles,
 } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -38,7 +37,6 @@ import { useApp } from '@/context/AppContext';
 import { useQuotations } from '@/hooks/useQuotations';
 import { usePDFSettings } from '@/hooks/usePDFSettings';
 import { QuotationForm } from './QuotationForm';
-import { QuotationDesigner } from './QuotationDesigner';
 import { downloadStyledQuotationPDF } from '@/lib/generateQuotationPDFStyled';
 import { format, parseISO, isPast } from 'date-fns';
 import { es } from 'date-fns/locale';
@@ -314,14 +312,6 @@ ${quotation.notes ? `\n📝 ${quotation.notes}` : ''}
                   <Download className="w-4 h-4 mr-1" />
                   {isDownloading ? '...' : 'PDF'}
                 </Button>
-                <QuotationDesigner
-                  quotation={quotation}
-                  trigger={
-                    <Button variant="ghost" size="icon" className="h-8 w-8" title="Personalizar diseño">
-                      <Sparkles className="w-4 h-4" />
-                    </Button>
-                  }
-                />
                 <Button
                   variant="warm"
                   size="sm"

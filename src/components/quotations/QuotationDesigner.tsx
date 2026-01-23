@@ -39,12 +39,35 @@ import { toast } from '@/hooks/use-toast';
 import { cn } from '@/lib/utils';
 
 interface QuotationDesignerProps {
-  quotation: Quotation;
+  quotation?: Quotation;
   trigger?: React.ReactNode;
   onClose?: () => void;
 }
 
+// Sample quotation for preview when no quotation is provided
+const SAMPLE_QUOTATION: Quotation = {
+  id: 'sample',
+  number: 'COT-001',
+  clientName: 'María García',
+  clientEmail: 'maria@ejemplo.com',
+  clientPhone: '+52 555 123 4567',
+  items: [
+    { id: '1', name: 'Pastel de Chocolate 3 Leches', quantity: 1, unitPrice: 450, total: 450 },
+    { id: '2', name: 'Cupcakes Decorados (docena)', quantity: 2, unitPrice: 180, total: 360 },
+  ],
+  subtotal: 810,
+  discount: 0,
+  discountType: 'percentage',
+  total: 810,
+  notes: 'Entrega a domicilio incluida',
+  status: 'draft',
+  validUntil: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString(),
+  createdAt: new Date().toISOString(),
+};
+
 export function QuotationDesigner({ quotation, trigger, onClose }: QuotationDesignerProps) {
+  // Use provided quotation or sample for preview
+  const displayQuotation = quotation || SAMPLE_QUOTATION;
   const { settings: appSettings } = useApp();
   const { settings: savedSettings, isLoading, saveSettings } = usePDFSettings();
   const [isOpen, setIsOpen] = useState(false);
@@ -116,7 +139,7 @@ export function QuotationDesigner({ quotation, trigger, onClose }: QuotationDesi
 
     setIsDownloading(true);
     try {
-      await downloadStyledQuotationPDF(quotation, {
+      await downloadStyledQuotationPDF(displayQuotation, {
         currencySymbol: appSettings.currencySymbol,
         pdfSettings: localSettings,
       });
@@ -464,7 +487,7 @@ export function QuotationDesigner({ quotation, trigger, onClose }: QuotationDesi
                   <TabsContent value="preview" className="mt-0 lg:hidden">
                     <div className="p-2">
                       <QuotationHTMLPreview
-                        quotation={quotation}
+                        quotation={displayQuotation}
                         pdfSettings={localSettings}
                         currencySymbol={appSettings.currencySymbol}
                       />
@@ -483,7 +506,7 @@ export function QuotationDesigner({ quotation, trigger, onClose }: QuotationDesi
               </div>
               <ScrollArea className="flex-1 p-4 min-h-0">
                 <QuotationHTMLPreview
-                  quotation={quotation}
+                  quotation={displayQuotation}
                   pdfSettings={localSettings}
                   currencySymbol={appSettings.currencySymbol}
                 />
