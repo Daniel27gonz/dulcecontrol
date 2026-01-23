@@ -1,10 +1,11 @@
 import { motion } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
-import { Plus, ClipboardList, DollarSign, TrendingUp, Wallet, TrendingDown, ChefHat, FileText, Users, Receipt } from 'lucide-react';
+import { Plus, ClipboardList, TrendingUp, Wallet, TrendingDown, ChefHat, FileText, Users, Receipt } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useApp } from '@/context/AppContext';
 import { BottomNav } from '@/components/BottomNav';
 import { AppHeader } from '@/components/AppHeader';
+import { HeroSection } from '@/components/dashboard/HeroSection';
 import { MetricCard } from '@/components/dashboard/MetricCard';
 import { QuickStats } from '@/components/dashboard/QuickStats';
 import { MonthlyChart } from '@/components/dashboard/MonthlyChart';
@@ -61,7 +62,7 @@ export default function DashboardPage() {
 
   return (
     <div className="min-h-screen bg-background pb-24">
-      <AppHeader title="Dashboard" showGreeting />
+      <AppHeader title="Inicio" />
 
       <motion.div
         variants={containerVariants}
@@ -69,6 +70,11 @@ export default function DashboardPage() {
         animate="visible"
         className="p-4 space-y-5"
       >
+        {/* Hero Section */}
+        <motion.div variants={itemVariants}>
+          <HeroSection />
+        </motion.div>
+
         {/* Hero Metric - Monthly Profit */}
         <motion.div variants={itemVariants}>
           <MetricCard
