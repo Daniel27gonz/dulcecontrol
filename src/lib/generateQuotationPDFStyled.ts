@@ -219,12 +219,19 @@ export async function generateStyledQuotationPDF(
   doc.text(`Nombre del cliente: ${quotation.clientName}`, margin + 10, clientY);
   doc.text(`Teléfono: ${quotation.clientPhone || '_________________'}`, margin + 10, clientY + 7);
   
-  const eventDateLabel = pdfSettings.eventDateLabel || 'Fecha del evento / entrega';
-  const validDate = format(parseISO(quotation.validUntil), "d 'de' MMMM, yyyy", { locale: es });
-  doc.text(`${eventDateLabel}: ${validDate}`, margin + 10, clientY + 14);
+  // Fecha de entrega
+  const eventDateLabel = pdfSettings.eventDateLabel || 'Fecha de entrega';
+  const deliveryDate = quotation.deliveryDate 
+    ? format(parseISO(quotation.deliveryDate), "d 'de' MMMM, yyyy", { locale: es })
+    : '_________________';
+  doc.text(`${eventDateLabel}: ${deliveryDate}`, margin + 10, clientY + 14);
   
-  const eventTypeLabel = pdfSettings.eventTypeLabel || 'Tipo de evento (opcional)';
-  doc.text(`${eventTypeLabel}: _________________`, margin + 10, clientY + 21);
+  // Válida hasta
+  const validUntilLabel = pdfSettings.validUntilLabel || 'Válida hasta';
+  const validDate = quotation.validUntil
+    ? format(parseISO(quotation.validUntil), "d 'de' MMMM, yyyy", { locale: es })
+    : '_________________';
+  doc.text(`${validUntilLabel}: ${validDate}`, margin + 10, clientY + 21);
 
   y += 55;
 
