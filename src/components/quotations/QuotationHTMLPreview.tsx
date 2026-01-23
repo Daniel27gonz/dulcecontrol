@@ -219,10 +219,6 @@ export function QuotationHTMLPreview({
                   {quotation.validUntil ? format(parseISO(quotation.validUntil), "d 'de' MMMM, yyyy", { locale: es }) : ''}
                 </span>
               </p>
-              <p className="flex items-baseline gap-2">
-                <span className="font-medium whitespace-nowrap">{pdfSettings.eventTypeLabel}:</span>
-                <span className="border-b border-dashed border-gray-400 flex-1"></span>
-              </p>
             </div>
           </div>
 
