@@ -36,7 +36,9 @@ export function HeroSection() {
           transition={{ delay: 0.2, duration: 0.5 }}
         >
           <h1 className="text-2xl sm:text-3xl md:text-4xl font-extrabold text-foreground leading-tight tracking-tight">
-            Calculadora de Costos <span className="text-primary-foreground bg-primary px-2 py-1 rounded-lg">para Postres</span>
+            Calculadora de Costos
+            <br />
+            <span className="text-primary-foreground bg-primary px-2 py-1 rounded-lg">para Postres</span>
           </h1>
         </motion.div>
 
