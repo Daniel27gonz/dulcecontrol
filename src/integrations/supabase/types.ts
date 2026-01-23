@@ -212,6 +212,7 @@ export type Database = {
           client_phone: string | null
           converted_to_order_id: string | null
           created_at: string
+          delivery_date: string | null
           discount: number
           discount_type: string
           id: string
@@ -231,6 +232,7 @@ export type Database = {
           client_phone?: string | null
           converted_to_order_id?: string | null
           created_at?: string
+          delivery_date?: string | null
           discount?: number
           discount_type?: string
           id?: string
@@ -250,6 +252,7 @@ export type Database = {
           client_phone?: string | null
           converted_to_order_id?: string | null
           created_at?: string
+          delivery_date?: string | null
           discount?: number
           discount_type?: string
           id?: string

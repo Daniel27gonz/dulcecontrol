@@ -58,6 +58,7 @@ export function QuotationForm({ quotation, trigger, onClose, onSave }: Quotation
   const [discountType, setDiscountType] = useState<'percentage' | 'fixed'>('percentage');
   const [notes, setNotes] = useState('');
   const [validUntil, setValidUntil] = useState<Date>(addDays(new Date(), 7));
+  const [deliveryDate, setDeliveryDate] = useState<Date | undefined>(undefined);
 
   const isEditing = !!quotation;
 
@@ -71,6 +72,7 @@ export function QuotationForm({ quotation, trigger, onClose, onSave }: Quotation
       setDiscountType(quotation.discountType);
       setNotes(quotation.notes || '');
       setValidUntil(new Date(quotation.validUntil));
+      setDeliveryDate(quotation.deliveryDate ? new Date(quotation.deliveryDate) : undefined);
     }
   }, [quotation, open]);
 
@@ -82,6 +84,7 @@ export function QuotationForm({ quotation, trigger, onClose, onSave }: Quotation
     setDiscountType('percentage');
     setNotes('');
     setValidUntil(addDays(new Date(), 7));
+    setDeliveryDate(undefined);
   };
 
   const handleOpenChange = (newOpen: boolean) => {
@@ -234,6 +237,7 @@ export function QuotationForm({ quotation, trigger, onClose, onSave }: Quotation
       total,
       notes: notes.trim() || undefined,
       validUntil: validUntil.toISOString(),
+      deliveryDate: deliveryDate?.toISOString(),
       status: 'draft' as const,
     };
 
@@ -424,28 +428,33 @@ export function QuotationForm({ quotation, trigger, onClose, onSave }: Quotation
             </p>
           </div>
 
-          {/* Discount */}
+          {/* Dates */}
           <div className="grid grid-cols-2 gap-3">
             <div className="space-y-2">
-              <Label>Descuento</Label>
-              <div className="flex gap-2">
-                <Input
-                  type="number"
-                  min={0}
-                  value={discount}
-                  onChange={(e) => setDiscount(parseFloat(e.target.value) || 0)}
-                  className="flex-1"
-                />
-                <Select value={discountType} onValueChange={(v) => setDiscountType(v as 'percentage' | 'fixed')}>
-                  <SelectTrigger className="w-20">
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent className="bg-background border">
-                    <SelectItem value="percentage">%</SelectItem>
-                    <SelectItem value="fixed">{settings.currencySymbol}</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
+              <Label>Fecha de entrega</Label>
+              <Popover>
+                <PopoverTrigger asChild>
+                  <Button
+                    variant="outline"
+                    className={cn(
+                      'w-full justify-start text-left font-normal',
+                      !deliveryDate && 'text-muted-foreground'
+                    )}
+                  >
+                    <CalendarIcon className="mr-2 h-4 w-4" />
+                    {deliveryDate ? format(deliveryDate, 'dd/MM/yyyy') : 'Seleccionar'}
+                  </Button>
+                </PopoverTrigger>
+                <PopoverContent className="w-auto p-0 bg-background border">
+                  <Calendar
+                    mode="single"
+                    selected={deliveryDate}
+                    onSelect={setDeliveryDate}
+                    locale={es}
+                    className="pointer-events-auto"
+                  />
+                </PopoverContent>
+              </Popover>
             </div>
             <div className="space-y-2">
               <Label>Válida hasta</Label>
@@ -468,9 +477,33 @@ export function QuotationForm({ quotation, trigger, onClose, onSave }: Quotation
                     selected={validUntil}
                     onSelect={(date) => date && setValidUntil(date)}
                     locale={es}
+                    className="pointer-events-auto"
                   />
                 </PopoverContent>
               </Popover>
+            </div>
+          </div>
+
+          {/* Discount */}
+          <div className="space-y-2">
+            <Label>Descuento</Label>
+            <div className="flex gap-2">
+              <Input
+                type="number"
+                min={0}
+                value={discount}
+                onChange={(e) => setDiscount(parseFloat(e.target.value) || 0)}
+                className="flex-1"
+              />
+              <Select value={discountType} onValueChange={(v) => setDiscountType(v as 'percentage' | 'fixed')}>
+                <SelectTrigger className="w-20">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent className="bg-background border">
+                  <SelectItem value="percentage">%</SelectItem>
+                  <SelectItem value="fixed">{settings.currencySymbol}</SelectItem>
+                </SelectContent>
+              </Select>
             </div>
           </div>
 
