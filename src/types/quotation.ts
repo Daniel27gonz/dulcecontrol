@@ -22,6 +22,7 @@ export interface Quotation {
   notes?: string;
   validUntil: string;
   deliveryDate?: string;
+  referenceImage?: string;
   status: 'draft' | 'sent' | 'accepted' | 'rejected' | 'converted';
   createdAt: string;
   convertedToOrderId?: string;

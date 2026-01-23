@@ -59,6 +59,7 @@ export function QuotationsProvider({ children }: { children: ReactNode }) {
         status: q.status as 'draft' | 'sent' | 'accepted' | 'rejected' | 'converted',
         validUntil: q.valid_until || undefined,
         deliveryDate: q.delivery_date || undefined,
+        referenceImage: q.reference_image || undefined,
         convertedToOrderId: q.converted_to_order_id || undefined,
         createdAt: q.created_at,
       })));
@@ -105,6 +106,7 @@ export function QuotationsProvider({ children }: { children: ReactNode }) {
         status: quotation.status,
         valid_until: quotation.validUntil,
         delivery_date: quotation.deliveryDate,
+        reference_image: quotation.referenceImage,
         converted_to_order_id: quotation.convertedToOrderId,
       }])
       .select()
@@ -130,6 +132,7 @@ export function QuotationsProvider({ children }: { children: ReactNode }) {
       status: data.status as 'draft' | 'sent' | 'accepted' | 'rejected' | 'converted',
       validUntil: data.valid_until || undefined,
       deliveryDate: data.delivery_date || undefined,
+      referenceImage: data.reference_image || undefined,
       convertedToOrderId: data.converted_to_order_id || undefined,
       createdAt: data.created_at,
     };
@@ -154,6 +157,7 @@ export function QuotationsProvider({ children }: { children: ReactNode }) {
     if (updates.status !== undefined) updateData.status = updates.status;
     if (updates.validUntil !== undefined) updateData.valid_until = updates.validUntil;
     if (updates.deliveryDate !== undefined) updateData.delivery_date = updates.deliveryDate;
+    if (updates.referenceImage !== undefined) updateData.reference_image = updates.referenceImage;
     if (updates.convertedToOrderId !== undefined) updateData.converted_to_order_id = updates.convertedToOrderId;
 
     const { error } = await supabase
@@ -204,6 +208,7 @@ export function QuotationsProvider({ children }: { children: ReactNode }) {
       status: 'draft',
       validUntil: original.validUntil,
       deliveryDate: original.deliveryDate,
+      referenceImage: original.referenceImage,
     });
   }, [quotations, addQuotation]);
 
