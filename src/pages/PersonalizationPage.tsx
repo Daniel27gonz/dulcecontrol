@@ -49,6 +49,7 @@ const SAMPLE_QUOTATION: Quotation = {
   total: 810,
   notes: 'Entrega a domicilio incluida',
   status: 'draft',
+  deliveryDate: new Date(Date.now() + 5 * 24 * 60 * 60 * 1000).toISOString(),
   validUntil: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString(),
   createdAt: new Date().toISOString(),
 };
