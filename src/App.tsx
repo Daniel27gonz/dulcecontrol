@@ -19,6 +19,7 @@ import RecipesPage from "./pages/RecipesPage";
 import OrdersPage from "./pages/OrdersPage";
 import FinancesPage from "./pages/FinancesPage";
 import QuotationsPage from "./pages/QuotationsPage";
+import PersonalizationPage from "./pages/PersonalizationPage";
 import IngredientsPage from "./pages/IngredientsPage";
 import LaborPage from "./pages/LaborPage";
 import IndirectCostsPage from "./pages/IndirectCostsPage";
@@ -66,6 +67,7 @@ function AppRoutes() {
       <Route path="/recipes" element={<ProtectedRoute><RecipesPage /></ProtectedRoute>} />
       <Route path="/orders" element={<ProtectedRoute><OrdersPage /></ProtectedRoute>} />
       <Route path="/quotations" element={<ProtectedRoute><QuotationsPage /></ProtectedRoute>} />
+      <Route path="/personalization" element={<ProtectedRoute><PersonalizationPage /></ProtectedRoute>} />
       <Route path="/ingredients" element={<ProtectedRoute><IngredientsPage /></ProtectedRoute>} />
       <Route path="/labor" element={<ProtectedRoute><LaborPage /></ProtectedRoute>} />
       <Route path="/indirect-costs" element={<ProtectedRoute><IndirectCostsPage /></ProtectedRoute>} />
