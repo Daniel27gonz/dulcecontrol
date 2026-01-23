@@ -379,11 +379,22 @@ export default function PersonalizationPage() {
                       </div>
 
                       <div>
-                        <Label htmlFor="eventDateLabel">Etiqueta de fecha</Label>
+                        <Label htmlFor="eventDateLabel">Etiqueta de fecha de entrega</Label>
                         <Input
                           id="eventDateLabel"
                           value={localSettings.eventDateLabel}
                           onChange={(e) => handleSettingsChange({ eventDateLabel: e.target.value.slice(0, 40) })}
+                          className="mt-1"
+                          maxLength={40}
+                        />
+                      </div>
+
+                      <div>
+                        <Label htmlFor="validUntilLabel">Etiqueta de validez</Label>
+                        <Input
+                          id="validUntilLabel"
+                          value={localSettings.validUntilLabel}
+                          onChange={(e) => handleSettingsChange({ validUntilLabel: e.target.value.slice(0, 40) })}
                           className="mt-1"
                           maxLength={40}
                         />
