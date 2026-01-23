@@ -148,6 +148,7 @@ export type Database = {
           id: string
           logo_url: string | null
           primary_color: string | null
+          secondary_color: string | null
           style: string | null
           updated_at: string
           user_id: string
@@ -160,6 +161,7 @@ export type Database = {
           id?: string
           logo_url?: string | null
           primary_color?: string | null
+          secondary_color?: string | null
           style?: string | null
           updated_at?: string
           user_id: string
@@ -172,6 +174,7 @@ export type Database = {
           id?: string
           logo_url?: string | null
           primary_color?: string | null
+          secondary_color?: string | null
           style?: string | null
           updated_at?: string
           user_id?: string

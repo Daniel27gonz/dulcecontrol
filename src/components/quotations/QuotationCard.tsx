@@ -1,5 +1,6 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
+import { supabase } from '@/integrations/supabase/client';
 import { 
   FileText, 
   Download, 
@@ -47,12 +48,47 @@ interface QuotationCardProps {
 }
 
 export function QuotationCard({ quotation, onUpdate }: QuotationCardProps) {
-  const { settings, addOrder, recipes, calculateRecipeCost } = useApp();
+  const { settings, user, addOrder, recipes, calculateRecipeCost } = useApp();
   const { updateQuotation, deleteQuotation, duplicateQuotation } = useQuotations();
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
   const [isSending, setIsSending] = useState(false);
+  const [pdfSettings, setPdfSettings] = useState<{
+    businessName?: string;
+    businessPhone?: string;
+    primaryColor?: string;
+    secondaryColor?: string;
+    logoUrl?: string | null;
+  } | null>(null);
 
   const isExpired = isPast(parseISO(quotation.validUntil));
+
+  useEffect(() => {
+    loadPdfSettings();
+  }, [user?.id]);
+
+  const loadPdfSettings = async () => {
+    if (!user?.id) return;
+    
+    try {
+      const { data } = await supabase
+        .from('pdf_settings')
+        .select('business_name, business_phone, primary_color, secondary_color, logo_url')
+        .eq('user_id', user.id)
+        .maybeSingle();
+      
+      if (data) {
+        setPdfSettings({
+          businessName: data.business_name || undefined,
+          businessPhone: data.business_phone || undefined,
+          primaryColor: data.primary_color || undefined,
+          secondaryColor: data.secondary_color || undefined,
+          logoUrl: data.logo_url,
+        });
+      }
+    } catch (error) {
+      console.error('Error loading PDF settings:', error);
+    }
+  };
 
   const statusConfig = {
     draft: { label: 'Borrador', color: 'bg-muted text-muted-foreground' },
@@ -70,8 +106,12 @@ export function QuotationCard({ quotation, onUpdate }: QuotationCardProps) {
 
   const handleDownloadPDF = () => {
     downloadQuotationPDF(quotation, {
-      businessName: settings.userName || 'Mi Negocio de Postres',
+      businessName: pdfSettings?.businessName || settings.userName || 'Mi Negocio de Postres',
       currencySymbol: settings.currencySymbol,
+      businessPhone: pdfSettings?.businessPhone,
+      primaryColor: pdfSettings?.primaryColor,
+      secondaryColor: pdfSettings?.secondaryColor,
+      logoUrl: pdfSettings?.logoUrl,
     });
     toast({
       title: 'PDF descargado',
