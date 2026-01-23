@@ -2,18 +2,19 @@ import { createRoot } from "react-dom/client";
 import { registerSW } from 'virtual:pwa-register';
 import App from "./App.tsx";
 import "./index.css";
+import { setUpdateFunction, notifyUpdateAvailable } from "./lib/pwaUpdater";
 
 // ============================================
 // PWA SERVICE WORKER REGISTRATION
 // ============================================
 
-// Registrar Service Worker con auto-update
+// Registrar Service Worker
 const updateSW = registerSW({
   immediate: true,
   onNeedRefresh() {
-    console.log('[PWA] 🔄 Nueva versión disponible');
-    // Auto-actualizar sin preguntar para mejor UX
-    updateSW(true);
+    console.log('[PWA] 🔄 Nueva versión disponible - mostrando notificación');
+    // Disparar evento personalizado para mostrar la notificación
+    notifyUpdateAvailable();
   },
   onOfflineReady() {
     console.log('[PWA] ✅ App lista para uso offline');
@@ -33,6 +34,9 @@ const updateSW = registerSW({
     console.error('[PWA] ❌ Error al registrar Service Worker:', error);
   }
 });
+
+// Registrar la función de actualización para uso global
+setUpdateFunction(updateSW);
 
 // ============================================
 // PWA DEBUGGING & STATUS
