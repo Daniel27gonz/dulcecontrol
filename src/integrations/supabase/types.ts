@@ -219,6 +219,7 @@ export type Database = {
           items: Json
           notes: string | null
           number: string
+          reference_image: string | null
           status: string
           subtotal: number
           total: number
@@ -239,6 +240,7 @@ export type Database = {
           items?: Json
           notes?: string | null
           number: string
+          reference_image?: string | null
           status?: string
           subtotal?: number
           total?: number
@@ -259,6 +261,7 @@ export type Database = {
           items?: Json
           notes?: string | null
           number?: string
+          reference_image?: string | null
           status?: string
           subtotal?: number
           total?: number

@@ -1,6 +1,6 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Plus, Trash2, X, Package, Percent } from 'lucide-react';
+import { Plus, Trash2, X, Package, Percent, ImagePlus, Loader2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -35,6 +35,7 @@ import { useIndirectCosts } from '@/context/IndirectCostsContext';
 import { useLabor } from '@/context/LaborContext';
 import { QuotationItem, Quotation } from '@/types/quotation';
 import { toast } from '@/hooks/use-toast';
+import { supabase } from '@/integrations/supabase/client';
 
 interface QuotationFormProps {
   quotation?: Quotation;
@@ -59,6 +60,9 @@ export function QuotationForm({ quotation, trigger, onClose, onSave }: Quotation
   const [notes, setNotes] = useState('');
   const [validUntil, setValidUntil] = useState<Date>(addDays(new Date(), 7));
   const [deliveryDate, setDeliveryDate] = useState<Date | undefined>(undefined);
+  const [referenceImage, setReferenceImage] = useState<string | undefined>(undefined);
+  const [isUploadingImage, setIsUploadingImage] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   const isEditing = !!quotation;
 
@@ -73,6 +77,7 @@ export function QuotationForm({ quotation, trigger, onClose, onSave }: Quotation
       setNotes(quotation.notes || '');
       setValidUntil(new Date(quotation.validUntil));
       setDeliveryDate(quotation.deliveryDate ? new Date(quotation.deliveryDate) : undefined);
+      setReferenceImage(quotation.referenceImage || undefined);
     }
   }, [quotation, open]);
 
@@ -85,6 +90,7 @@ export function QuotationForm({ quotation, trigger, onClose, onSave }: Quotation
     setNotes('');
     setValidUntil(addDays(new Date(), 7));
     setDeliveryDate(undefined);
+    setReferenceImage(undefined);
   };
 
   const handleOpenChange = (newOpen: boolean) => {
@@ -93,6 +99,71 @@ export function QuotationForm({ quotation, trigger, onClose, onSave }: Quotation
       resetForm();
       onClose?.();
     }
+  };
+
+  // Handle reference image upload
+  const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    // Validate file type
+    if (!file.type.startsWith('image/')) {
+      toast({
+        title: 'Error',
+        description: 'Solo se permiten imágenes',
+        variant: 'destructive',
+      });
+      return;
+    }
+
+    // Validate file size (max 5MB)
+    if (file.size > 5 * 1024 * 1024) {
+      toast({
+        title: 'Error',
+        description: 'La imagen no puede ser mayor a 5MB',
+        variant: 'destructive',
+      });
+      return;
+    }
+
+    setIsUploadingImage(true);
+    try {
+      const fileExt = file.name.split('.').pop();
+      const fileName = `${crypto.randomUUID()}.${fileExt}`;
+      const filePath = `quotation-references/${fileName}`;
+
+      const { error: uploadError } = await supabase.storage
+        .from('business-logos')
+        .upload(filePath, file);
+
+      if (uploadError) throw uploadError;
+
+      const { data: { publicUrl } } = supabase.storage
+        .from('business-logos')
+        .getPublicUrl(filePath);
+
+      setReferenceImage(publicUrl);
+      toast({
+        title: '¡Imagen subida!',
+        description: 'La imagen de referencia se agregó correctamente',
+      });
+    } catch (error) {
+      console.error('Error uploading image:', error);
+      toast({
+        title: 'Error',
+        description: 'No se pudo subir la imagen',
+        variant: 'destructive',
+      });
+    } finally {
+      setIsUploadingImage(false);
+      if (fileInputRef.current) {
+        fileInputRef.current.value = '';
+      }
+    }
+  };
+
+  const removeReferenceImage = () => {
+    setReferenceImage(undefined);
   };
 
   const addItem = () => {
@@ -238,6 +309,7 @@ export function QuotationForm({ quotation, trigger, onClose, onSave }: Quotation
       notes: notes.trim() || undefined,
       validUntil: validUntil.toISOString(),
       deliveryDate: deliveryDate?.toISOString(),
+      referenceImage,
       status: 'draft' as const,
     };
 
@@ -526,6 +598,53 @@ export function QuotationForm({ quotation, trigger, onClose, onSave }: Quotation
               </div>
             </div>
           )}
+
+          {/* Reference Image */}
+          <div className="space-y-2">
+            <Label>Imagen de referencia (opcional)</Label>
+            <input
+              ref={fileInputRef}
+              type="file"
+              accept="image/*"
+              onChange={handleImageUpload}
+              className="hidden"
+            />
+            {referenceImage ? (
+              <div className="relative rounded-xl overflow-hidden border bg-muted/30">
+                <img
+                  src={referenceImage}
+                  alt="Referencia"
+                  className="w-full h-40 object-cover"
+                />
+                <button
+                  type="button"
+                  onClick={removeReferenceImage}
+                  className="absolute top-2 right-2 p-1.5 bg-destructive text-destructive-foreground rounded-full hover:bg-destructive/90 transition-colors"
+                >
+                  <X className="w-4 h-4" />
+                </button>
+              </div>
+            ) : (
+              <button
+                type="button"
+                onClick={() => fileInputRef.current?.click()}
+                disabled={isUploadingImage}
+                className="w-full h-28 border-2 border-dashed rounded-xl flex flex-col items-center justify-center gap-2 text-muted-foreground hover:border-primary hover:text-primary transition-colors disabled:opacity-50"
+              >
+                {isUploadingImage ? (
+                  <>
+                    <Loader2 className="w-6 h-6 animate-spin" />
+                    <span className="text-sm">Subiendo...</span>
+                  </>
+                ) : (
+                  <>
+                    <ImagePlus className="w-6 h-6" />
+                    <span className="text-sm">Agregar imagen de referencia</span>
+                  </>
+                )}
+              </button>
+            )}
+          </div>
 
           {/* Notes */}
           <div className="space-y-2">
