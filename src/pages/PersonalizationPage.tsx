@@ -378,27 +378,15 @@ export default function PersonalizationPage() {
                         />
                       </div>
 
-                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                        <div>
-                          <Label htmlFor="eventDateLabel">Etiqueta de fecha</Label>
-                          <Input
-                            id="eventDateLabel"
-                            value={localSettings.eventDateLabel}
-                            onChange={(e) => handleSettingsChange({ eventDateLabel: e.target.value.slice(0, 40) })}
-                            className="mt-1"
-                            maxLength={40}
-                          />
-                        </div>
-                        <div>
-                          <Label htmlFor="eventTypeLabel">Etiqueta de evento</Label>
-                          <Input
-                            id="eventTypeLabel"
-                            value={localSettings.eventTypeLabel}
-                            onChange={(e) => handleSettingsChange({ eventTypeLabel: e.target.value.slice(0, 40) })}
-                            className="mt-1"
-                            maxLength={40}
-                          />
-                        </div>
+                      <div>
+                        <Label htmlFor="eventDateLabel">Etiqueta de fecha</Label>
+                        <Input
+                          id="eventDateLabel"
+                          value={localSettings.eventDateLabel}
+                          onChange={(e) => handleSettingsChange({ eventDateLabel: e.target.value.slice(0, 40) })}
+                          className="mt-1"
+                          maxLength={40}
+                        />
                       </div>
 
                       <div>
