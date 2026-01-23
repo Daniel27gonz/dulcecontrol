@@ -141,7 +141,14 @@ export function QuotationHTMLPreview({
           {/* Header con título y logo */}
           <div className="text-center mb-3 sm:mb-4 md:mb-5">
             {pdfSettings.logoUrl && (
-              <div className="flex justify-center mb-2 sm:mb-3">
+              <div 
+                className="flex mb-2 sm:mb-3"
+                style={{ 
+                  justifyContent: pdfSettings.logoPosition === 'left' ? 'flex-start' 
+                    : pdfSettings.logoPosition === 'right' ? 'flex-end' 
+                    : 'center' 
+                }}
+              >
                 <img 
                   src={pdfSettings.logoUrl} 
                   alt="Logo" 

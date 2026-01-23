@@ -35,6 +35,7 @@ export function usePDFSettings() {
           businessPhone: data.business_phone || '',
           businessEmail: data.business_email || '',
           logoUrl: data.logo_url,
+          logoPosition: (data.logo_position as PDFSettings['logoPosition']) || DEFAULT_PDF_SETTINGS.logoPosition,
           primaryColor: data.primary_color || DEFAULT_PDF_SETTINGS.primaryColor,
           secondaryColor: DEFAULT_PDF_SETTINGS.secondaryColor,
           style: (data.style as PDFSettings['style']) || DEFAULT_PDF_SETTINGS.style,
@@ -77,6 +78,7 @@ export function usePDFSettings() {
         business_phone: newSettings.businessPhone ?? settings.businessPhone,
         business_email: newSettings.businessEmail ?? settings.businessEmail,
         logo_url: newSettings.logoUrl ?? settings.logoUrl,
+        logo_position: newSettings.logoPosition ?? settings.logoPosition,
         primary_color: newSettings.primaryColor ?? settings.primaryColor,
         style: newSettings.style ?? settings.style,
       };
