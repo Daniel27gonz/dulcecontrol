@@ -58,6 +58,7 @@ export function QuotationsProvider({ children }: { children: ReactNode }) {
         total: Number(q.total),
         status: q.status as 'draft' | 'sent' | 'accepted' | 'rejected' | 'converted',
         validUntil: q.valid_until || undefined,
+        deliveryDate: q.delivery_date || undefined,
         convertedToOrderId: q.converted_to_order_id || undefined,
         createdAt: q.created_at,
       })));
@@ -103,6 +104,7 @@ export function QuotationsProvider({ children }: { children: ReactNode }) {
         total: quotation.total,
         status: quotation.status,
         valid_until: quotation.validUntil,
+        delivery_date: quotation.deliveryDate,
         converted_to_order_id: quotation.convertedToOrderId,
       }])
       .select()
@@ -127,6 +129,7 @@ export function QuotationsProvider({ children }: { children: ReactNode }) {
       total: Number(data.total),
       status: data.status as 'draft' | 'sent' | 'accepted' | 'rejected' | 'converted',
       validUntil: data.valid_until || undefined,
+      deliveryDate: data.delivery_date || undefined,
       convertedToOrderId: data.converted_to_order_id || undefined,
       createdAt: data.created_at,
     };
@@ -150,6 +153,7 @@ export function QuotationsProvider({ children }: { children: ReactNode }) {
     if (updates.total !== undefined) updateData.total = updates.total;
     if (updates.status !== undefined) updateData.status = updates.status;
     if (updates.validUntil !== undefined) updateData.valid_until = updates.validUntil;
+    if (updates.deliveryDate !== undefined) updateData.delivery_date = updates.deliveryDate;
     if (updates.convertedToOrderId !== undefined) updateData.converted_to_order_id = updates.convertedToOrderId;
 
     const { error } = await supabase
@@ -199,6 +203,7 @@ export function QuotationsProvider({ children }: { children: ReactNode }) {
       total: original.total,
       status: 'draft',
       validUntil: original.validUntil,
+      deliveryDate: original.deliveryDate,
     });
   }, [quotations, addQuotation]);
 

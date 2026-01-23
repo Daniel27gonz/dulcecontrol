@@ -21,6 +21,7 @@ export interface Quotation {
   total: number;
   notes?: string;
   validUntil: string;
+  deliveryDate?: string;
   status: 'draft' | 'sent' | 'accepted' | 'rejected' | 'converted';
   createdAt: string;
   convertedToOrderId?: string;
