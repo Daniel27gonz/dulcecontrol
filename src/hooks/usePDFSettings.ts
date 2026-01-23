@@ -37,7 +37,7 @@ export function usePDFSettings() {
           logoUrl: data.logo_url,
           logoPosition: (data.logo_position as PDFSettings['logoPosition']) || DEFAULT_PDF_SETTINGS.logoPosition,
           primaryColor: data.primary_color || DEFAULT_PDF_SETTINGS.primaryColor,
-          secondaryColor: DEFAULT_PDF_SETTINGS.secondaryColor,
+          secondaryColor: data.secondary_color || DEFAULT_PDF_SETTINGS.secondaryColor,
           style: (data.style as PDFSettings['style']) || DEFAULT_PDF_SETTINGS.style,
           quotationTitle: DEFAULT_PDF_SETTINGS.quotationTitle,
           eventDateLabel: DEFAULT_PDF_SETTINGS.eventDateLabel,
@@ -80,6 +80,7 @@ export function usePDFSettings() {
         logo_url: newSettings.logoUrl ?? settings.logoUrl,
         logo_position: newSettings.logoPosition ?? settings.logoPosition,
         primary_color: newSettings.primaryColor ?? settings.primaryColor,
+        secondary_color: newSettings.secondaryColor ?? settings.secondaryColor,
         style: newSettings.style ?? settings.style,
       };
 
