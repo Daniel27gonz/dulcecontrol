@@ -306,8 +306,8 @@ export function QuotationDesigner({ quotation, trigger, onClose }: QuotationDesi
                         <h3 className="font-semibold text-sm sm:text-base">Paleta de colores</h3>
                       </div>
 
-                      {/* Color presets - responsive grid */}
-                      <div className="grid grid-cols-4 xs:grid-cols-8 gap-2">
+                      {/* Color presets - fully visible on all devices */}
+                      <div className="grid grid-cols-4 sm:grid-cols-6 md:grid-cols-8 gap-2 sm:gap-3">
                         {COLOR_PRESETS.map((preset) => (
                           <motion.button
                             key={preset.color}
@@ -316,7 +316,7 @@ export function QuotationDesigner({ quotation, trigger, onClose }: QuotationDesi
                             whileTap={{ scale: 0.95 }}
                             onClick={() => handleColorPresetChange(preset)}
                             className={cn(
-                              'relative aspect-square rounded-lg overflow-hidden transition-all ring-2 ring-offset-2 ring-offset-background',
+                              'relative aspect-square rounded-lg overflow-hidden transition-all ring-2 ring-offset-1 sm:ring-offset-2 ring-offset-background min-w-[40px] min-h-[40px]',
                               localSettings.primaryColor === preset.color
                                 ? 'ring-primary'
                                 : 'ring-transparent hover:ring-muted-foreground/30'
@@ -331,46 +331,48 @@ export function QuotationDesigner({ quotation, trigger, onClose }: QuotationDesi
                             />
                             {localSettings.primaryColor === preset.color && (
                               <div className="absolute inset-0 flex items-center justify-center bg-black/20">
-                                <Check className="w-4 h-4 text-white drop-shadow-md" />
+                                <Check className="w-3 h-3 sm:w-4 sm:h-4 text-white drop-shadow-md" />
                               </div>
                             )}
                           </motion.button>
                         ))}
                       </div>
 
-                      {/* Custom color pickers - always visible */}
-                      <div className="grid grid-cols-2 gap-3 pt-2 border-t border-dashed">
-                        <div className="space-y-1.5">
-                          <Label className="text-xs font-medium">Color principal</Label>
+                      {/* Custom color pickers - fully visible */}
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-3 border-t border-dashed">
+                        <div className="space-y-2">
+                          <Label className="text-xs sm:text-sm font-medium">Color principal</Label>
                           <div className="flex items-center gap-2">
                             <input
                               type="color"
                               value={localSettings.primaryColor}
                               onChange={(e) => handleSettingsChange({ primaryColor: e.target.value })}
-                              className="w-10 h-10 rounded-lg cursor-pointer border-0 shrink-0"
+                              className="w-12 h-12 sm:w-10 sm:h-10 rounded-lg cursor-pointer border-2 border-muted shrink-0"
                             />
                             <Input
                               value={localSettings.primaryColor}
                               onChange={(e) => handleSettingsChange({ primaryColor: e.target.value })}
-                              className="flex-1 font-mono text-xs h-10"
+                              className="flex-1 font-mono text-sm h-12 sm:h-10"
                               maxLength={7}
+                              placeholder="#F8BBD9"
                             />
                           </div>
                         </div>
-                        <div className="space-y-1.5">
-                          <Label className="text-xs font-medium">Color secundario</Label>
+                        <div className="space-y-2">
+                          <Label className="text-xs sm:text-sm font-medium">Color secundario</Label>
                           <div className="flex items-center gap-2">
                             <input
                               type="color"
                               value={localSettings.secondaryColor}
                               onChange={(e) => handleSettingsChange({ secondaryColor: e.target.value })}
-                              className="w-10 h-10 rounded-lg cursor-pointer border-0 shrink-0"
+                              className="w-12 h-12 sm:w-10 sm:h-10 rounded-lg cursor-pointer border-2 border-muted shrink-0"
                             />
                             <Input
                               value={localSettings.secondaryColor}
                               onChange={(e) => handleSettingsChange({ secondaryColor: e.target.value })}
-                              className="flex-1 font-mono text-xs h-10"
+                              className="flex-1 font-mono text-sm h-12 sm:h-10"
                               maxLength={7}
+                              placeholder="#FFF0F5"
                             />
                           </div>
                         </div>
