@@ -29,11 +29,11 @@ export function LogoUpload({ logoUrl, onLogoChange }: LogoUploadProps) {
       return;
     }
 
-    // Validate file size (max 2MB)
-    if (file.size > 2 * 1024 * 1024) {
+    // Validate file size (max 5MB)
+    if (file.size > 5 * 1024 * 1024) {
       toast({
         title: 'Archivo muy grande',
-        description: 'El logo debe ser menor a 2MB',
+        description: 'El logo debe ser menor a 5MB',
         variant: 'destructive',
       });
       return;
@@ -151,11 +151,12 @@ export function LogoUpload({ logoUrl, onLogoChange }: LogoUploadProps) {
             exit={{ opacity: 0, scale: 0.95 }}
             className="relative group"
           >
-            <div className="w-full h-24 rounded-lg border-2 border-dashed border-primary/30 bg-primary/5 flex items-center justify-center overflow-hidden">
+            <div className="w-full h-28 rounded-lg border-2 border-dashed border-primary/30 bg-primary/5 flex items-center justify-center overflow-hidden p-2">
               <img
                 src={logoUrl}
                 alt="Logo del negocio"
-                className="max-h-20 max-w-full object-contain"
+                className="max-h-24 max-w-full object-contain"
+                style={{ imageRendering: 'auto' }}
               />
             </div>
             <Button
@@ -207,7 +208,7 @@ export function LogoUpload({ logoUrl, onLogoChange }: LogoUploadProps) {
       </AnimatePresence>
       
       <p className="text-xs text-muted-foreground text-center">
-        Formatos: JPG, PNG • Máx: 2MB
+        Formatos: JPG, PNG • Máx: 5MB
       </p>
     </div>
   );
