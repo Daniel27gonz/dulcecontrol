@@ -3,7 +3,7 @@ import { motion } from 'framer-motion';
 import { 
   FileText, 
   Download, 
-  Send, 
+  Share2, 
   MoreVertical, 
   Pencil, 
   Trash2, 
@@ -52,8 +52,8 @@ export function QuotationCard({ quotation, onUpdate }: QuotationCardProps) {
   const { updateQuotation, deleteQuotation, duplicateQuotation } = useQuotations();
   const { settings: pdfSettings, isLoading: isPdfSettingsLoading } = usePDFSettings();
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
-  const [isSending, setIsSending] = useState(false);
   const [isDownloading, setIsDownloading] = useState(false);
+  const [isSharing, setIsSharing] = useState(false);
 
   const isExpired = isPast(parseISO(quotation.validUntil));
 
@@ -100,65 +100,59 @@ export function QuotationCard({ quotation, onUpdate }: QuotationCardProps) {
     }
   };
 
-  const handleSendWhatsApp = async () => {
-    if (!quotation.clientPhone) {
-      toast({
-        title: 'Sin número de teléfono',
-        description: 'Agrega el teléfono del cliente para enviar por WhatsApp',
-        variant: 'destructive',
-      });
-      return;
-    }
-
-    setIsSending(true);
-
+  const handleSharePDF = async () => {
+    setIsSharing(true);
     try {
-      // Generate summary message
-      const itemsList = quotation.items
-        .map(item => `• ${item.name} x${item.quantity} - ${formatCurrency(item.total)}`)
-        .join('\n');
-
-      const message = `
-🧁 *COTIZACIÓN #${quotation.number}*
-━━━━━━━━━━━━━━━━━━
-
-Hola ${quotation.clientName}! 👋
-
-Aquí está tu cotización:
-
-${itemsList}
-
-${quotation.discount > 0 ? `\n💫 Descuento: -${formatCurrency(quotation.subtotal - quotation.total)}\n` : ''}
-💰 *TOTAL: ${formatCurrency(quotation.total)}*
-
-📅 Válida hasta: ${format(parseISO(quotation.validUntil), "d 'de' MMMM", { locale: es })}
-${quotation.notes ? `\n📝 ${quotation.notes}` : ''}
-
-¡Gracias por tu preferencia! 🎂
-      `.trim();
-
-      // Clean phone number
-      const phone = quotation.clientPhone.replace(/\D/g, '');
-      const whatsappUrl = `https://wa.me/${phone}?text=${encodeURIComponent(message)}`;
+      const { getStyledQuotationPDFBlob } = await import('@/lib/generateQuotationPDFStyled');
+      const effectiveSettings = {
+        ...pdfSettings,
+        businessName: pdfSettings.businessName || settings.userName || 'Mi Negocio de Postres',
+      };
       
-      window.open(whatsappUrl, '_blank');
-
-      // Update status to sent
-      updateQuotation(quotation.id, { status: 'sent' });
-      
-      toast({
-        title: '¡Enviado a WhatsApp!',
-        description: 'La cotización se abrió en WhatsApp',
+      const pdfBlob = await getStyledQuotationPDFBlob(quotation, {
+        currencySymbol: settings.currencySymbol,
+        pdfSettings: effectiveSettings,
       });
-      onUpdate?.();
+
+      const file = new File([pdfBlob], `Cotizacion-${quotation.number}.pdf`, { type: 'application/pdf' });
+
+      if (navigator.share && navigator.canShare({ files: [file] })) {
+        await navigator.share({
+          files: [file],
+          title: `Cotización #${quotation.number}`,
+          text: `Cotización para ${quotation.clientName}`,
+        });
+        
+        updateQuotation(quotation.id, { status: 'sent' });
+        toast({
+          title: '¡PDF compartido!',
+          description: 'La cotización se compartió correctamente',
+        });
+        onUpdate?.();
+      } else {
+        // Fallback: download the PDF
+        const url = URL.createObjectURL(pdfBlob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `Cotizacion-${quotation.number}.pdf`;
+        a.click();
+        URL.revokeObjectURL(url);
+        
+        toast({
+          title: 'PDF descargado',
+          description: 'Tu navegador no soporta compartir, se descargó el PDF',
+        });
+      }
     } catch (error) {
-      toast({
-        title: 'Error',
-        description: 'No se pudo abrir WhatsApp',
-        variant: 'destructive',
-      });
+      if ((error as Error).name !== 'AbortError') {
+        toast({
+          title: 'Error',
+          description: 'No se pudo compartir el PDF',
+          variant: 'destructive',
+        });
+      }
     } finally {
-      setIsSending(false);
+      setIsSharing(false);
     }
   };
 
@@ -315,11 +309,11 @@ ${quotation.notes ? `\n📝 ${quotation.notes}` : ''}
                 <Button
                   variant="warm"
                   size="sm"
-                  onClick={handleSendWhatsApp}
-                  disabled={isSending || !quotation.clientPhone}
+                  onClick={handleSharePDF}
+                  disabled={isSharing || isPdfSettingsLoading}
                 >
-                  <Send className="w-4 h-4 mr-1" />
-                  WhatsApp
+                  <Share2 className="w-4 h-4 mr-1" />
+                  {isSharing ? '...' : 'Compartir'}
                 </Button>
               </div>
             </div>
