@@ -146,6 +146,7 @@ export type Database = {
           business_phone: string | null
           created_at: string
           id: string
+          logo_position: string | null
           logo_url: string | null
           primary_color: string | null
           secondary_color: string | null
@@ -159,6 +160,7 @@ export type Database = {
           business_phone?: string | null
           created_at?: string
           id?: string
+          logo_position?: string | null
           logo_url?: string | null
           primary_color?: string | null
           secondary_color?: string | null
@@ -172,6 +174,7 @@ export type Database = {
           business_phone?: string | null
           created_at?: string
           id?: string
+          logo_position?: string | null
           logo_url?: string | null
           primary_color?: string | null
           secondary_color?: string | null

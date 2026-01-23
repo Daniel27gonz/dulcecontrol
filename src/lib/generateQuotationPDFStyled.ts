@@ -131,14 +131,32 @@ export async function generateStyledQuotationPDF(
     }
   }
 
-  // Logo (if available) - centered at top
+  // Logo (if available) - positioned based on settings
   if (pdfSettings.logoUrl) {
     try {
       const logoData = await loadImageAsBase64(pdfSettings.logoUrl);
       if (logoData) {
         const logoHeight = 25;
         const logoWidth = 40;
-        doc.addImage(logoData, 'PNG', (pageWidth - logoWidth) / 2, y, logoWidth, logoHeight);
+        
+        // Calculate X position based on logoPosition setting
+        let logoX: number;
+        const logoPosition = pdfSettings.logoPosition || 'center';
+        
+        switch (logoPosition) {
+          case 'left':
+            logoX = margin;
+            break;
+          case 'right':
+            logoX = pageWidth - margin - logoWidth;
+            break;
+          case 'center':
+          default:
+            logoX = (pageWidth - logoWidth) / 2;
+            break;
+        }
+        
+        doc.addImage(logoData, 'PNG', logoX, y, logoWidth, logoHeight);
         y += logoHeight + 5;
       }
     } catch (error) {

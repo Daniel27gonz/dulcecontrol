@@ -1,4 +1,5 @@
 export type PDFStyle = 'pastel' | 'minimal' | 'elegant';
+export type LogoPosition = 'left' | 'center' | 'right';
 
 export interface PDFSettings {
   id?: string;
@@ -7,6 +8,7 @@ export interface PDFSettings {
   businessPhone: string;
   businessEmail: string;
   logoUrl: string | null;
+  logoPosition: LogoPosition;
   primaryColor: string;
   secondaryColor: string;
   style: PDFStyle;
@@ -27,6 +29,7 @@ export const DEFAULT_PDF_SETTINGS: PDFSettings = {
   businessPhone: '',
   businessEmail: '',
   logoUrl: null,
+  logoPosition: 'center',
   primaryColor: '#F8BBD9', // Rosa pastel
   secondaryColor: '#FFF0F5', // Lavanda muy claro
   style: 'pastel',
@@ -38,6 +41,12 @@ export const DEFAULT_PDF_SETTINGS: PDFSettings = {
   footerMessage: 'Esta cotización ha sido elaborada considerando ingredientes de calidad, tiempo de preparación y dedicación artesanal para brindarte un resultado delicioso.',
   thankYouMessage: 'Gracias por confiar en mi trabajo para endulzar tus momentos',
 };
+
+export const LOGO_POSITION_OPTIONS: { value: LogoPosition; label: string }[] = [
+  { value: 'left', label: 'Izquierda' },
+  { value: 'center', label: 'Centro' },
+  { value: 'right', label: 'Derecha' },
+];
 
 export const PDF_STYLE_OPTIONS: { value: PDFStyle; label: string; description: string; preview: string }[] = [
   { 
