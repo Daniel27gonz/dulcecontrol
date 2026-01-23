@@ -116,11 +116,11 @@ export function QuotationForm({ quotation, trigger, onClose, onSave }: Quotation
       return;
     }
 
-    // Validate file size (max 2MB)
-    if (file.size > 2 * 1024 * 1024) {
+    // Validate file size (max 5MB)
+    if (file.size > 5 * 1024 * 1024) {
       toast({
         title: 'Error',
-        description: 'La imagen no puede ser mayor a 2MB',
+        description: 'La imagen no puede ser mayor a 5MB',
         variant: 'destructive',
       });
       return;
@@ -610,11 +610,11 @@ export function QuotationForm({ quotation, trigger, onClose, onSave }: Quotation
               className="hidden"
             />
             {referenceImage ? (
-              <div className="relative rounded-xl overflow-hidden border bg-muted/30">
+              <div className="relative rounded-xl overflow-hidden border bg-muted/30 flex items-center justify-center p-2">
                 <img
                   src={referenceImage}
                   alt="Referencia"
-                  className="w-full h-40 object-cover"
+                  className="max-w-full max-h-48 w-auto h-auto object-contain rounded-lg"
                 />
                 <button
                   type="button"
@@ -639,7 +639,8 @@ export function QuotationForm({ quotation, trigger, onClose, onSave }: Quotation
                 ) : (
                   <>
                     <ImagePlus className="w-6 h-6" />
-                    <span className="text-sm">Agregar imagen de referencia</span>
+                    <span className="text-sm">Agregar imagen</span>
+                    <span className="text-xs text-muted-foreground/70">Máximo 5MB • Vertical u horizontal</span>
                   </>
                 )}
               </button>

@@ -337,10 +337,46 @@ export async function generateStyledQuotationPDF(
     try {
       const referenceImageData = await loadImageAsBase64(quotation.referenceImage);
       if (referenceImageData) {
+        // Get image dimensions to calculate aspect ratio
+        const img = new Image();
+        await new Promise<void>((resolve) => {
+          img.onload = () => resolve();
+          img.onerror = () => resolve();
+          img.src = referenceImageData;
+        });
+        
+        const imgWidth = img.width || 100;
+        const imgHeight = img.height || 100;
+        const aspectRatio = imgWidth / imgHeight;
+        
         // Calculate available space for the image
         const availableHeight = pageHeight - y - 55; // Leave space for footer
-        const maxImageHeight = Math.min(50, availableHeight);
-        const maxImageWidth = contentWidth * 0.6;
+        const maxContainerHeight = Math.min(55, availableHeight);
+        const maxContainerWidth = contentWidth * 0.65;
+        
+        // Calculate actual image dimensions maintaining aspect ratio
+        let finalWidth: number;
+        let finalHeight: number;
+        
+        if (aspectRatio > 1) {
+          // Horizontal image
+          finalWidth = Math.min(maxContainerWidth, maxContainerHeight * aspectRatio);
+          finalHeight = finalWidth / aspectRatio;
+        } else {
+          // Vertical image
+          finalHeight = Math.min(maxContainerHeight, maxContainerWidth / aspectRatio);
+          finalWidth = finalHeight * aspectRatio;
+        }
+        
+        // Ensure dimensions don't exceed maximums
+        if (finalWidth > maxContainerWidth) {
+          finalWidth = maxContainerWidth;
+          finalHeight = finalWidth / aspectRatio;
+        }
+        if (finalHeight > maxContainerHeight) {
+          finalHeight = maxContainerHeight;
+          finalWidth = finalHeight * aspectRatio;
+        }
         
         // Add section label
         doc.setFontSize(9);
@@ -354,22 +390,24 @@ export async function generateStyledQuotationPDF(
         doc.setDrawColor(...primaryColor);
         doc.setLineWidth(0.5);
         
-        // Center the image container
-        const imageContainerWidth = maxImageWidth + 10;
-        const containerX = (pageWidth - imageContainerWidth) / 2;
+        // Container dimensions with padding
+        const padding = 5;
+        const containerWidth = finalWidth + padding * 2;
+        const containerHeight = finalHeight + padding * 2;
+        const containerX = (pageWidth - containerWidth) / 2;
         
         if (styleConfig.useRoundedCorners) {
-          doc.roundedRect(containerX, y, imageContainerWidth, maxImageHeight + 10, 4, 4, 'FD');
+          doc.roundedRect(containerX, y, containerWidth, containerHeight, 4, 4, 'FD');
         } else {
-          doc.rect(containerX, y, imageContainerWidth, maxImageHeight + 10, 'FD');
+          doc.rect(containerX, y, containerWidth, containerHeight, 'FD');
         }
         
-        // Add the image centered
-        const imageX = containerX + 5;
-        const imageY = y + 5;
-        doc.addImage(referenceImageData, 'JPEG', imageX, imageY, maxImageWidth, maxImageHeight);
+        // Add the image centered within the container
+        const imageX = containerX + padding;
+        const imageY = y + padding;
+        doc.addImage(referenceImageData, 'JPEG', imageX, imageY, finalWidth, finalHeight);
         
-        y += maxImageHeight + 15;
+        y += containerHeight + 10;
       }
     } catch (error) {
       console.error('Error loading reference image:', error);
