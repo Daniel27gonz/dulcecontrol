@@ -59,17 +59,20 @@ export default function QuotationsPage() {
 
         {/* Filter Tabs */}
         <Tabs value={filterStatus} onValueChange={(v) => setFilterStatus(v as FilterStatus)}>
-          <TabsList className="w-full grid grid-cols-4 h-auto p-1">
-            <TabsTrigger value="all" className="text-xs py-2">
+          <TabsList className="w-full grid grid-cols-5 h-auto p-1">
+            <TabsTrigger value="all" className="text-xs py-2 px-1">
               Todas ({statusCounts.all})
             </TabsTrigger>
-            <TabsTrigger value="draft" className="text-xs py-2">
+            <TabsTrigger value="draft" className="text-xs py-2 px-1">
               Borrador ({statusCounts.draft})
             </TabsTrigger>
-            <TabsTrigger value="sent" className="text-xs py-2">
+            <TabsTrigger value="sent" className="text-xs py-2 px-1">
               Enviadas ({statusCounts.sent})
             </TabsTrigger>
-            <TabsTrigger value="converted" className="text-xs py-2">
+            <TabsTrigger value="accepted" className="text-xs py-2 px-1">
+              Aceptadas ({statusCounts.accepted})
+            </TabsTrigger>
+            <TabsTrigger value="converted" className="text-xs py-2 px-1">
               Pedidos ({statusCounts.converted})
             </TabsTrigger>
           </TabsList>
