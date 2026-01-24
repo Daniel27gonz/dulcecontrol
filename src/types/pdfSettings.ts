@@ -17,7 +17,6 @@ export interface PDFSettings {
   eventDateLabel: string;
   validUntilLabel: string;
   eventTypeLabel: string;
-  observationsText: string;
   footerMessage: string;
   thankYouMessage: string;
   createdAt?: string;
@@ -37,7 +36,6 @@ export const DEFAULT_PDF_SETTINGS: PDFSettings = {
   eventDateLabel: 'Fecha de entrega',
   validUntilLabel: 'Válida hasta',
   eventTypeLabel: 'Tipo de evento (opcional)',
-  observationsText: '',
   footerMessage: 'Esta cotización ha sido elaborada considerando ingredientes de calidad, tiempo de preparación y dedicación artesanal para brindarte un resultado delicioso.',
   thankYouMessage: 'Gracias por confiar en mi trabajo para endulzar tus momentos',
 };

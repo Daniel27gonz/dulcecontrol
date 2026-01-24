@@ -444,18 +444,6 @@ export function QuotationDesigner({ quotation, trigger, onClose }: QuotationDesi
                           </div>
                         </div>
 
-                        <div>
-                          <Label htmlFor="observationsText" className="text-xs sm:text-sm">Observaciones predeterminadas</Label>
-                          <Textarea
-                            id="observationsText"
-                            value={localSettings.observationsText}
-                            onChange={(e) => handleSettingsChange({ observationsText: e.target.value.slice(0, 200) })}
-                            className="mt-1 text-sm"
-                            rows={2}
-                            maxLength={200}
-                            placeholder="Se mostrarán en cada cotización..."
-                          />
-                        </div>
 
                         <div>
                           <Label htmlFor="footerMessage" className="text-xs sm:text-sm">Mensaje del pie</Label>

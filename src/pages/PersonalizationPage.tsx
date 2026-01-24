@@ -426,18 +426,6 @@ export default function PersonalizationPage() {
                         />
                       </div>
 
-                      <div>
-                        <Label htmlFor="observationsText">Observaciones predeterminadas</Label>
-                        <Textarea
-                          id="observationsText"
-                          value={localSettings.observationsText}
-                          onChange={(e) => handleSettingsChange({ observationsText: e.target.value.slice(0, 200) })}
-                          className="mt-1"
-                          rows={3}
-                          maxLength={200}
-                          placeholder="Se mostrarán en cada cotización..."
-                        />
-                      </div>
 
                       <div>
                         <Label htmlFor="footerMessage">Mensaje del pie</Label>

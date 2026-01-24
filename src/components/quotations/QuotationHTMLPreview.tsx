@@ -297,14 +297,16 @@ export function QuotationHTMLPreview({
 
 
           {/* Observaciones */}
-          <div className="mb-3 sm:mb-4">
-            <p className="mb-1">
-              <span className="font-medium border-b border-gray-600">Observaciones:</span>
-            </p>
-            <p className="text-center italic text-[10px] sm:text-xs text-gray-600">
-              {pdfSettings.observationsText || quotation.notes || ''}
-            </p>
-          </div>
+          {quotation.notes && (
+            <div className="mb-3 sm:mb-4">
+              <p className="mb-1">
+                <span className="font-medium border-b border-gray-600">Observaciones:</span>
+              </p>
+              <p className="text-center italic text-[10px] sm:text-xs text-gray-600">
+                {quotation.notes}
+              </p>
+            </div>
+          )}
 
           {/* Footer con mensaje */}
           <div className="mt-auto text-center space-y-1.5 sm:space-y-2">

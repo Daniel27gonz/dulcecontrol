@@ -367,23 +367,23 @@ export async function generateStyledQuotationPDF(
 
 
   // === OBSERVATIONS ===
-  const observations = pdfSettings.observationsText || quotation.notes || '';
+  const observations = quotation.notes || '';
   
-  doc.setFontSize(9);
-  doc.setFont('helvetica', 'normal');
-  doc.setTextColor(...textColor);
-  
-  // "Observaciones:" label with underline
-  doc.text('Observaciones:', margin, y);
-  const obsLabelWidth = doc.getTextWidth('Observaciones:');
-  doc.setDrawColor(...textColor);
-  doc.setLineWidth(0.3);
-  doc.line(margin, y + 1, margin + obsLabelWidth, y + 1);
-  
-  y += 6;
-  
-  // Observations text - italic and centered
   if (observations) {
+    doc.setFontSize(9);
+    doc.setFont('helvetica', 'normal');
+    doc.setTextColor(...textColor);
+    
+    // "Observaciones:" label with underline
+    doc.text('Observaciones:', margin, y);
+    const obsLabelWidth = doc.getTextWidth('Observaciones:');
+    doc.setDrawColor(...textColor);
+    doc.setLineWidth(0.3);
+    doc.line(margin, y + 1, margin + obsLabelWidth, y + 1);
+    
+    y += 6;
+    
+    // Observations text - italic and centered
     doc.setFont('helvetica', 'italic');
     const observationLines = doc.splitTextToSize(observations, contentWidth - 10);
     const lineHeight = 4.5;
@@ -392,9 +392,9 @@ export async function generateStyledQuotationPDF(
       doc.text(line, pageWidth / 2, y, { align: 'center' });
       y += lineHeight;
     });
+    
+    y += 8;
   }
-  
-  y += 8;
 
   // === FOOTER ===
   const footerReservedHeight = 45;
