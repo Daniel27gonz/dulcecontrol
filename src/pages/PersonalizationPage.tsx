@@ -23,7 +23,7 @@ import { ScrollArea } from '@/components/ui/scroll-area';
 import { AppHeader } from '@/components/AppHeader';
 import { BottomNav } from '@/components/BottomNav';
 import { Quotation } from '@/types/quotation';
-import { PDFSettings, PDFStyle, DEFAULT_PDF_SETTINGS, PDF_STYLE_OPTIONS, COLOR_PRESETS, LOGO_POSITION_OPTIONS, LogoPosition } from '@/types/pdfSettings';
+import { PDFSettings, PDFStyle, DEFAULT_PDF_SETTINGS, PDF_STYLE_OPTIONS, COLOR_PRESETS } from '@/types/pdfSettings';
 import { usePDFSettings } from '@/hooks/usePDFSettings';
 import { useApp } from '@/context/AppContext';
 import { LogoUpload } from '@/components/quotations/LogoUpload';
@@ -209,31 +209,6 @@ export default function PersonalizationPage() {
                         />
                       </div>
 
-                      {/* Logo Position Selector */}
-                      {localSettings.logoUrl && (
-                        <div className="space-y-2">
-                          <Label className="text-sm">Posición del logo</Label>
-                          <div className="flex gap-2">
-                            {LOGO_POSITION_OPTIONS.map((option) => (
-                              <motion.button
-                                key={option.value}
-                                type="button"
-                                whileHover={{ scale: 1.02 }}
-                                whileTap={{ scale: 0.98 }}
-                                onClick={() => handleSettingsChange({ logoPosition: option.value })}
-                                className={cn(
-                                  'flex-1 py-2 px-3 rounded-lg border-2 text-sm font-medium transition-all',
-                                  localSettings.logoPosition === option.value
-                                    ? 'border-primary bg-primary/10 text-primary'
-                                    : 'border-muted hover:border-primary/50'
-                                )}
-                              >
-                                {option.label}
-                              </motion.button>
-                            ))}
-                          </div>
-                        </div>
-                      )}
 
                       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                         <div>

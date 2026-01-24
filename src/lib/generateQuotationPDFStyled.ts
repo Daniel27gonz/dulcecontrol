@@ -153,16 +153,8 @@ export async function generateStyledQuotationPDF(
         const logoHeight = 28;
         const logoWidth = 35;
         
-        // Calculate X position based on logoPosition setting
-        let logoX: number;
-        const logoPosition = pdfSettings.logoPosition || 'left';
-        
-        if (logoPosition === 'right') {
-          logoX = pageWidth - margin - logoWidth;
-        } else {
-          // Default to left
-          logoX = margin;
-        }
+        // Logo always positioned on the left
+        const logoX = margin;
         
         doc.addImage(logoData, 'PNG', logoX, y, logoWidth, logoHeight);
         logoEndY = y + logoHeight;
