@@ -356,14 +356,39 @@ export async function generateStyledQuotationPDF(
   
   y += 15;
 
-  // Observations
-  doc.setFontSize(10);
-  doc.setFont('helvetica', 'normal');
-  doc.setTextColor(...textColor);
+  // Observations - improved typography with better spacing
+  const observationsLabel = 'Observaciones:';
   const observations = pdfSettings.observationsText || quotation.notes || '';
-  doc.text(`Observaciones: ${observations || '_______________________________________________'}`, margin, y);
-
-  y += 10;
+  
+  doc.setFontSize(10);
+  doc.setFont('helvetica', 'bold');
+  doc.setTextColor(...primaryColor);
+  doc.text(observationsLabel, margin, y);
+  
+  y += 6;
+  
+  if (observations) {
+    doc.setFontSize(9);
+    doc.setFont('helvetica', 'normal');
+    doc.setTextColor(...textColor);
+    
+    // Split text with proper width for padding effect
+    const observationLines = doc.splitTextToSize(observations, contentWidth - 10);
+    const lineHeight = 5; // Increased line height for better readability
+    
+    observationLines.forEach((line: string) => {
+      doc.text(line, margin + 5, y); // Added left padding
+      y += lineHeight;
+    });
+    
+    y += 4; // Extra spacing after observations
+  } else {
+    doc.setFontSize(9);
+    doc.setFont('helvetica', 'normal');
+    doc.setTextColor(...mutedColor);
+    doc.text('_______________________________________________', margin + 5, y);
+    y += 8;
+  }
 
   // Reference image (if available) - positioned in a dedicated section
   if (quotation.referenceImage) {
@@ -451,33 +476,44 @@ export async function generateStyledQuotationPDF(
     }
   }
 
-  // Footer messages - position based on content above, not fixed
-  const minFooterY = y + 5; // Minimum position after content
-  const fixedFooterY = pageHeight - 35; // Preferred fixed position
+  // Footer messages - improved typography with better spacing and readability
+  const footerReservedHeight = 55; // Increased reserved height for footer
+  const minFooterY = y + 8; // Minimum position after content with more spacing
+  const fixedFooterY = pageHeight - footerReservedHeight; // Preferred fixed position
   const footerY = Math.max(minFooterY, fixedFooterY); // Use whichever is lower on the page
   
-  // Footer message
+  // Footer message - with improved line spacing
   const footerMessage = pdfSettings.footerMessage || 'Esta cotización ha sido elaborada considerando ingredientes de calidad, tiempo de preparación y dedicación artesanal para brindarte un resultado delicioso.';
   doc.setFontSize(8);
   doc.setTextColor(...mutedColor);
   doc.setFont('helvetica', 'italic');
-  const footerLines = doc.splitTextToSize(footerMessage, contentWidth - 20);
-  doc.text(footerLines, pageWidth / 2, footerY, { align: 'center' });
+  
+  // Split footer text with narrower width for better padding
+  const footerLines = doc.splitTextToSize(footerMessage, contentWidth - 30);
+  const footerLineHeight = 4.5; // Improved line height
+  
+  let currentFooterY = footerY;
+  footerLines.forEach((line: string) => {
+    doc.text(line, pageWidth / 2, currentFooterY, { align: 'center' });
+    currentFooterY += footerLineHeight;
+  });
 
-  // Thank you message
+  // Thank you message - with proper spacing from footer text
   const thankYouMessage = pdfSettings.thankYouMessage || 'Gracias por confiar en mi trabajo para endulzar tus momentos';
+  const thankYouY = currentFooterY + 6; // More spacing between footer message and thank you
+  
   doc.setFontSize(11);
   doc.setTextColor(...primaryColor);
   doc.setFont('helvetica', 'bolditalic');
-  doc.text(thankYouMessage, pageWidth / 2, footerY + 12, { align: 'center' });
+  doc.text(thankYouMessage, pageWidth / 2, thankYouY, { align: 'center' });
 
-  // Decorative hearts
+  // Decorative hearts - with proper spacing
   if (styleConfig.showDecorations) {
     doc.setFontSize(10);
-    doc.text('♥   ♥   ♥', pageWidth / 2, footerY + 20, { align: 'center' });
+    doc.text('♥   ♥   ♥', pageWidth / 2, thankYouY + 8, { align: 'center' });
   }
 
-  // Contact info at very bottom
+  // Contact info at very bottom - with adequate spacing
   const contactParts: string[] = [];
   if (pdfSettings.businessPhone) contactParts.push(`Tel: ${pdfSettings.businessPhone}`);
   if (pdfSettings.businessEmail) contactParts.push(pdfSettings.businessEmail);
@@ -486,7 +522,7 @@ export async function generateStyledQuotationPDF(
     doc.setFontSize(8);
     doc.setTextColor(...mutedColor);
     doc.setFont('helvetica', 'normal');
-    doc.text(contactParts.join(' | '), pageWidth / 2, pageHeight - 8, { align: 'center' });
+    doc.text(contactParts.join('  |  '), pageWidth / 2, pageHeight - 10, { align: 'center' }); // Added more spacing in separator and from bottom
   }
 
   return doc;
