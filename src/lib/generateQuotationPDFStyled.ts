@@ -207,7 +207,7 @@ export async function generateStyledQuotationPDF(
   y = Math.max(logoEndY, businessNameY + 8) + 8;
 
   // === CLIENT INFO SECTION ===
-  const clientSectionHeight = 42;
+  const clientSectionHeight = 46;
   doc.setFillColor(...lightPrimary);
   if (styleConfig.useRoundedCorners) {
     doc.roundedRect(margin, y, contentWidth, clientSectionHeight, 4, 4, 'F');
@@ -223,27 +223,55 @@ export async function generateStyledQuotationPDF(
   doc.setFont('helvetica', 'bold');
   doc.text('DATOS DEL CLIENTE:', margin + 10, y + 11);
 
-  // Client data - with proper spacing
+  // Client data - with proper spacing and underlines
   doc.setTextColor(...textColor);
   doc.setFontSize(9);
   doc.setFont('helvetica', 'normal');
   
-  const clientDataStartY = y + 18;
+  const clientDataStartY = y + 20;
   const lineSpacing = 6;
   
-  doc.text(`Nombre del cliente: ${quotation.clientName}`, margin + 8, clientDataStartY);
-  doc.text(`Teléfono: ${quotation.clientPhone || '_________________'}`, margin + 8, clientDataStartY + lineSpacing);
+  // Nombre del cliente
+  doc.text('Nombre del cliente: ', margin + 8, clientDataStartY);
+  const nombreWidth = doc.getTextWidth('Nombre del cliente: ');
+  doc.setFont('helvetica', 'normal');
+  const clientNameText = quotation.clientName || '_________________';
+  doc.text(clientNameText, margin + 8 + nombreWidth, clientDataStartY);
+  // Underline for client name
+  const clientNameWidth = doc.getTextWidth(clientNameText);
+  doc.setDrawColor(...textColor);
+  doc.setLineWidth(0.3);
+  doc.line(margin + 8 + nombreWidth, clientDataStartY + 1, margin + 8 + nombreWidth + clientNameWidth, clientDataStartY + 1);
+  
+  // Teléfono
+  doc.text('Teléfono: ', margin + 8, clientDataStartY + lineSpacing);
+  const telWidth = doc.getTextWidth('Teléfono: ');
+  const phoneText = quotation.clientPhone || '_________________';
+  doc.text(phoneText, margin + 8 + telWidth, clientDataStartY + lineSpacing);
+  const phoneTextWidth = doc.getTextWidth(phoneText);
+  doc.line(margin + 8 + telWidth, clientDataStartY + lineSpacing + 1, margin + 8 + telWidth + phoneTextWidth, clientDataStartY + lineSpacing + 1);
   
   // Fecha de entrega
   const eventDateLabel = pdfSettings.eventDateLabel || 'Fecha de entrega';
-  const deliveryDate = quotation.deliveryDate 
-    ? format(parseISO(quotation.deliveryDate), "d 'de' MMMM, yyyy", { locale: es })
+  doc.text(`${eventDateLabel}: `, margin + 8, clientDataStartY + lineSpacing * 2);
+  const fechaEntregaWidth = doc.getTextWidth(`${eventDateLabel}: `);
+  const deliveryDateText = quotation.deliveryDate 
+    ? format(parseISO(quotation.deliveryDate), 'dd/MM/yyyy')
     : '_________________';
-  doc.text(`${eventDateLabel}: ${deliveryDate}`, margin + 8, clientDataStartY + lineSpacing * 2);
+  doc.text(deliveryDateText, margin + 8 + fechaEntregaWidth, clientDataStartY + lineSpacing * 2);
+  const deliveryDateWidth = doc.getTextWidth(deliveryDateText);
+  doc.line(margin + 8 + fechaEntregaWidth, clientDataStartY + lineSpacing * 2 + 1, margin + 8 + fechaEntregaWidth + deliveryDateWidth, clientDataStartY + lineSpacing * 2 + 1);
   
-  // Tipo de evento (opcional)
-  const eventTypeLabel = pdfSettings.eventTypeLabel || 'Tipo de evento (opcional)';
-  doc.text(`${eventTypeLabel}: _________________`, margin + 8, clientDataStartY + lineSpacing * 3);
+  // Válida hasta
+  const validUntilLabel = pdfSettings.validUntilLabel || 'Válida hasta';
+  doc.text(`${validUntilLabel}: `, margin + 8, clientDataStartY + lineSpacing * 3);
+  const validaHastaWidth = doc.getTextWidth(`${validUntilLabel}: `);
+  const validUntilText = quotation.validUntil 
+    ? format(parseISO(quotation.validUntil), 'dd/MM/yyyy')
+    : '_________________';
+  doc.text(validUntilText, margin + 8 + validaHastaWidth, clientDataStartY + lineSpacing * 3);
+  const validUntilWidth = doc.getTextWidth(validUntilText);
+  doc.line(margin + 8 + validaHastaWidth, clientDataStartY + lineSpacing * 3 + 1, margin + 8 + validaHastaWidth + validUntilWidth, clientDataStartY + lineSpacing * 3 + 1);
 
   y += clientSectionHeight + 10;
 
@@ -335,22 +363,7 @@ export async function generateStyledQuotationPDF(
   doc.setFont('helvetica', 'bold');
   doc.text(`TOTAL A PAGAR: ${currencySymbol}${quotation.total.toFixed(2)}`, pageWidth - margin, y, { align: 'right' });
   
-  y += 15;
-
-  // === OBSERVATIONS ===
-  doc.setFontSize(9);
-  doc.setFont('helvetica', 'normal');
-  doc.setTextColor(...textColor);
-  
-  const observations = pdfSettings.observationsText || quotation.notes || '';
-  if (observations) {
-    doc.text(`Observaciones: ${observations}`, margin, y);
-    const observationLines = doc.splitTextToSize(observations, contentWidth - 25);
-    y += observationLines.length * 5 + 4;
-  } else {
-    doc.text('Observaciones: ___________________________________________________', margin, y);
-    y += 10;
-  }
+  y += 12;
 
   // === REFERENCE IMAGE ===
   if (quotation.referenceImage) {
@@ -370,10 +383,10 @@ export async function generateStyledQuotationPDF(
         const aspectRatio = imgWidth / imgHeight;
         
         // Calculate available space for the image
-        const footerReserved = 50;
-        const availableHeight = pageHeight - y - footerReserved - 20;
-        const maxImageHeight = Math.min(60, Math.max(35, availableHeight));
-        const maxImageWidth = contentWidth * 0.45;
+        const footerReserved = 55;
+        const availableHeight = pageHeight - y - footerReserved - 25;
+        const maxImageHeight = Math.min(65, Math.max(40, availableHeight));
+        const maxImageWidth = contentWidth * 0.5;
         
         // Calculate final dimensions maintaining aspect ratio
         let finalWidth: number;
@@ -398,16 +411,18 @@ export async function generateStyledQuotationPDF(
         }
         
         // Add spacing before image section
-        y += 6;
+        y += 4;
         
         // Label on the left side
         doc.setFontSize(9);
-        doc.setFont('helvetica', 'bold');
+        doc.setFont('helvetica', 'normal');
         doc.setTextColor(...primaryColor);
         doc.text('Imagen de referencia:', margin, y + 4);
         
+        y += 8;
+        
         // Image container - centered on the page
-        const padding = 5;
+        const padding = 6;
         const containerWidth = finalWidth + padding * 2;
         const containerHeight = finalHeight + padding * 2;
         const containerX = (pageWidth - containerWidth) / 2;
@@ -423,50 +438,58 @@ export async function generateStyledQuotationPDF(
         const imageY = y + padding;
         doc.addImage(referenceImageData, 'JPEG', imageX, imageY, finalWidth, finalHeight);
         
-        y += containerHeight + 10;
+        y += containerHeight + 12;
       }
     } catch (error) {
       console.error('Error loading reference image:', error);
     }
   }
 
+  // === OBSERVATIONS ===
+  const observations = pdfSettings.observationsText || quotation.notes || '';
+  
+  doc.setFontSize(9);
+  doc.setFont('helvetica', 'normal');
+  doc.setTextColor(...textColor);
+  
+  // "Observaciones:" label with underline
+  doc.text('Observaciones:', margin, y);
+  const obsLabelWidth = doc.getTextWidth('Observaciones:');
+  doc.setDrawColor(...textColor);
+  doc.setLineWidth(0.3);
+  doc.line(margin, y + 1, margin + obsLabelWidth, y + 1);
+  
+  y += 6;
+  
+  // Observations text - italic and centered
+  if (observations) {
+    doc.setFont('helvetica', 'italic');
+    const observationLines = doc.splitTextToSize(observations, contentWidth - 10);
+    const lineHeight = 4.5;
+    
+    observationLines.forEach((line: string) => {
+      doc.text(line, pageWidth / 2, y, { align: 'center' });
+      y += lineHeight;
+    });
+  }
+  
+  y += 8;
+
   // === FOOTER ===
-  const footerReservedHeight = 52;
-  const minFooterY = y + 10;
+  const footerReservedHeight = 45;
+  const minFooterY = y + 8;
   const fixedFooterY = pageHeight - footerReservedHeight;
   const footerY = Math.max(minFooterY, fixedFooterY);
   
-  // Footer message - italic and centered
-  const footerMessage = pdfSettings.footerMessage || 'Esta cotización ha sido elaborada considerando ingredientes de calidad, tiempo de preparación y dedicación artesanal para brindarte un resultado delicioso.';
-  doc.setFontSize(8);
-  doc.setTextColor(...mutedColor);
-  doc.setFont('helvetica', 'italic');
-  
-  const footerLines = doc.splitTextToSize(footerMessage, contentWidth - 20);
-  const footerLineHeight = 4;
-  
-  let currentFooterY = footerY;
-  footerLines.forEach((line: string) => {
-    doc.text(line, pageWidth / 2, currentFooterY, { align: 'center' });
-    currentFooterY += footerLineHeight;
-  });
-
-  // Thank you message - bold italic in primary color
+  // Thank you message - italic in primary color (first in footer)
   const thankYouMessage = pdfSettings.thankYouMessage || 'Gracias por confiar en mi trabajo para endulzar tus momentos';
-  const thankYouY = currentFooterY + 8;
   
   doc.setFontSize(11);
   doc.setTextColor(...primaryColor);
-  doc.setFont('helvetica', 'bolditalic');
-  doc.text(thankYouMessage, pageWidth / 2, thankYouY, { align: 'center' });
+  doc.setFont('helvetica', 'italic');
+  doc.text(thankYouMessage, pageWidth / 2, footerY, { align: 'center' });
 
-  // Decorative hearts
-  if (styleConfig.showDecorations) {
-    doc.setFontSize(10);
-    doc.text('♥   ♥   ♥', pageWidth / 2, thankYouY + 7, { align: 'center' });
-  }
-
-  // Contact info at the very bottom
+  // Contact info below thank you message - italic
   const contactParts: string[] = [];
   if (pdfSettings.businessPhone) contactParts.push(`Tel: ${pdfSettings.businessPhone}`);
   if (pdfSettings.businessEmail) contactParts.push(pdfSettings.businessEmail);
@@ -474,8 +497,8 @@ export async function generateStyledQuotationPDF(
   if (contactParts.length > 0) {
     doc.setFontSize(9);
     doc.setTextColor(...textColor);
-    doc.setFont('helvetica', 'bold');
-    doc.text(contactParts.join('  |  '), pageWidth / 2, pageHeight - 12, { align: 'center' });
+    doc.setFont('helvetica', 'italic');
+    doc.text(contactParts.join(' | '), pageWidth / 2, footerY + 12, { align: 'center' });
   }
 
   return doc;
