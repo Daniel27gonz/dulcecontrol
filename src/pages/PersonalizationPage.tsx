@@ -432,11 +432,13 @@ export default function PersonalizationPage() {
                         <Textarea
                           id="footerMessage"
                           value={localSettings.footerMessage}
-                          onChange={(e) => handleSettingsChange({ footerMessage: e.target.value.slice(0, 200) })}
+                          onChange={(e) => handleSettingsChange({ footerMessage: e.target.value.slice(0, 150) })}
                           className="mt-1"
-                          rows={3}
-                          maxLength={200}
+                          rows={2}
+                          maxLength={150}
+                          placeholder="Ej: Esta cotización ha sido elaborada considerando ingredientes de calidad..."
                         />
+                        <p className="text-xs text-muted-foreground mt-1">{localSettings.footerMessage.length}/150</p>
                       </div>
 
                       <div>
