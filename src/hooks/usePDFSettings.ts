@@ -28,7 +28,7 @@ export function usePDFSettings() {
 
       if (data) {
         // Validate style - ensure it's a valid PDFStyle, otherwise use default
-        const validStyles = ['pastel', 'minimal', 'elegant'];
+        const validStyles = ['minimal', 'elegant'];
         const loadedStyle = validStyles.includes(data.style || '') 
           ? (data.style as PDFSettings['style']) 
           : DEFAULT_PDF_SETTINGS.style;

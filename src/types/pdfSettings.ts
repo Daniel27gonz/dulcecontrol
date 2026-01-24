@@ -1,4 +1,4 @@
-export type PDFStyle = 'pastel' | 'minimal' | 'elegant';
+export type PDFStyle = 'minimal' | 'elegant';
 export type LogoPosition = 'left' | 'center' | 'right';
 
 export interface PDFSettings {
@@ -30,9 +30,9 @@ export const DEFAULT_PDF_SETTINGS: PDFSettings = {
   businessEmail: '',
   logoUrl: null,
   logoPosition: 'center',
-  primaryColor: '#F8BBD9', // Rosa pastel
-  secondaryColor: '#FFF0F5', // Lavanda muy claro
-  style: 'pastel',
+  primaryColor: '#90A4AE', // Gris azulado
+  secondaryColor: '#ECEFF1', // Gris claro
+  style: 'minimal',
   quotationTitle: 'COTIZACIÓN DE POSTRES ARTESANALES',
   eventDateLabel: 'Fecha de entrega',
   validUntilLabel: 'Válida hasta',
@@ -49,12 +49,6 @@ export const LOGO_POSITION_OPTIONS: { value: LogoPosition; label: string }[] = [
 ];
 
 export const PDF_STYLE_OPTIONS: { value: PDFStyle; label: string; description: string; preview: string }[] = [
-  { 
-    value: 'pastel', 
-    label: 'Pastel', 
-    description: 'Cálido y artesanal',
-    preview: 'Rosa suave con decoraciones de postres'
-  },
   { 
     value: 'minimal', 
     label: 'Minimal', 
