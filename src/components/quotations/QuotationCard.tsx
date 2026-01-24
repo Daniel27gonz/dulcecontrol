@@ -9,6 +9,7 @@ import {
   ShoppingCart,
   Clock,
   Copy,
+  MessageCircle,
 } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -150,6 +151,43 @@ export function QuotationCard({ quotation, onUpdate }: QuotationCardProps) {
     }
   };
 
+  const handleShareWhatsApp = () => {
+    const itemsList = quotation.items
+      .map(item => `• ${item.name} x${item.quantity} - ${formatCurrency(item.total)}`)
+      .join('\n');
+
+    const message = `🧁 *Cotización #${quotation.number}*
+
+Hola ${quotation.clientName}, te comparto los detalles de tu cotización:
+
+*Productos:*
+${itemsList}
+
+💰 *Total: ${formatCurrency(quotation.total)}*
+
+${quotation.deliveryDate ? `📅 Fecha de entrega: ${format(parseISO(quotation.deliveryDate), "dd 'de' MMMM, yyyy", { locale: es })}` : ''}
+📆 Válida hasta: ${format(parseISO(quotation.validUntil), "dd 'de' MMMM, yyyy", { locale: es })}
+
+${quotation.notes ? `📝 Notas: ${quotation.notes}` : ''}
+
+¡Gracias por tu preferencia! 🎂`;
+
+    const phoneNumber = quotation.clientPhone?.replace(/\D/g, '') || '';
+    const whatsappUrl = `https://wa.me/${phoneNumber}?text=${encodeURIComponent(message)}`;
+    
+    window.open(whatsappUrl, '_blank');
+    
+    // Update status to sent if it's draft
+    if (quotation.status === 'draft') {
+      updateQuotation(quotation.id, { status: 'sent' });
+      toast({
+        title: 'Cotización enviada',
+        description: 'El estado se actualizó a "Enviada"',
+      });
+      onUpdate?.();
+    }
+  };
+
   return (
     <>
       <motion.div
@@ -236,16 +274,27 @@ export function QuotationCard({ quotation, onUpdate }: QuotationCardProps) {
                   </span>
                 </div>
               </div>
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={handleQuickDownload}
-                disabled={isDownloading || isPdfSettingsLoading}
-                title="Descargar PDF"
-              >
-                <Download className="w-4 h-4 mr-1" />
-                {isDownloading ? '...' : 'PDF'}
-              </Button>
+              <div className="flex items-center gap-2">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={handleShareWhatsApp}
+                  title="Enviar por WhatsApp"
+                  className="text-green-600 border-green-600 hover:bg-green-50"
+                >
+                  <MessageCircle className="w-4 h-4" />
+                </Button>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={handleQuickDownload}
+                  disabled={isDownloading || isPdfSettingsLoading}
+                  title="Descargar PDF"
+                >
+                  <Download className="w-4 h-4 mr-1" />
+                  {isDownloading ? '...' : 'PDF'}
+                </Button>
+              </div>
             </div>
           </CardContent>
         </Card>
