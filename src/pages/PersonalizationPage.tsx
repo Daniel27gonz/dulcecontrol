@@ -175,17 +175,6 @@ export default function PersonalizationPage() {
                     </div>
 
                     <div className="space-y-4">
-                      <div>
-                        <Label htmlFor="businessName">Nombre del negocio (opcional)</Label>
-                        <Input
-                          id="businessName"
-                          placeholder="Mi Pastelería Artesanal"
-                          value={localSettings.businessName}
-                          onChange={(e) => handleSettingsChange({ businessName: e.target.value.slice(0, 100) })}
-                          className="mt-1"
-                          maxLength={100}
-                        />
-                      </div>
 
                       <div>
                         <Label className="flex items-center gap-1 mb-2">
@@ -365,6 +354,18 @@ export default function PersonalizationPage() {
                           onChange={(e) => handleSettingsChange({ quotationTitle: e.target.value.slice(0, 60) })}
                           className="mt-1"
                           maxLength={60}
+                        />
+                      </div>
+
+                      <div>
+                        <Label htmlFor="businessName">Nombre del negocio (opcional)</Label>
+                        <Input
+                          id="businessName"
+                          placeholder="Mi Pastelería Artesanal"
+                          value={localSettings.businessName}
+                          onChange={(e) => handleSettingsChange({ businessName: e.target.value.slice(0, 100) })}
+                          className="mt-1"
+                          maxLength={100}
                         />
                       </div>
 
