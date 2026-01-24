@@ -51,11 +51,11 @@ export function usePDFSettings() {
           primaryColor: data.primary_color || DEFAULT_PDF_SETTINGS.primaryColor,
           secondaryColor: data.secondary_color || DEFAULT_PDF_SETTINGS.secondaryColor,
           style: loadedStyle,
-          quotationTitle: DEFAULT_PDF_SETTINGS.quotationTitle,
-          eventDateLabel: DEFAULT_PDF_SETTINGS.eventDateLabel,
-          eventTypeLabel: DEFAULT_PDF_SETTINGS.eventTypeLabel,
-          footerMessage: DEFAULT_PDF_SETTINGS.footerMessage,
-          thankYouMessage: DEFAULT_PDF_SETTINGS.thankYouMessage,
+          quotationTitle: (data as any).quotation_title || DEFAULT_PDF_SETTINGS.quotationTitle,
+          eventDateLabel: (data as any).event_date_label || DEFAULT_PDF_SETTINGS.eventDateLabel,
+          eventTypeLabel: (data as any).event_type_label || DEFAULT_PDF_SETTINGS.eventTypeLabel,
+          footerMessage: (data as any).footer_message || DEFAULT_PDF_SETTINGS.footerMessage,
+          thankYouMessage: (data as any).thank_you_message || DEFAULT_PDF_SETTINGS.thankYouMessage,
           createdAt: data.created_at,
           updatedAt: data.updated_at,
         });
@@ -93,6 +93,11 @@ export function usePDFSettings() {
         primary_color: newSettings.primaryColor ?? settings.primaryColor,
         secondary_color: newSettings.secondaryColor ?? settings.secondaryColor,
         style: newSettings.style ?? settings.style,
+        quotation_title: newSettings.quotationTitle ?? settings.quotationTitle,
+        event_date_label: newSettings.eventDateLabel ?? settings.eventDateLabel,
+        event_type_label: newSettings.eventTypeLabel ?? settings.eventTypeLabel,
+        footer_message: newSettings.footerMessage ?? settings.footerMessage,
+        thank_you_message: newSettings.thankYouMessage ?? settings.thankYouMessage,
       };
 
       const { error } = await supabase

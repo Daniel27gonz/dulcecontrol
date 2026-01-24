@@ -145,12 +145,17 @@ export type Database = {
           business_name: string | null
           business_phone: string | null
           created_at: string
+          event_date_label: string | null
+          event_type_label: string | null
+          footer_message: string | null
           id: string
           logo_position: string | null
           logo_url: string | null
           primary_color: string | null
+          quotation_title: string | null
           secondary_color: string | null
           style: string | null
+          thank_you_message: string | null
           updated_at: string
           user_id: string
         }
@@ -159,12 +164,17 @@ export type Database = {
           business_name?: string | null
           business_phone?: string | null
           created_at?: string
+          event_date_label?: string | null
+          event_type_label?: string | null
+          footer_message?: string | null
           id?: string
           logo_position?: string | null
           logo_url?: string | null
           primary_color?: string | null
+          quotation_title?: string | null
           secondary_color?: string | null
           style?: string | null
+          thank_you_message?: string | null
           updated_at?: string
           user_id: string
         }
@@ -173,12 +183,17 @@ export type Database = {
           business_name?: string | null
           business_phone?: string | null
           created_at?: string
+          event_date_label?: string | null
+          event_type_label?: string | null
+          footer_message?: string | null
           id?: string
           logo_position?: string | null
           logo_url?: string | null
           primary_color?: string | null
+          quotation_title?: string | null
           secondary_color?: string | null
           style?: string | null
+          thank_you_message?: string | null
           updated_at?: string
           user_id?: string
         }
