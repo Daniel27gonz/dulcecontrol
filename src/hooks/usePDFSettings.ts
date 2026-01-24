@@ -54,7 +54,6 @@ export function usePDFSettings() {
           quotationTitle: DEFAULT_PDF_SETTINGS.quotationTitle,
           eventDateLabel: DEFAULT_PDF_SETTINGS.eventDateLabel,
           eventTypeLabel: DEFAULT_PDF_SETTINGS.eventTypeLabel,
-          observationsText: DEFAULT_PDF_SETTINGS.observationsText,
           footerMessage: DEFAULT_PDF_SETTINGS.footerMessage,
           thankYouMessage: DEFAULT_PDF_SETTINGS.thankYouMessage,
           createdAt: data.created_at,
