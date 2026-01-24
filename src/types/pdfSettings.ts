@@ -1,5 +1,5 @@
 export type PDFStyle = 'minimal' | 'elegant';
-export type LogoPosition = 'left' | 'center' | 'right';
+export type LogoPosition = 'left' | 'right';
 
 export interface PDFSettings {
   id?: string;
@@ -29,7 +29,7 @@ export const DEFAULT_PDF_SETTINGS: PDFSettings = {
   businessPhone: '',
   businessEmail: '',
   logoUrl: null,
-  logoPosition: 'center',
+  logoPosition: 'left',
   primaryColor: '#90A4AE', // Gris azulado
   secondaryColor: '#ECEFF1', // Gris claro
   style: 'minimal',
@@ -44,7 +44,6 @@ export const DEFAULT_PDF_SETTINGS: PDFSettings = {
 
 export const LOGO_POSITION_OPTIONS: { value: LogoPosition; label: string }[] = [
   { value: 'left', label: 'Izquierda' },
-  { value: 'center', label: 'Centro' },
   { value: 'right', label: 'Derecha' },
 ];
 
