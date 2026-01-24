@@ -187,7 +187,7 @@ export default function PersonalizationPage() {
 
                     <div className="space-y-4">
                       <div>
-                        <Label htmlFor="businessName">Nombre del negocio *</Label>
+                        <Label htmlFor="businessName">Nombre del negocio (opcional)</Label>
                         <Input
                           id="businessName"
                           placeholder="Mi Pastelería Artesanal"
