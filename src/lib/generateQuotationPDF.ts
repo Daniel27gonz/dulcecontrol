@@ -31,7 +31,9 @@ export function generateQuotationPDF(quotation: Quotation, options: PDFOptions):
   doc.setTextColor(255, 255, 255);
   doc.setFontSize(22);
   doc.setFont('helvetica', 'bold');
-  doc.text(options.businessName || 'Postres Rentables', margin, y + 12);
+  if (options.businessName?.trim()) {
+    doc.text(options.businessName.trim(), margin, y + 12);
+  }
 
   // Quotation label
   doc.setFontSize(12);
