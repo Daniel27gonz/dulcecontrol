@@ -397,18 +397,34 @@ export async function generateStyledQuotationPDF(
   }
 
   // === FOOTER ===
-  const footerReservedHeight = 45;
+  const footerReservedHeight = 55;
   const minFooterY = y + 8;
   const fixedFooterY = pageHeight - footerReservedHeight;
   const footerY = Math.max(minFooterY, fixedFooterY);
   
-  // Thank you message - italic in primary color (first in footer)
+  // Footer message - italicized description
+  const footerMessage = pdfSettings.footerMessage || '';
+  if (footerMessage) {
+    doc.setFontSize(8);
+    doc.setTextColor(...mutedColor);
+    doc.setFont('helvetica', 'italic');
+    const footerLines = doc.splitTextToSize(footerMessage, contentWidth - 20);
+    const lineHeight = 4;
+    let footerMsgY = footerY;
+    footerLines.slice(0, 3).forEach((line: string) => {
+      doc.text(line, pageWidth / 2, footerMsgY, { align: 'center' });
+      footerMsgY += lineHeight;
+    });
+  }
+  
+  // Thank you message - italic in primary color
   const thankYouMessage = pdfSettings.thankYouMessage || 'Gracias por confiar en mi trabajo para endulzar tus momentos';
+  const thankYouY = footerMessage ? footerY + 16 : footerY;
   
   doc.setFontSize(11);
   doc.setTextColor(...primaryColor);
   doc.setFont('helvetica', 'italic');
-  doc.text(thankYouMessage, pageWidth / 2, footerY, { align: 'center' });
+  doc.text(thankYouMessage, pageWidth / 2, thankYouY, { align: 'center' });
 
   // Contact info below thank you message - italic
   const contactParts: string[] = [];
@@ -419,7 +435,7 @@ export async function generateStyledQuotationPDF(
     doc.setFontSize(9);
     doc.setTextColor(...textColor);
     doc.setFont('helvetica', 'italic');
-    doc.text(contactParts.join(' | '), pageWidth / 2, footerY + 12, { align: 'center' });
+    doc.text(contactParts.join(' | '), pageWidth / 2, thankYouY + 12, { align: 'center' });
   }
 
   return doc;
