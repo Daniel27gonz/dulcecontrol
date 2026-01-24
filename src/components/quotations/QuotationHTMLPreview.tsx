@@ -295,29 +295,6 @@ export function QuotationHTMLPreview({
             </p>
           </div>
 
-          {/* Imagen de referencia */}
-          {quotation.referenceImage && (
-            <div className="mb-3 sm:mb-4">
-              <p 
-                className="text-[10px] sm:text-xs font-medium mb-2"
-                style={{ color: pdfSettings.primaryColor }}
-              >
-                Imagen de referencia:
-              </p>
-              <div className="flex justify-center">
-                <div 
-                  className="rounded-lg overflow-hidden border p-1.5"
-                  style={{ borderColor: pdfSettings.primaryColor }}
-                >
-                  <img 
-                    src={quotation.referenceImage} 
-                    alt="Referencia del postre" 
-                    className="max-h-24 sm:max-h-32 md:max-h-40 w-auto object-contain rounded"
-                  />
-                </div>
-              </div>
-            </div>
-          )}
 
           {/* Observaciones */}
           <div className="mb-3 sm:mb-4">
