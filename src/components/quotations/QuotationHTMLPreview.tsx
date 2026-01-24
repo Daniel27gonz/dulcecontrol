@@ -160,6 +160,18 @@ export function QuotationHTMLPreview({
               </p>
             )}
             
+            {/* Folio único */}
+            <div 
+              className="inline-block px-3 py-1 mt-2 rounded-full text-[10px] sm:text-xs font-bold"
+              style={{ 
+                backgroundColor: `${pdfSettings.primaryColor}20`,
+                color: pdfSettings.primaryColor,
+                border: `1px solid ${pdfSettings.primaryColor}50`,
+              }}
+            >
+              Folio: {quotation.number}
+            </div>
+            
             <p className="text-xs sm:text-sm mt-1.5 text-gray-600">
               Fecha: {creationDate}
             </p>

@@ -187,8 +187,24 @@ export async function generateStyledQuotationPDF(
     y += 10;
   }
 
+  // Folio único - centered with decorative styling
+  doc.setFillColor(...lightenColor(primaryColor, 0.8));
+  doc.setDrawColor(...primaryColor);
+  doc.setLineWidth(0.3);
+  const folioText = `Folio: ${quotation.number}`;
+  const folioWidth = doc.getTextWidth(folioText) + 16;
+  const folioX = (pageWidth - folioWidth) / 2;
+  doc.roundedRect(folioX, y, folioWidth, 8, 2, 2, 'FD');
+  
+  doc.setFontSize(9);
+  doc.setFont('helvetica', 'bold');
+  doc.setTextColor(...primaryColor);
+  doc.text(folioText, pageWidth / 2, y + 5.5, { align: 'center' });
+  y += 12;
+
   // Date
   doc.setFontSize(10);
+  doc.setFont('helvetica', 'normal');
   doc.setTextColor(...mutedColor);
   const creationDate = format(parseISO(quotation.createdAt), "d 'de' MMMM, yyyy", { locale: es });
   doc.text(`Fecha: ${creationDate}`, pageWidth / 2, y + 5, { align: 'center' });
