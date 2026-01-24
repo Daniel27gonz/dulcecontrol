@@ -27,6 +27,18 @@ export function usePDFSettings() {
       }
 
       if (data) {
+        // Validate style - ensure it's a valid PDFStyle, otherwise use default
+        const validStyles = ['pastel', 'minimal', 'elegant'];
+        const loadedStyle = validStyles.includes(data.style || '') 
+          ? (data.style as PDFSettings['style']) 
+          : DEFAULT_PDF_SETTINGS.style;
+        
+        // Validate logo position
+        const validPositions = ['left', 'center', 'right'];
+        const loadedPosition = validPositions.includes(data.logo_position || '')
+          ? (data.logo_position as PDFSettings['logoPosition'])
+          : DEFAULT_PDF_SETTINGS.logoPosition;
+
         setSettings({
           ...DEFAULT_PDF_SETTINGS,
           id: data.id,
@@ -35,10 +47,10 @@ export function usePDFSettings() {
           businessPhone: data.business_phone || '',
           businessEmail: data.business_email || '',
           logoUrl: data.logo_url,
-          logoPosition: (data.logo_position as PDFSettings['logoPosition']) || DEFAULT_PDF_SETTINGS.logoPosition,
+          logoPosition: loadedPosition,
           primaryColor: data.primary_color || DEFAULT_PDF_SETTINGS.primaryColor,
           secondaryColor: data.secondary_color || DEFAULT_PDF_SETTINGS.secondaryColor,
-          style: (data.style as PDFSettings['style']) || DEFAULT_PDF_SETTINGS.style,
+          style: loadedStyle,
           quotationTitle: DEFAULT_PDF_SETTINGS.quotationTitle,
           eventDateLabel: DEFAULT_PDF_SETTINGS.eventDateLabel,
           eventTypeLabel: DEFAULT_PDF_SETTINGS.eventTypeLabel,
