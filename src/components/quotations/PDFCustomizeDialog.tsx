@@ -37,7 +37,6 @@ export function PDFCustomizeDialog({ quotation, trigger }: PDFCustomizeDialogPro
     if (!isLoading) {
       setLocalSettings({
         ...savedSettings,
-        businessName: savedSettings.businessName || appSettings.userName || '',
       });
     }
   }, [savedSettings, isLoading, appSettings.userName]);
@@ -54,16 +53,6 @@ export function PDFCustomizeDialog({ quotation, trigger }: PDFCustomizeDialogPro
   };
 
   const handleDownload = async () => {
-    if (!localSettings.businessName.trim()) {
-      toast({
-        title: 'Nombre requerido',
-        description: 'Por favor ingresa el nombre de tu negocio',
-        variant: 'destructive',
-      });
-      setActiveTab('settings');
-      return;
-    }
-
     try {
       await downloadStyledQuotationPDF(quotation, {
         currencySymbol: appSettings.currencySymbol,

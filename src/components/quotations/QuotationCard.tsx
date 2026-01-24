@@ -70,10 +70,10 @@ export function QuotationCard({ quotation, onUpdate }: QuotationCardProps) {
   };
 
   const handleQuickDownload = async () => {
-    // Use saved settings with fallback to user name
+    // Use saved settings as-is: business name should appear only if user explicitly set it
     const effectiveSettings = {
       ...pdfSettings,
-      businessName: pdfSettings.businessName || settings.userName || 'Mi Negocio de Postres',
+      businessName: (pdfSettings.businessName ?? '').trim(),
     };
 
     setIsDownloading(true);
