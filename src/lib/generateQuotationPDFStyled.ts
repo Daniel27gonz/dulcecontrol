@@ -72,7 +72,6 @@ function getStyleConfig(style: PDFStyle, primaryColor: [number, number, number])
         showDecorations: true,
         rowBgColor: lightColor,
       };
-    case 'pastel':
     default:
       return {
         headerHeight: 45,

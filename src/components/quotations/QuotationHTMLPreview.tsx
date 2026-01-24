@@ -29,17 +29,6 @@ export function QuotationHTMLPreview({
   // Estilos basados en el estilo seleccionado
   const getStyleClasses = () => {
     switch (pdfSettings.style) {
-      case 'pastel':
-        return {
-          container: 'bg-gradient-to-b from-pink-50 to-white',
-          header: 'text-pink-800',
-          headerBg: pdfSettings.primaryColor,
-          border: `border-[${pdfSettings.primaryColor}]`,
-          accent: pdfSettings.secondaryColor,
-          tableBg: pdfSettings.primaryColor,
-          tableText: 'text-pink-900',
-          decorative: true,
-        };
       case 'minimal':
         return {
           container: 'bg-white',

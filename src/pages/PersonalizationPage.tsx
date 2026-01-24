@@ -79,7 +79,6 @@ export default function PersonalizationPage() {
 
   const handleStyleChange = (style: PDFStyle) => {
     const styleColors = {
-      pastel: { primary: '#F8BBD9', secondary: '#FFF0F5' },
       minimal: { primary: '#90A4AE', secondary: '#ECEFF1' },
       elegant: { primary: '#D4A574', secondary: '#FFF8F0' },
     };
