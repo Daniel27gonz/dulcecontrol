@@ -1,5 +1,5 @@
 export type PDFStyle = 'minimal' | 'elegant';
-export type LogoPosition = 'left' | 'right';
+export type LogoPosition = 'left';
 
 export interface PDFSettings {
   id?: string;
@@ -40,10 +40,6 @@ export const DEFAULT_PDF_SETTINGS: PDFSettings = {
   thankYouMessage: 'Gracias por confiar en mi trabajo para endulzar tus momentos',
 };
 
-export const LOGO_POSITION_OPTIONS: { value: LogoPosition; label: string }[] = [
-  { value: 'left', label: 'Izquierda' },
-  { value: 'right', label: 'Derecha' },
-];
 
 export const PDF_STYLE_OPTIONS: { value: PDFStyle; label: string; description: string; preview: string }[] = [
   { 
