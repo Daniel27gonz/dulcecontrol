@@ -142,10 +142,10 @@ export default function IngredientsPage() {
     return true;
   };
 
-  const handleSaveAdd = () => {
+  const handleSaveAdd = async () => {
     if (!validateForm()) return;
 
-    addIngredient({
+    const result = await addIngredient({
       name: formData.name.trim(),
       category: formData.category,
       purchaseUnit: formData.purchaseUnit as any,
@@ -153,19 +153,23 @@ export default function IngredientsPage() {
       presentationPrice: parseFloat(formData.presentationPrice),
     });
 
-    toast({
-      title: '✅ Ingrediente agregado',
-      description: `"${formData.name}" se agregó correctamente`,
-    });
-
-    setShowAddModal(false);
-    setFormData(initialFormData);
+    if (result) {
+      toast({
+        title: '✅ Ingrediente agregado',
+        description: `"${formData.name}" se agregó correctamente`,
+      });
+      setShowAddModal(false);
+      setFormData(initialFormData);
+      setFormError(null);
+    } else {
+      setFormError('Error al guardar el ingrediente. Intenta de nuevo.');
+    }
   };
 
-  const handleSaveEdit = () => {
+  const handleSaveEdit = async () => {
     if (!editingIngredient || !validateForm(true)) return;
 
-    updateIngredient(editingIngredient.id, {
+    await updateIngredient(editingIngredient.id, {
       name: formData.name.trim(),
       category: formData.category,
       purchaseUnit: formData.purchaseUnit as any,
@@ -180,6 +184,7 @@ export default function IngredientsPage() {
 
     setShowEditModal(false);
     setEditingIngredient(null);
+    setFormError(null);
   };
 
   const handleDelete = () => {
