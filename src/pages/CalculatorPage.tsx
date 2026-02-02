@@ -105,6 +105,7 @@ export default function CalculatorPage() {
         });
         setExtras(recipe.extras || []);
         setDecorationHours(recipe.decorationHours || 0);
+        setSaleMargin(recipe.marginPercentage || 50);
       }
     }
   }, [editId, recipes]);
