@@ -13,17 +13,37 @@ import { useApp } from '@/context/AppContext';
 import { useBaseIngredients } from '@/context/BaseIngredientsContext';
 import { useToast } from '@/hooks/use-toast';
 
+// Currencies organized by region
 const currencies = [
-  { code: 'USD', symbol: '$', name: 'Dólar estadounidense' },
-  { code: 'EUR', symbol: '€', name: 'Euro' },
-  { code: 'MXN', symbol: '$', name: 'Peso mexicano' },
-  { code: 'ARS', symbol: '$', name: 'Peso argentino' },
-  { code: 'COP', symbol: '$', name: 'Peso colombiano' },
-  { code: 'PEN', symbol: 'S/', name: 'Sol peruano' },
-  { code: 'CLP', symbol: '$', name: 'Peso chileno' },
-  { code: 'BRL', symbol: 'R$', name: 'Real brasileño' },
-  { code: 'UYU', symbol: '$U', name: 'Peso uruguayo' },
-  { code: 'BOB', symbol: 'Bs', name: 'Boliviano' },
+  // 🌎 AMÉRICA DEL NORTE
+  { code: 'CAD', symbol: 'C$', name: '🇨🇦 Dólar canadiense', region: 'América del Norte' },
+  { code: 'USD', symbol: '$', name: '🇺🇸 Dólar estadounidense', region: 'América del Norte' },
+  { code: 'MXN', symbol: '$', name: '🇲🇽 Peso mexicano', region: 'América del Norte' },
+  
+  // 🌴 AMÉRICA CENTRAL
+  { code: 'BZD', symbol: 'BZ$', name: '🇧🇿 Dólar beliceño', region: 'América Central' },
+  { code: 'CRC', symbol: '₡', name: '🇨🇷 Colón costarricense', region: 'América Central' },
+  { code: 'GTQ', symbol: 'Q', name: '🇬🇹 Quetzal guatemalteco', region: 'América Central' },
+  { code: 'HNL', symbol: 'L', name: '🇭🇳 Lempira hondureño', region: 'América Central' },
+  { code: 'NIO', symbol: 'C$', name: '🇳🇮 Córdoba nicaragüense', region: 'América Central' },
+  { code: 'PAB', symbol: 'B/.', name: '🇵🇦 Balboa panameño', region: 'América Central' },
+  { code: 'DOP', symbol: 'RD$', name: '🇩🇴 Peso dominicano', region: 'América Central' },
+  
+  // 🌎 AMÉRICA DEL SUR
+  { code: 'ARS', symbol: '$', name: '🇦🇷 Peso argentino', region: 'América del Sur' },
+  { code: 'BOB', symbol: 'Bs', name: '🇧🇴 Boliviano', region: 'América del Sur' },
+  { code: 'BRL', symbol: 'R$', name: '🇧🇷 Real brasileño', region: 'América del Sur' },
+  { code: 'CLP', symbol: '$', name: '🇨🇱 Peso chileno', region: 'América del Sur' },
+  { code: 'COP', symbol: '$', name: '🇨🇴 Peso colombiano', region: 'América del Sur' },
+  { code: 'GYD', symbol: 'G$', name: '🇬🇾 Dólar guyanés', region: 'América del Sur' },
+  { code: 'PYG', symbol: '₲', name: '🇵🇾 Guaraní paraguayo', region: 'América del Sur' },
+  { code: 'PEN', symbol: 'S/', name: '🇵🇪 Sol peruano', region: 'América del Sur' },
+  { code: 'SRD', symbol: 'Sr$', name: '🇸🇷 Dólar surinamés', region: 'América del Sur' },
+  { code: 'UYU', symbol: '$U', name: '🇺🇾 Peso uruguayo', region: 'América del Sur' },
+  { code: 'VES', symbol: 'Bs.S', name: '🇻🇪 Bolívar venezolano', region: 'América del Sur' },
+  
+  // 🌍 OTRAS
+  { code: 'EUR', symbol: '€', name: '🇪🇺 Euro', region: 'Otras' },
 ];
 
 export default function SettingsPage() {
