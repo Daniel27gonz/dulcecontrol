@@ -105,7 +105,7 @@ export function QuotationForm({ quotation, trigger, onClose, onSave }: Quotation
       name: '',
       quantity: 1,
       unitPrice: 0,
-      total: 0,
+      total: 0, // quantity * unitPrice redondeado a 2 decimales
     };
     setItems([...items, newItem]);
   };
@@ -166,14 +166,17 @@ export function QuotationForm({ quotation, trigger, onClose, onSave }: Quotation
     // Validaciones: no negativo, no nulo, 2 decimales
     const validatedCost = round2(Math.max(0, totalCostWithWaste || 0));
 
+    // Redondear precio unitario a 2 decimales para consistencia
+    const roundedUnitPrice = Math.round(validatedCost * 100) / 100;
+    
     const newItem: QuotationItem = {
       id: crypto.randomUUID(),
       name: recipe.name,
       description: recipe.category,
       quantity: 1,
-      unitPrice: validatedCost,
-      total: validatedCost,
-      baseCost: validatedCost,
+      unitPrice: roundedUnitPrice,
+      total: roundedUnitPrice,
+      baseCost: roundedUnitPrice,
     };
     setItems([...items, newItem]);
   };
@@ -197,7 +200,8 @@ export function QuotationForm({ quotation, trigger, onClose, onSave }: Quotation
     setItems(items.map(item => {
       if (item.id === id) {
         const updated = { ...item, ...updates };
-        updated.total = updated.quantity * updated.unitPrice;
+        // Redondear a 2 decimales para consistencia en WhatsApp, PDF y vista
+        updated.total = Math.round(updated.quantity * updated.unitPrice * 100) / 100;
         return updated;
       }
       return item;

@@ -221,11 +221,13 @@ export function QuotationsProvider({ children }: { children: ReactNode }) {
     discount: number, 
     discountType: 'percentage' | 'fixed'
   ) => {
-    const subtotal = items.reduce((sum, item) => sum + item.total, 0);
+    // Redondear subtotal a 2 decimales para consistencia con WhatsApp y PDF
+    const subtotal = Math.round(items.reduce((sum, item) => sum + item.total, 0) * 100) / 100;
     const discountAmount = discountType === 'percentage' 
       ? subtotal * (discount / 100) 
       : discount;
-    const total = Math.max(0, subtotal - discountAmount);
+    // Redondear total a 2 decimales
+    const total = Math.round(Math.max(0, subtotal - discountAmount) * 100) / 100;
     return { subtotal, total };
   }, []);
 
