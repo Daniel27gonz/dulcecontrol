@@ -11,7 +11,6 @@ import {
   Eye,
   MoreVertical,
   Pencil,
-  Flame,
   Package,
   Zap
 } from 'lucide-react';
@@ -96,13 +95,14 @@ export default function RecipesPage() {
     const decorationHours = recipe.decorationHours || 0;
     const laborDecorationCost = decorationHours * laborCostPerHour;
 
+    // Total labor = elaboration labor + decoration labor
+    const totalLaborCost = laborFinalCost + laborDecorationCost;
+    const totalLaborHours = totalProductHours + decorationHours;
+
     const baseCost = ingredientsCost + laborFinalCost + indirectFinalCost + extrasCost + laborDecorationCost;
     const wasteCost = baseCost * WASTE_PERCENTAGE;
 
     const totalCostWithWaste = round2(Math.max(0, baseCost + wasteCost));
-
-    // Para mantener la UI intacta (2 líneas), mostramos "Gastos indirectos" como TODO lo que no es ingredientes
-    const indirectCost = round2(Math.max(0, totalCostWithWaste - ingredientsCost));
 
     // Fórmula de margen real (misma que calculadora): precio = costo / (1 - margen)
     const marginDecimal = Math.min(Math.max(recipe.marginPercentage || 50, 30), 90) / 100;
@@ -111,7 +111,9 @@ export default function RecipesPage() {
 
     return {
       ingredientsCost: round2(Math.max(0, ingredientsCost)),
-      indirectCost,
+      laborCostPerHour: round2(laborCostPerHour),
+      totalLaborHours: round2(totalLaborHours),
+      totalLaborCost: round2(totalLaborCost),
       totalCost: totalCostWithWaste,
       suggestedPrice,
       profit,
@@ -362,27 +364,41 @@ export default function RecipesPage() {
                     </CardContent>
                   </Card>
 
-                  {/* Cost Breakdown */}
+                  {/* Cost Breakdown - Solo ingredientes y mano de obra */}
                   <div className="space-y-3">
                     <h4 className="font-semibold text-foreground flex items-center gap-2">
                       <DollarSign className="w-4 h-4" />
                       Desglose de costos
                     </h4>
                     <div className="space-y-2">
+                      {/* Costo total de ingredientes */}
                       <div className="flex justify-between p-3 bg-muted/50 rounded-lg">
                         <span className="flex items-center gap-2 text-sm">
                           <Package className="w-4 h-4 text-caramel" />
-                          Ingredientes
+                          Costo total de ingredientes
                         </span>
                         <span className="font-medium">{formatCurrency(costs.ingredientsCost)}</span>
                       </div>
+                      
+                      {/* Costo por hora de mano de obra */}
                       <div className="flex justify-between p-3 bg-muted/50 rounded-lg">
                         <span className="flex items-center gap-2 text-sm">
-                          <Zap className="w-4 h-4 text-primary" />
-                          Gastos indirectos
+                          <ChefHat className="w-4 h-4 text-primary" />
+                          Costo por hora de mano de obra
                         </span>
-                        <span className="font-medium">{formatCurrency(costs.indirectCost)}</span>
+                        <span className="font-medium">{formatCurrency(costs.laborCostPerHour)}/h</span>
                       </div>
+                      
+                      {/* Mano de obra total */}
+                      <div className="flex justify-between p-3 bg-muted/50 rounded-lg">
+                        <span className="flex items-center gap-2 text-sm">
+                          <Zap className="w-4 h-4 text-success" />
+                          Mano de obra total ({costs.totalLaborHours}h × {formatCurrency(costs.laborCostPerHour)})
+                        </span>
+                        <span className="font-medium">{formatCurrency(costs.totalLaborCost)}</span>
+                      </div>
+                      
+                      {/* Costo total */}
                       <div className="flex justify-between p-3 bg-primary/10 rounded-lg font-bold">
                         <span>Costo total</span>
                         <span>{formatCurrency(costs.totalCost)}</span>
@@ -394,7 +410,7 @@ export default function RecipesPage() {
                   {selectedRecipe.ingredients.length > 0 && (
                     <div className="space-y-3">
                       <h4 className="font-semibold text-foreground flex items-center gap-2">
-                        <ChefHat className="w-4 h-4" />
+                        <Package className="w-4 h-4" />
                         Ingredientes ({selectedRecipe.ingredients.length})
                       </h4>
                       <div className="space-y-2 max-h-40 overflow-y-auto">
@@ -409,46 +425,6 @@ export default function RecipesPage() {
                       </div>
                     </div>
                   )}
-
-                  {/* Indirect Costs */}
-                  <div className="space-y-3">
-                    <h4 className="font-semibold text-foreground flex items-center gap-2">
-                      <Flame className="w-4 h-4" />
-                      Gastos indirectos
-                    </h4>
-                    <div className="grid grid-cols-2 gap-2 text-sm">
-                      {selectedRecipe.indirectCosts.gas > 0 && (
-                        <div className="flex justify-between p-2 bg-muted/30 rounded">
-                          <span className="text-muted-foreground">Gas</span>
-                          <span>{formatCurrency(selectedRecipe.indirectCosts.gas)}</span>
-                        </div>
-                      )}
-                      {selectedRecipe.indirectCosts.electricity > 0 && (
-                        <div className="flex justify-between p-2 bg-muted/30 rounded">
-                          <span className="text-muted-foreground">Luz</span>
-                          <span>{formatCurrency(selectedRecipe.indirectCosts.electricity)}</span>
-                        </div>
-                      )}
-                      {selectedRecipe.indirectCosts.packaging > 0 && (
-                        <div className="flex justify-between p-2 bg-muted/30 rounded">
-                          <span className="text-muted-foreground">Empaque</span>
-                          <span>{formatCurrency(selectedRecipe.indirectCosts.packaging)}</span>
-                        </div>
-                      )}
-                      {selectedRecipe.indirectCosts.labor > 0 && (
-                        <div className="flex justify-between p-2 bg-muted/30 rounded">
-                          <span className="text-muted-foreground">Mano de obra</span>
-                          <span>{formatCurrency(selectedRecipe.indirectCosts.labor)}</span>
-                        </div>
-                      )}
-                      {selectedRecipe.indirectCosts.other > 0 && (
-                        <div className="flex justify-between p-2 bg-muted/30 rounded">
-                          <span className="text-muted-foreground">Otros</span>
-                          <span>{formatCurrency(selectedRecipe.indirectCosts.other)}</span>
-                        </div>
-                      )}
-                    </div>
-                  </div>
 
                   {/* Actions */}
                   <div className="flex gap-3 pt-4">
