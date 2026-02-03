@@ -104,8 +104,9 @@ export default function RecipesPage() {
     // Para mantener la UI intacta (2 líneas), mostramos "Gastos indirectos" como TODO lo que no es ingredientes
     const indirectCost = round2(Math.max(0, totalCostWithWaste - ingredientsCost));
 
-    const marginMultiplier = 1 + (recipe.marginPercentage || 0) / 100;
-    const suggestedPrice = round2(Math.max(0, totalCostWithWaste * marginMultiplier));
+    // Fórmula de margen real (misma que calculadora): precio = costo / (1 - margen)
+    const marginDecimal = Math.min(Math.max(recipe.marginPercentage || 50, 30), 90) / 100;
+    const suggestedPrice = round2(Math.max(0, totalCostWithWaste / (1 - marginDecimal)));
     const profit = round2(Math.max(0, suggestedPrice - totalCostWithWaste));
 
     return {
