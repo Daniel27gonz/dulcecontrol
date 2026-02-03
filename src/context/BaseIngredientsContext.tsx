@@ -1,6 +1,6 @@
 import React, { createContext, useContext, useState, useEffect, useCallback, ReactNode } from 'react';
 import { supabase } from '@/integrations/supabase/client';
-import { useApp } from './AppContext';
+import { useApp, Ingredient } from './AppContext';
 
 // Types
 export interface BaseIngredient {
@@ -119,6 +119,9 @@ interface BaseIngredientsContextType {
   getIngredientById: (id: string) => BaseIngredient | undefined;
   findDuplicate: (name: string, excludeId?: string) => BaseIngredient | undefined;
   refreshIngredients: () => Promise<void>;
+  // New: Get current price for recipe ingredient calculation
+  getCurrentIngredientCost: (recipeIngredient: Ingredient) => number;
+  calculateIngredientsWithCurrentPrices: (recipeIngredients: Ingredient[]) => { ingredient: Ingredient; currentCost: number }[];
 }
 
 const BaseIngredientsContext = createContext<BaseIngredientsContextType | undefined>(undefined);
@@ -320,6 +323,35 @@ export function BaseIngredientsProvider({ children }: { children: ReactNode }) {
     await loadIngredients();
   }, [loadIngredients]);
 
+  // Get the current cost for a recipe ingredient using master data
+  // If the ingredient has a baseIngredientId, use the current price from the base ingredient
+  // Otherwise, fall back to the stored pricePerUnit
+  const getCurrentIngredientCost = useCallback((recipeIngredient: Ingredient): number => {
+    if (recipeIngredient.baseIngredientId) {
+      const baseIngredient = ingredients.find(ing => ing.id === recipeIngredient.baseIngredientId);
+      if (baseIngredient) {
+        return baseIngredient.costPerBaseUnit * recipeIngredient.quantityUsed;
+      }
+    }
+    // Fallback: try to find by name if no baseIngredientId (legacy recipes)
+    const byName = ingredients.find(ing => 
+      ing.name.toLowerCase().trim() === recipeIngredient.name.toLowerCase().trim()
+    );
+    if (byName) {
+      return byName.costPerBaseUnit * recipeIngredient.quantityUsed;
+    }
+    // Final fallback: use stored price
+    return recipeIngredient.pricePerUnit * recipeIngredient.quantityUsed;
+  }, [ingredients]);
+
+  // Calculate all ingredients with current prices for a recipe
+  const calculateIngredientsWithCurrentPrices = useCallback((recipeIngredients: Ingredient[]) => {
+    return recipeIngredients.map(ing => ({
+      ingredient: ing,
+      currentCost: getCurrentIngredientCost(ing),
+    }));
+  }, [getCurrentIngredientCost]);
+
   const value: BaseIngredientsContextType = {
     ingredients,
     isLoading,
@@ -330,6 +362,8 @@ export function BaseIngredientsProvider({ children }: { children: ReactNode }) {
     getIngredientById,
     findDuplicate,
     refreshIngredients,
+    getCurrentIngredientCost,
+    calculateIngredientsWithCurrentPrices,
   };
 
   return (
