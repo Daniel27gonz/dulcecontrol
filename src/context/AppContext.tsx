@@ -530,10 +530,24 @@ export function AppProvider({ children }: { children: ReactNode }) {
     if (newSettings.hasCompletedOnboarding !== undefined) updateData.has_completed_onboarding = newSettings.hasCompletedOnboarding;
     if (newSettings.hasCompletedRecipeTutorial !== undefined) updateData.has_completed_recipe_tutorial = newSettings.hasCompletedRecipeTutorial;
 
-    await supabase
-      .from('user_settings')
-      .update(updateData)
-      .eq('user_id', session.user.id);
+    // Update user_settings table
+    if (Object.keys(updateData).length > 0) {
+      await supabase
+        .from('user_settings')
+        .update(updateData)
+        .eq('user_id', session.user.id);
+    }
+
+    // If userName is being updated, also update the profiles table
+    if (newSettings.userName !== undefined) {
+      await supabase
+        .from('profiles')
+        .update({ name: newSettings.userName })
+        .eq('user_id', session.user.id);
+
+      // Update local user state
+      setUser(prev => prev ? { ...prev, name: newSettings.userName! } : null);
+    }
 
     setSettings(prev => ({ ...prev, ...newSettings }));
   };
