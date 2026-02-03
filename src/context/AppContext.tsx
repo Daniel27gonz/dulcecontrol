@@ -5,6 +5,7 @@ import { User, Session } from '@supabase/supabase-js';
 // Types
 export interface Ingredient {
   id: string;
+  baseIngredientId?: string; // Reference to master ingredient
   name: string;
   pricePerUnit: number;
   quantityUsed: number;

@@ -437,7 +437,8 @@ export default function CalculatorPage() {
                                 name: '',
                                 pricePerUnit: 0,
                                 unit: 'g',
-                                quantityUsed: 0
+                                quantityUsed: 0,
+                                baseIngredientId: undefined,
                               });
                             } else {
                               updateIngredient(ing.id, 'name', value);
@@ -445,6 +446,7 @@ export default function CalculatorPage() {
                           }}
                           onSelect={(selected) => {
                             updateIngredientFull(ing.id, {
+                              baseIngredientId: selected.id, // Store reference to master ingredient
                               name: selected.name,
                               pricePerUnit: selected.costPerBaseUnit,
                               unit: selected.baseUnit,

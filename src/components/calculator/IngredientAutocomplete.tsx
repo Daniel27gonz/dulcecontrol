@@ -13,6 +13,7 @@ import { cn } from '@/lib/utils';
 interface IngredientAutocompleteProps {
   value: string;
   onSelect: (ingredient: { 
+    id: string; // baseIngredientId for master data reference
     name: string; 
     costPerBaseUnit: number; 
     baseUnit: string;
@@ -126,6 +127,7 @@ export function IngredientAutocomplete({
     const presentationInfo = `${settings.currencySymbol}${ingredient.presentationPrice} por ${ingredient.presentationQuantity} ${ingredient.purchaseUnit}`;
     
     onSelect({
+      id: ingredient.id, // Pass baseIngredientId for master data reference
       name: ingredient.name,
       costPerBaseUnit: ingredient.costPerBaseUnit,
       baseUnit,
@@ -181,6 +183,7 @@ export function IngredientAutocomplete({
     const presentationInfo = `${settings.currencySymbol}${newIngredient.presentationPrice} por ${newIngredient.presentationQuantity} ${newIngredient.purchaseUnit}`;
     
     onSelect({
+      id: newIngredient.id, // Pass baseIngredientId for master data reference
       name: newIngredient.name,
       costPerBaseUnit: newIngredient.costPerBaseUnit,
       baseUnit,
