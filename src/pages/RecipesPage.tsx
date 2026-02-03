@@ -451,7 +451,7 @@ export default function RecipesPage() {
                         </div>
 
                         <div className="flex justify-between pt-2 border-t">
-                          <span className="text-muted-foreground">Extras (decoración y empaques)</span>
+                          <span className="text-muted-foreground">Extra del producto</span>
                           <span>{formatCurrency(costs.extrasCost)}</span>
                         </div>
                         {costs.decorationHours > 0 && (
