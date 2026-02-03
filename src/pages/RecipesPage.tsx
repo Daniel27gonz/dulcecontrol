@@ -508,26 +508,6 @@ export default function RecipesPage() {
                     </CardContent>
                   </Card>
 
-                  {/* Ingredients List */}
-                  {selectedRecipe.ingredients.length > 0 && (
-                    <div className="space-y-3">
-                      <h4 className="font-semibold text-foreground flex items-center gap-2">
-                        <Package className="w-4 h-4" />
-                        Ingredientes ({selectedRecipe.ingredients.length})
-                      </h4>
-                      <div className="space-y-2 max-h-40 overflow-y-auto">
-                        {selectedRecipe.ingredients.map((ing) => (
-                          <div key={ing.id} className="flex justify-between text-sm p-2 bg-muted/30 rounded">
-                            <span className="text-muted-foreground">
-                              {ing.name} ({ing.quantityUsed} {ing.unit})
-                            </span>
-                            <span>{formatCurrency(getCurrentIngredientCost(ing))}</span>
-                          </div>
-                        ))}
-                      </div>
-                    </div>
-                  )}
-
                   {/* Actions */}
                   <div className="flex gap-3 pt-4">
                     <Button
