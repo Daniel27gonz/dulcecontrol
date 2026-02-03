@@ -926,7 +926,7 @@ export default function CalculatorPage() {
                     </div>
 
                     <div className="flex justify-between pt-2 border-t">
-                      <span className="text-muted-foreground">Extras (decoración y empaques)</span>
+                      <span className="text-muted-foreground">Extra del producto</span>
                       <span>{settings.currencySymbol}{round2(extrasCost).toFixed(2)}</span>
                     </div>
                     {decorationHours > 0 && (
