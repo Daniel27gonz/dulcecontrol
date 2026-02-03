@@ -33,6 +33,7 @@ import { useApp } from '@/context/AppContext';
 import { useQuotations } from '@/hooks/useQuotations';
 import { useIndirectCosts } from '@/context/IndirectCostsContext';
 import { useLabor } from '@/context/LaborContext';
+import { useBaseIngredients } from '@/context/BaseIngredientsContext';
 import { QuotationItem, Quotation } from '@/types/quotation';
 import { toast } from '@/hooks/use-toast';
 
@@ -49,6 +50,7 @@ export function QuotationForm({ quotation, trigger, onClose, onSave }: Quotation
   const { addQuotation, updateQuotation, calculateTotals } = useQuotations();
   const { getTotalIndirectCosts } = useIndirectCosts();
   const { getTotalMonthlyHours, getLaborCostPerHour } = useLabor();
+  const { getCurrentIngredientCost } = useBaseIngredients();
   const [open, setOpen] = useState(false);
   
   // Form state
@@ -116,11 +118,11 @@ export function QuotationForm({ quotation, trigger, onClose, onSave }: Quotation
     const WASTE_PERCENTAGE = 0.05; // merma fija 5%
 
     // === FUENTE ÚNICA DE VERDAD: costo_total_con_merma ===
-    // Replica exactamente la lógica de CalculatorPage
+    // Usa precios actuales de ingredientes base (MASTER DATA REACTIVA)
 
-    // 1. Costo de ingredientes
+    // 1. Costo de ingredientes usando precios actuales
     const ingredientsCost = recipe.ingredients.reduce(
-      (sum, ing) => sum + (ing.pricePerUnit * ing.quantityUsed),
+      (sum, ing) => sum + getCurrentIngredientCost(ing),
       0
     );
 
