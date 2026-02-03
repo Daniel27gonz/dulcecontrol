@@ -163,11 +163,13 @@ export function QuotationForm({ quotation, trigger, onClose, onSave }: Quotation
     // 10. COSTO TOTAL CON MERMA — FUENTE ÚNICA DE VERDAD
     const totalCostWithWaste = round2(baseCost + wasteCost);
 
-    // Validaciones: no negativo, no nulo, 2 decimales
-    const validatedCost = round2(Math.max(0, totalCostWithWaste || 0));
+    // 11. PRECIO SUGERIDO CON MARGEN DE GANANCIA (misma fórmula que RecipesPage)
+    // Fórmula de margen real: precio = costo / (1 - margen)
+    const marginDecimal = Math.min(Math.max(recipe.marginPercentage || 50, 30), 90) / 100;
+    const suggestedPrice = round2(Math.max(0, totalCostWithWaste / (1 - marginDecimal)));
 
     // Redondear precio unitario a 2 decimales para consistencia
-    const roundedUnitPrice = Math.round(validatedCost * 100) / 100;
+    const roundedUnitPrice = Math.round(suggestedPrice * 100) / 100;
     
     const newItem: QuotationItem = {
       id: crypto.randomUUID(),
@@ -176,7 +178,7 @@ export function QuotationForm({ quotation, trigger, onClose, onSave }: Quotation
       quantity: 1,
       unitPrice: roundedUnitPrice,
       total: roundedUnitPrice,
-      baseCost: roundedUnitPrice,
+      baseCost: round2(Math.max(0, totalCostWithWaste || 0)), // Guardar costo base real para referencia
     };
     setItems([...items, newItem]);
   };
