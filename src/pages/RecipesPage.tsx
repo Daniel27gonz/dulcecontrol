@@ -12,7 +12,14 @@ import {
   MoreVertical,
   Pencil,
   Package,
-  Zap
+  Zap,
+  Clock,
+  Utensils,
+  Flame,
+  Palette,
+  Percent,
+  AlertTriangle,
+  Gift
 } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -95,10 +102,6 @@ export default function RecipesPage() {
     const decorationHours = recipe.decorationHours || 0;
     const laborDecorationCost = decorationHours * laborCostPerHour;
 
-    // Total labor = elaboration labor + decoration labor
-    const totalLaborCost = laborFinalCost + laborDecorationCost;
-    const totalLaborHours = totalProductHours + decorationHours;
-
     const baseCost = ingredientsCost + laborFinalCost + indirectFinalCost + extrasCost + laborDecorationCost;
     const wasteCost = baseCost * WASTE_PERCENTAGE;
 
@@ -110,13 +113,28 @@ export default function RecipesPage() {
     const profit = round2(Math.max(0, suggestedPrice - totalCostWithWaste));
 
     return {
+      // Ingredientes
       ingredientsCost: round2(Math.max(0, ingredientsCost)),
+      // Mano de obra
       laborCostPerHour: round2(laborCostPerHour),
-      totalLaborHours: round2(totalLaborHours),
-      totalLaborCost: round2(totalLaborCost),
+      totalProductHours: round2(totalProductHours),
+      laborFinalCost: round2(laborFinalCost),
+      // Gastos indirectos
+      indirectCostPerHour: round2(indirectCostPerHour),
+      indirectFinalCost: round2(indirectFinalCost),
+      // Extras
+      extrasCost: round2(extrasCost),
+      decorationHours,
+      laborDecorationCost: round2(laborDecorationCost),
+      // Totales
+      baseCost: round2(baseCost),
+      wasteCost: round2(wasteCost),
       totalCost: totalCostWithWaste,
       suggestedPrice,
       profit,
+      marginPercentage: recipe.marginPercentage || 50,
+      // Tiempo de elaboración
+      elaborationTime,
     };
   };
 
@@ -349,62 +367,146 @@ export default function RecipesPage() {
                 </DialogHeader>
 
                 <div className="space-y-4 mt-4">
-                  {/* Price Summary */}
-                  <Card className="bg-gradient-to-br from-success/10 to-success/5 border-success/20">
-                    <CardContent className="p-4">
-                      <div className="text-center">
-                        <p className="text-sm text-muted-foreground">Precio sugerido</p>
-                        <p className="text-3xl font-bold text-success mt-1">
-                          {formatCurrency(costs.suggestedPrice)}
-                        </p>
-                        <p className="text-sm text-success mt-1">
-                          Ganancia: {formatCurrency(costs.profit)} ({selectedRecipe.marginPercentage}%)
-                        </p>
+                  {/* Horas totales del producto */}
+                  <Card className="bg-muted/50 border-primary/20">
+                    <CardContent className="p-4 space-y-3">
+                      <h3 className="font-bold text-foreground flex items-center gap-2">
+                        <Clock className="w-5 h-5 text-primary" />
+                        Horas totales del producto (inicio a fin)
+                      </h3>
+                      <div className="space-y-2 text-sm">
+                        <div className="flex justify-between">
+                          <span className="text-muted-foreground flex items-center gap-1">
+                            <Utensils className="w-3 h-3" /> Preparación
+                          </span>
+                          <span>{costs.elaborationTime.preparation} min</span>
+                        </div>
+                        <div className="flex justify-between">
+                          <span className="text-muted-foreground flex items-center gap-1">
+                            <Flame className="w-3 h-3" /> Horneado
+                          </span>
+                          <span>{costs.elaborationTime.baking} min</span>
+                        </div>
+                        <div className="flex justify-between">
+                          <span className="text-muted-foreground flex items-center gap-1">
+                            <Palette className="w-3 h-3" /> Decoración
+                          </span>
+                          <span>{costs.elaborationTime.decoration} min</span>
+                        </div>
+                        <div className="flex justify-between">
+                          <span className="text-muted-foreground flex items-center gap-1">
+                            <Package className="w-3 h-3" /> Empaque
+                          </span>
+                          <span>{costs.elaborationTime.packaging} min</span>
+                        </div>
+                        <div className="flex justify-between font-bold pt-2 border-t text-lg">
+                          <span>Tiempo total</span>
+                          <span className="text-primary">{costs.totalProductHours.toFixed(2)} horas</span>
+                        </div>
+                      </div>
+                      {costs.totalProductHours === 0 && (
+                        <div className="flex items-center gap-2 text-amber-600 text-xs bg-amber-50 dark:bg-amber-950/30 p-2 rounded-lg">
+                          <AlertTriangle className="w-4 h-4" />
+                          <span>Agrega tiempos de elaboración para un cálculo preciso</span>
+                        </div>
+                      )}
+                    </CardContent>
+                  </Card>
+
+                  {/* Desglose de costos */}
+                  <Card>
+                    <CardContent className="p-4 space-y-3">
+                      <h3 className="font-bold text-foreground flex items-center gap-2">
+                        <DollarSign className="w-5 h-5" />
+                        Desglose de costos
+                      </h3>
+                      <div className="space-y-2 text-sm">
+                        <div className="flex justify-between">
+                          <span className="text-muted-foreground">Costo total de la receta (ingredientes)</span>
+                          <span>{formatCurrency(costs.ingredientsCost)}</span>
+                        </div>
+
+                        {/* Mano de obra */}
+                        <div className="pt-2 border-t space-y-1">
+                          <div className="flex justify-between text-xs text-muted-foreground">
+                            <span>Costo por hora de mano de obra:</span>
+                            <span>{formatCurrency(costs.laborCostPerHour)}/h</span>
+                          </div>
+                          <div className="flex justify-between">
+                            <span className="text-muted-foreground">Mano de obra total ({costs.totalProductHours.toFixed(2)}h × {formatCurrency(costs.laborCostPerHour)})</span>
+                            <span>{formatCurrency(costs.laborFinalCost)}</span>
+                          </div>
+                        </div>
+
+                        {/* Gastos indirectos */}
+                        <div className="pt-2 border-t space-y-1">
+                          <div className="flex justify-between text-xs text-muted-foreground">
+                            <span>Costo por hora de gastos indirectos:</span>
+                            <span>{formatCurrency(costs.indirectCostPerHour)}/h</span>
+                          </div>
+                          <div className="flex justify-between">
+                            <span className="text-muted-foreground">Gastos indirectos total ({costs.totalProductHours.toFixed(2)}h × {formatCurrency(costs.indirectCostPerHour)})</span>
+                            <span>{formatCurrency(costs.indirectFinalCost)}</span>
+                          </div>
+                        </div>
+
+                        <div className="flex justify-between pt-2 border-t">
+                          <span className="text-muted-foreground">Extras (decoración y empaques)</span>
+                          <span>{formatCurrency(costs.extrasCost)}</span>
+                        </div>
+                        {costs.decorationHours > 0 && (
+                          <div className="flex justify-between">
+                            <span className="text-muted-foreground">Mano de obra extra decoración ({costs.decorationHours}h)</span>
+                            <span>{formatCurrency(costs.laborDecorationCost)}</span>
+                          </div>
+                        )}
+                        <div className="flex justify-between font-medium pt-2 border-t">
+                          <span>Costo base del producto</span>
+                          <span>{formatCurrency(costs.baseCost)}</span>
+                        </div>
+                        <div className="flex justify-between text-amber-600">
+                          <span>Merma (5%)</span>
+                          <span>+{formatCurrency(costs.wasteCost)}</span>
+                        </div>
+                        <div className="flex justify-between font-bold pt-2 border-t text-lg">
+                          <span>Costo total con merma</span>
+                          <span className="text-primary">{formatCurrency(costs.totalCost)}</span>
+                        </div>
                       </div>
                     </CardContent>
                   </Card>
 
-                  {/* Cost Breakdown - Solo ingredientes y mano de obra */}
-                  <div className="space-y-3">
-                    <h4 className="font-semibold text-foreground flex items-center gap-2">
-                      <DollarSign className="w-4 h-4" />
-                      Desglose de costos
-                    </h4>
-                    <div className="space-y-2">
-                      {/* Costo total de ingredientes */}
-                      <div className="flex justify-between p-3 bg-muted/50 rounded-lg">
-                        <span className="flex items-center gap-2 text-sm">
-                          <Package className="w-4 h-4 text-caramel" />
-                          Costo total de ingredientes
-                        </span>
-                        <span className="font-medium">{formatCurrency(costs.ingredientsCost)}</span>
+                  {/* Margen y precio sugerido */}
+                  <Card className="bg-gradient-to-br from-caramel/20 to-accent/20 border-caramel/30">
+                    <CardContent className="p-4 space-y-4">
+                      <div className="flex items-center gap-2">
+                        <Percent className="w-5 h-5 text-caramel" />
+                        <h3 className="font-bold">Margen de ganancia</h3>
                       </div>
                       
-                      {/* Costo por hora de mano de obra */}
-                      <div className="flex justify-between p-3 bg-muted/50 rounded-lg">
-                        <span className="flex items-center gap-2 text-sm">
-                          <ChefHat className="w-4 h-4 text-primary" />
-                          Costo por hora de mano de obra
-                        </span>
-                        <span className="font-medium">{formatCurrency(costs.laborCostPerHour)}/h</span>
+                      <div className="space-y-3">
+                        <div className="flex items-center justify-between">
+                          <span className="text-sm text-muted-foreground">Margen configurado:</span>
+                          <span className="text-2xl font-bold text-caramel">{costs.marginPercentage}%</span>
+                        </div>
                       </div>
-                      
-                      {/* Mano de obra total */}
-                      <div className="flex justify-between p-3 bg-muted/50 rounded-lg">
-                        <span className="flex items-center gap-2 text-sm">
-                          <Zap className="w-4 h-4 text-success" />
-                          Mano de obra total ({costs.totalLaborHours}h × {formatCurrency(costs.laborCostPerHour)})
-                        </span>
-                        <span className="font-medium">{formatCurrency(costs.totalLaborCost)}</span>
+
+                      <div className="pt-4 border-t border-caramel/30">
+                        <div className="text-center">
+                          <p className="text-sm text-muted-foreground mb-1">Precio sugerido de venta</p>
+                          <p className="text-4xl font-bold text-foreground">
+                            {formatCurrency(costs.suggestedPrice)}
+                          </p>
+                          <p className="text-sm text-success mt-2">
+                            Ganancia: {formatCurrency(costs.profit)}
+                          </p>
+                          <p className="text-xs text-muted-foreground mt-2">
+                            Fórmula: Costo ÷ (1 − margen)
+                          </p>
+                        </div>
                       </div>
-                      
-                      {/* Costo total */}
-                      <div className="flex justify-between p-3 bg-primary/10 rounded-lg font-bold">
-                        <span>Costo total</span>
-                        <span>{formatCurrency(costs.totalCost)}</span>
-                      </div>
-                    </div>
-                  </div>
+                    </CardContent>
+                  </Card>
 
                   {/* Ingredients List */}
                   {selectedRecipe.ingredients.length > 0 && (
