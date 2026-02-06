@@ -13,21 +13,29 @@ interface PDFOptions {
 export function generateQuotationPDF(quotation: Quotation, options: PDFOptions): jsPDF {
   const doc = new jsPDF();
   const pageWidth = doc.internal.pageSize.getWidth();
+  const pageHeight = doc.internal.pageSize.getHeight();
   const margin = 20;
   const contentWidth = pageWidth - margin * 2;
+  const bottomMargin = 25;
   let y = margin;
 
   // Colors
-  const primaryColor: [number, number, number] = [93, 64, 55]; // #5D4037
+  const primaryColor: [number, number, number] = [93, 64, 55];
   const accentColor: [number, number, number] = [200, 150, 120];
   const textColor: [number, number, number] = [50, 50, 50];
   const mutedColor: [number, number, number] = [120, 120, 120];
+
+  const checkPageBreak = (needed: number) => {
+    if (y + needed > pageHeight - bottomMargin) {
+      doc.addPage();
+      y = margin;
+    }
+  };
 
   // Header background
   doc.setFillColor(...primaryColor);
   doc.rect(0, 0, pageWidth, 45, 'F');
 
-  // Business name
   doc.setTextColor(255, 255, 255);
   doc.setFontSize(22);
   doc.setFont('helvetica', 'bold');
@@ -35,16 +43,13 @@ export function generateQuotationPDF(quotation: Quotation, options: PDFOptions):
     doc.text(options.businessName.trim(), margin, y + 12);
   }
 
-  // Quotation label
   doc.setFontSize(12);
   doc.setFont('helvetica', 'normal');
   doc.text('COTIZACIÓN', pageWidth - margin, y + 8, { align: 'right' });
-  
   doc.setFontSize(16);
   doc.setFont('helvetica', 'bold');
   doc.text(`#${quotation.number}`, pageWidth - margin, y + 18, { align: 'right' });
 
-  // Date
   doc.setFontSize(10);
   doc.setFont('helvetica', 'normal');
   const createdDate = format(parseISO(quotation.createdAt), "d 'de' MMMM, yyyy", { locale: es });
@@ -71,7 +76,6 @@ export function generateQuotationPDF(quotation: Quotation, options: PDFOptions):
     doc.text(`Tel: ${quotation.clientPhone}`, margin + 8, y + 28);
   }
 
-  // Valid until
   doc.setTextColor(...textColor);
   doc.setFontSize(10);
   doc.setFont('helvetica', 'bold');
@@ -83,18 +87,20 @@ export function generateQuotationPDF(quotation: Quotation, options: PDFOptions):
   y += 45;
 
   // Items table header
-  doc.setFillColor(...primaryColor);
-  doc.rect(margin, y, contentWidth, 10, 'F');
-  
-  doc.setTextColor(255, 255, 255);
-  doc.setFontSize(9);
-  doc.setFont('helvetica', 'bold');
-  doc.text('PRODUCTO', margin + 5, y + 7);
-  doc.text('CANT.', margin + 95, y + 7);
-  doc.text('PRECIO UNIT.', margin + 115, y + 7);
-  doc.text('TOTAL', pageWidth - margin - 5, y + 7, { align: 'right' });
+  const drawTableHeader = () => {
+    doc.setFillColor(...primaryColor);
+    doc.rect(margin, y, contentWidth, 10, 'F');
+    doc.setTextColor(255, 255, 255);
+    doc.setFontSize(9);
+    doc.setFont('helvetica', 'bold');
+    doc.text('PRODUCTO', margin + 5, y + 7);
+    doc.text('CANT.', margin + 95, y + 7);
+    doc.text('PRECIO UNIT.', margin + 115, y + 7);
+    doc.text('TOTAL', pageWidth - margin - 5, y + 7, { align: 'right' });
+    y += 12;
+  };
 
-  y += 12;
+  drawTableHeader();
 
   // Items
   doc.setTextColor(...textColor);
@@ -104,7 +110,13 @@ export function generateQuotationPDF(quotation: Quotation, options: PDFOptions):
   quotation.items.forEach((item, index) => {
     const rowHeight = 15;
     
-    // Alternating row background
+    // Check for page break
+    if (y + rowHeight > pageHeight - bottomMargin) {
+      doc.addPage();
+      y = margin;
+      drawTableHeader();
+    }
+
     if (index % 2 === 0) {
       doc.setFillColor(250, 248, 245);
       doc.rect(margin, y - 3, contentWidth, rowHeight, 'F');
@@ -113,17 +125,10 @@ export function generateQuotationPDF(quotation: Quotation, options: PDFOptions):
     doc.setTextColor(...textColor);
     doc.setFont('helvetica', 'normal');
     
-    // Item name
     const itemName = item.name.length > 35 ? item.name.substring(0, 35) + '...' : item.name;
     doc.text(itemName, margin + 5, y + 5);
-    
-    // Quantity
     doc.text(item.quantity.toString(), margin + 100, y + 5, { align: 'center' });
-    
-    // Unit price
     doc.text(`${options.currencySymbol}${item.unitPrice.toFixed(2)}`, margin + 130, y + 5);
-    
-    // Total
     doc.setFont('helvetica', 'bold');
     doc.text(`${options.currencySymbol}${item.total.toFixed(2)}`, pageWidth - margin - 5, y + 5, { align: 'right' });
 
@@ -132,12 +137,12 @@ export function generateQuotationPDF(quotation: Quotation, options: PDFOptions):
 
   // Totals section
   y += 10;
+  checkPageBreak(40);
   doc.setDrawColor(...accentColor);
   doc.line(pageWidth - margin - 80, y, pageWidth - margin, y);
 
   y += 8;
 
-  // Subtotal
   doc.setFont('helvetica', 'normal');
   doc.setFontSize(10);
   doc.setTextColor(...mutedColor);
@@ -145,7 +150,6 @@ export function generateQuotationPDF(quotation: Quotation, options: PDFOptions):
   doc.setTextColor(...textColor);
   doc.text(`${options.currencySymbol}${quotation.subtotal.toFixed(2)}`, pageWidth - margin, y, { align: 'right' });
 
-  // Discount (if any)
   if (quotation.discount > 0) {
     y += 8;
     doc.setTextColor(...mutedColor);
@@ -161,7 +165,6 @@ export function generateQuotationPDF(quotation: Quotation, options: PDFOptions):
     doc.text(`-${options.currencySymbol}${discountAmount.toFixed(2)}`, pageWidth - margin, y, { align: 'right' });
   }
 
-  // Total
   y += 12;
   doc.setFillColor(...primaryColor);
   doc.roundedRect(pageWidth - margin - 80, y - 6, 80, 16, 2, 2, 'F');
@@ -176,6 +179,7 @@ export function generateQuotationPDF(quotation: Quotation, options: PDFOptions):
   // Notes
   if (quotation.notes) {
     y += 30;
+    checkPageBreak(30);
     doc.setTextColor(...textColor);
     doc.setFontSize(10);
     doc.setFont('helvetica', 'bold');
@@ -185,11 +189,15 @@ export function generateQuotationPDF(quotation: Quotation, options: PDFOptions):
     doc.setFont('helvetica', 'normal');
     doc.setTextColor(...mutedColor);
     const noteLines = doc.splitTextToSize(quotation.notes, contentWidth);
-    doc.text(noteLines, margin, y);
+    noteLines.forEach((line: string) => {
+      checkPageBreak(6);
+      doc.text(line, margin, y);
+      y += 6;
+    });
   }
 
-  // Footer
-  const footerY = doc.internal.pageSize.getHeight() - 20;
+  // Footer on last page
+  const footerY = pageHeight - 20;
   doc.setDrawColor(...accentColor);
   doc.line(margin, footerY - 10, pageWidth - margin, footerY - 10);
   
