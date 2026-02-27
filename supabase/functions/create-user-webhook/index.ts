@@ -49,10 +49,10 @@ Deno.serve(async (req) => {
 
     // 3. Extract buyer data from Hotmart payload
     const buyer = body.data?.buyer;
-    if (!buyer?.email || !buyer?.document) {
-      console.error("Missing buyer data:", JSON.stringify(buyer));
+    if (!buyer?.email) {
+      console.error("Missing buyer email:", JSON.stringify(buyer));
       return new Response(
-        JSON.stringify({ error: "Missing buyer email or document" }),
+        JSON.stringify({ error: "Missing buyer email" }),
         {
           status: 400,
           headers: { ...corsHeaders, "Content-Type": "application/json" },
@@ -61,8 +61,10 @@ Deno.serve(async (req) => {
     }
 
     const email = buyer.email;
-    const document = buyer.document;
+    // Use document, phone, or generate a random password as fallback
+    const password = buyer.document || buyer.checkout_phone || crypto.randomUUID().slice(0, 12);
     const name = buyer.name || "Usuario";
+    console.log("Creating user:", email, name, "password source:", buyer.document ? "document" : buyer.checkout_phone ? "phone" : "generated");
 
     // 4. Create user with service role
     const supabaseAdmin = createClient(
@@ -72,9 +74,9 @@ Deno.serve(async (req) => {
 
     const { data, error } = await supabaseAdmin.auth.admin.createUser({
       email,
-      password: document,
+      password,
       email_confirm: true,
-      user_metadata: { name, document },
+      user_metadata: { name, document: buyer.document || "", phone: buyer.checkout_phone || "" },
     });
 
     if (error) {
