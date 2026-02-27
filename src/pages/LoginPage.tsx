@@ -147,14 +147,6 @@ const LoginPage = () => {
             </Button>
           </form>
 
-          <div className="mt-6 text-center">
-            <p className="text-muted-foreground">
-              ¿No tienes cuenta?{' '}
-              <Link to="/register" className="text-primary font-medium hover:underline">
-                Regístrate aquí
-              </Link>
-            </p>
-          </div>
         </motion.div>
       </div>
 
