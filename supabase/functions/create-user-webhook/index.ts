@@ -20,6 +20,7 @@ Deno.serve(async (req) => {
 
   try {
     const body = await req.json();
+    console.log("Webhook payload received:", JSON.stringify(body, null, 2));
 
     const email = body.email;
     const document = body.document; // CPF or CNPJ — used as temporary password
