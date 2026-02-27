@@ -1,7 +1,8 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { Settings, User, DollarSign, Save, Check, HelpCircle, ChevronRight, Package } from 'lucide-react';
+import { Settings, User, DollarSign, Save, Check, HelpCircle, ChevronRight, Package, Shield, Eye, EyeOff } from 'lucide-react';
+import { supabase } from '@/integrations/supabase/client';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -57,7 +58,84 @@ export default function SettingsPage() {
   const [customSymbol, setCustomSymbol] = useState(settings.currencySymbol);
   const [saved, setSaved] = useState(false);
 
+  // Password change state
+  const [currentPassword, setCurrentPassword] = useState('');
+  const [newPassword, setNewPassword] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
+  const [showCurrentPassword, setShowCurrentPassword] = useState(false);
+  const [showNewPassword, setShowNewPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+  const [passwordLoading, setPasswordLoading] = useState(false);
+  const [passwordErrors, setPasswordErrors] = useState<string[]>([]);
+
   const configuredIngredients = ingredients.filter(i => i.presentationPrice > 0).length;
+
+  const validatePassword = (password: string): string[] => {
+    const errors: string[] = [];
+    if (password.length < 8) errors.push('Debe tener al menos 8 caracteres');
+    if (!/[A-Z]/.test(password)) errors.push('Debe incluir al menos una letra mayúscula');
+    if (!/[0-9]/.test(password)) errors.push('Debe incluir al menos un número');
+    return errors;
+  };
+
+  const handleChangePassword = async () => {
+    setPasswordErrors([]);
+
+    if (!currentPassword) {
+      setPasswordErrors(['Ingresa tu contraseña actual']);
+      return;
+    }
+
+    const validationErrors = validatePassword(newPassword);
+    if (validationErrors.length > 0) {
+      setPasswordErrors(validationErrors);
+      return;
+    }
+
+    if (newPassword !== confirmPassword) {
+      setPasswordErrors(['Las contraseñas no coinciden']);
+      return;
+    }
+
+    setPasswordLoading(true);
+    try {
+      // Verify current password by re-authenticating
+      const { error: signInError } = await supabase.auth.signInWithPassword({
+        email: user?.email || '',
+        password: currentPassword,
+      });
+
+      if (signInError) {
+        setPasswordErrors(['La contraseña actual es incorrecta']);
+        setPasswordLoading(false);
+        return;
+      }
+
+      // Update password
+      const { error: updateError } = await supabase.auth.updateUser({
+        password: newPassword,
+      });
+
+      if (updateError) {
+        setPasswordErrors([updateError.message]);
+        setPasswordLoading(false);
+        return;
+      }
+
+      toast({
+        title: '✅ Contraseña actualizada correctamente',
+        description: 'Tu nueva contraseña ya está activa.',
+      });
+
+      setCurrentPassword('');
+      setNewPassword('');
+      setConfirmPassword('');
+    } catch (err) {
+      setPasswordErrors(['Ocurrió un error inesperado. Intenta de nuevo.']);
+    } finally {
+      setPasswordLoading(false);
+    }
+  };
 
   const handleCurrencyChange = (code: string) => {
     setSelectedCurrency(code);
@@ -209,6 +287,108 @@ export default function SettingsPage() {
                   {customSymbol}1,234.56 <span className="text-sm font-normal text-muted-foreground">{selectedCurrency}</span>
                 </p>
               </div>
+            </CardContent>
+          </Card>
+        </motion.div>
+
+        {/* Seguridad - Cambiar contraseña */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.25 }}
+        >
+          <Card className="border-border/50 shadow-warm">
+            <CardHeader className="pb-4">
+              <div className="flex items-center gap-3">
+                <div className="p-2 rounded-xl bg-primary/10">
+                  <Shield className="w-5 h-5 text-primary" />
+                </div>
+                <div>
+                  <CardTitle className="text-lg">Seguridad</CardTitle>
+                  <CardDescription>Cambia tu contraseña</CardDescription>
+                </div>
+              </div>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="space-y-2">
+                <Label htmlFor="currentPassword">Contraseña actual</Label>
+                <div className="relative">
+                  <Input
+                    id="currentPassword"
+                    type={showCurrentPassword ? 'text' : 'password'}
+                    value={currentPassword}
+                    onChange={(e) => setCurrentPassword(e.target.value)}
+                    placeholder="••••••••"
+                    className="bg-background pr-10"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowCurrentPassword(!showCurrentPassword)}
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+                  >
+                    {showCurrentPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                  </button>
+                </div>
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="newPassword">Nueva contraseña</Label>
+                <div className="relative">
+                  <Input
+                    id="newPassword"
+                    type={showNewPassword ? 'text' : 'password'}
+                    value={newPassword}
+                    onChange={(e) => setNewPassword(e.target.value)}
+                    placeholder="Mínimo 8 caracteres, 1 mayúscula, 1 número"
+                    className="bg-background pr-10"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowNewPassword(!showNewPassword)}
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+                  >
+                    {showNewPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                  </button>
+                </div>
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="confirmPassword">Confirmar nueva contraseña</Label>
+                <div className="relative">
+                  <Input
+                    id="confirmPassword"
+                    type={showConfirmPassword ? 'text' : 'password'}
+                    value={confirmPassword}
+                    onChange={(e) => setConfirmPassword(e.target.value)}
+                    placeholder="Repite la nueva contraseña"
+                    className="bg-background pr-10"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+                  >
+                    {showConfirmPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                  </button>
+                </div>
+              </div>
+
+              {passwordErrors.length > 0 && (
+                <div className="p-3 rounded-xl bg-destructive/10 border border-destructive/20 space-y-1">
+                  {passwordErrors.map((error, i) => (
+                    <p key={i} className="text-sm text-destructive">• {error}</p>
+                  ))}
+                </div>
+              )}
+
+              <Button
+                onClick={handleChangePassword}
+                disabled={passwordLoading || !currentPassword || !newPassword || !confirmPassword}
+                variant="outline"
+                className="w-full"
+              >
+                {passwordLoading ? 'Actualizando...' : 'Cambiar contraseña'}
+              </Button>
             </CardContent>
           </Card>
         </motion.div>
