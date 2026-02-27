@@ -20,15 +20,39 @@ Deno.serve(async (req) => {
 
   try {
     const body = await req.json();
-    console.log("Webhook payload received:", JSON.stringify(body, null, 2));
+    console.log("Hotmart webhook received, event:", body.event);
 
-    const email = body.email;
-    const document = body.document; // CPF or CNPJ — used as temporary password
-    const name = body.name || "Usuario";
-
-    if (!email || !document) {
+    // 1. Validate hottok token
+    const expectedToken = Deno.env.get("HOTMART_HOTTOK");
+    if (expectedToken && body.hottok !== expectedToken) {
+      console.error("Invalid hottok token");
       return new Response(
-        JSON.stringify({ error: "Missing required fields: email, document" }),
+        JSON.stringify({ error: "Unauthorized" }),
+        {
+          status: 401,
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        }
+      );
+    }
+
+    // 2. Only process PURCHASE_APPROVED events
+    if (body.event !== "PURCHASE_APPROVED") {
+      console.log("Ignoring event:", body.event);
+      return new Response(
+        JSON.stringify({ message: "Event ignored", event: body.event }),
+        {
+          status: 200,
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        }
+      );
+    }
+
+    // 3. Extract buyer data from Hotmart payload
+    const buyer = body.data?.buyer;
+    if (!buyer?.email || !buyer?.document) {
+      console.error("Missing buyer data:", JSON.stringify(buyer));
+      return new Response(
+        JSON.stringify({ error: "Missing buyer email or document" }),
         {
           status: 400,
           headers: { ...corsHeaders, "Content-Type": "application/json" },
@@ -36,7 +60,11 @@ Deno.serve(async (req) => {
       );
     }
 
-    // Use service role to create user
+    const email = buyer.email;
+    const document = buyer.document;
+    const name = buyer.name || "Usuario";
+
+    // 4. Create user with service role
     const supabaseAdmin = createClient(
       Deno.env.get("SUPABASE_URL")!,
       Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!
@@ -60,7 +88,7 @@ Deno.serve(async (req) => {
       );
     }
 
-    console.log("User created successfully:", data.user.id);
+    console.log("User created successfully:", data.user.id, email);
 
     return new Response(
       JSON.stringify({
