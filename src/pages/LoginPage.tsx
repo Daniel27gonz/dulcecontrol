@@ -79,15 +79,14 @@ const LoginPage = () => {
             transition={{ delay: 0.2 }}
             className="mb-6 rounded-2xl bg-accent/20 border-2 border-accent p-4 text-center"
           >
-            <p className="text-lg font-bold text-foreground mb-1">
+            <p className="text-lg font-bold text-foreground mb-2">
               🔐 ¿Es tu primer acceso?
             </p>
             <p className="text-sm font-semibold text-foreground leading-relaxed">
-              Ingresa con el correo electrónico que utilizaste en la compra
-              y usa tu <span className="text-primary font-extrabold">número de teléfono registrado</span> como contraseña temporal.
+              Ingresa con el correo electrónico que utilizaste en la compra y usa tu <span className="text-primary font-extrabold">número de teléfono registrado</span> como contraseña temporal. Ejemplo: <span className="text-primary font-extrabold">521234567890</span>
             </p>
-            <p className="text-xs text-muted-foreground mt-2">
-              Una vez dentro, podrás cambiar tu contraseña fácilmente desde la configuración ⚙️
+            <p className="text-sm text-muted-foreground mt-2">
+              Luego podrás cambiar tu contraseña fácilmente desde la configuración ⚙️
             </p>
           </motion.div>
 
