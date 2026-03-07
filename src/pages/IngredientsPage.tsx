@@ -571,7 +571,18 @@ function IngredientForm({
               setFormData(prev => ({ ...prev, presentationQuantity: e.target.value }));
               setFormError(null);
             }}
-            placeholder="Ej: 1000"
+            placeholder={
+              formData.purchaseUnit === 'kg' ? 'Ej: 1000 (g por kg)' :
+              formData.purchaseUnit === 'g' ? 'Ej: 500 (g)' :
+              formData.purchaseUnit === 'lb' ? 'Ej: 454 (g por lb)' :
+              formData.purchaseUnit === 'oz' ? 'Ej: 28 (g por oz)' :
+              formData.purchaseUnit === 'L' ? 'Ej: 1000 (ml por L)' :
+              formData.purchaseUnit === 'ml' ? 'Ej: 500 (ml)' :
+              formData.purchaseUnit === 'pza' ? 'Ej: 12 (piezas)' :
+              formData.purchaseUnit === 'paquete' ? 'Ej: 10 (pzas por paq)' :
+              formData.purchaseUnit === 'caja' ? 'Ej: 24 (pzas por caja)' :
+              'Ej: 1000'
+            }
           />
         </div>
       </div>
