@@ -98,6 +98,13 @@ export default function IngredientsPage() {
     return calculateCostPerBaseUnit(price, qty, formData.purchaseUnit);
   }, [formData]);
 
+  const previewTotalPaid = useMemo(() => {
+    const price = parseFloat(formData.presentationPrice) || 0;
+    const qtyPurchased = parseFloat(formData.quantityPurchased) || 1;
+    return price * qtyPurchased;
+  }, [formData.presentationPrice, formData.quantityPurchased]);
+  }, [formData]);
+
   const handleOpenAdd = () => {
     setFormData(initialFormData);
     setFormError(null);
