@@ -39,7 +39,7 @@ export function AppSidebar() {
   const isActive = (path: string) => location.pathname === path;
 
   return (
-    <Sidebar collapsible="icon" className="border-r border-border/50">
+    <Sidebar collapsible="none" className="border-r border-border/50">
       <SidebarContent className="bg-card">
         {/* Logo / Brand */}
         <div className="px-4 py-5 border-b border-border/50">
