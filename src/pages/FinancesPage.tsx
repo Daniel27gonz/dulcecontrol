@@ -356,84 +356,12 @@ export default function FinancesPage() {
           </Card>
         </motion.div>
 
-        {/* Add Transaction */}
-        <motion.div variants={itemVariants}>
-          <TransactionForm />
-        </motion.div>
-
         {/* Chart */}
         <motion.div variants={itemVariants}>
           <FinanceChart 
             transactions={transactions} 
             currencySymbol={cs} 
           />
-        </motion.div>
-
-        {/* Transaction History Table */}
-        <motion.div variants={itemVariants}>
-          <Card>
-            <CardHeader className="pb-2">
-              <CardTitle className="text-base font-semibold">Historial de Transacciones</CardTitle>
-            </CardHeader>
-            <CardContent className="p-0">
-              <ScrollArea className="w-full">
-                <div className="min-w-[500px]">
-                  <table className="w-full text-sm">
-                    <thead>
-                      <tr className="border-b border-border">
-                        <th className="text-left p-3 text-muted-foreground font-medium">Fecha</th>
-                        <th className="text-left p-3 text-muted-foreground font-medium">Tipo</th>
-                        <th className="text-left p-3 text-muted-foreground font-medium">Categoría</th>
-                        <th className="text-left p-3 text-muted-foreground font-medium">Descripción</th>
-                        <th className="text-right p-3 text-muted-foreground font-medium">Monto</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {monthlyData.monthTransactions.length === 0 ? (
-                        <tr>
-                          <td colSpan={5} className="p-8 text-center text-muted-foreground">
-                            No hay transacciones en este mes
-                          </td>
-                        </tr>
-                      ) : (
-                        [...monthlyData.monthTransactions]
-                          .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
-                          .map(t => (
-                            <tr key={t.id} className="border-b border-border/50 hover:bg-muted/30 transition-colors">
-                              <td className="p-3 text-foreground whitespace-nowrap">
-                                {format(new Date(t.date), 'dd MMM yyyy', { locale: es })}
-                              </td>
-                              <td className="p-3">
-                                <span className={cn(
-                                  'inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium',
-                                  t.type === 'income'
-                                    ? 'bg-success/10 text-success'
-                                    : 'bg-destructive/10 text-destructive'
-                                )}>
-                                  {t.type === 'income' ? (
-                                    <><TrendingUp className="w-3 h-3" /> Ingreso</>
-                                  ) : (
-                                    <><TrendingDown className="w-3 h-3" /> Gasto</>
-                                  )}
-                                </span>
-                              </td>
-                              <td className="p-3 text-muted-foreground capitalize">{t.category.replace('_', ' ')}</td>
-                              <td className="p-3 text-foreground">{t.description}</td>
-                              <td className={cn(
-                                'p-3 text-right font-semibold whitespace-nowrap',
-                                t.type === 'income' ? 'text-success' : 'text-destructive'
-                              )}>
-                                {t.type === 'income' ? '+' : '-'}{cs}{t.amount.toFixed(2)}
-                              </td>
-                            </tr>
-                          ))
-                      )}
-                    </tbody>
-                  </table>
-                </div>
-              </ScrollArea>
-            </CardContent>
-          </Card>
         </motion.div>
       </motion.div>
 
