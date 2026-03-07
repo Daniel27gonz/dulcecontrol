@@ -433,20 +433,23 @@ export function AppProvider({ children }: { children: ReactNode }) {
       
       setOrders(prev => [newOrder, ...prev]);
 
-      // Auto-add transaction for order income
-      await addTransaction({
-        type: 'income',
-        description: `Pedido: ${order.recipeName} x${order.quantity}`,
-        amount: order.totalPrice,
-        category: 'ventas',
-        date: new Date().toISOString(),
-      });
+      // If order is created with 'completed' status, register as income
+      if (order.status === 'completed') {
+        await addTransaction({
+          type: 'income',
+          description: `Pedido pagado: ${order.recipeName} x${order.quantity} - ${order.clientName}`,
+          amount: order.totalPrice,
+          category: 'ingreso por pedido',
+          date: new Date().toISOString(),
+        });
+      }
     }
   };
 
   const updateOrder = async (id: string, updates: Partial<Order>) => {
     if (!session?.user) return;
 
+    const existingOrder = orders.find(o => o.id === id);
     const updateData: Record<string, unknown> = {};
     if (updates.clientName !== undefined) updateData.client_name = updates.clientName;
     if (updates.recipeId !== undefined) updateData.recipe_id = updates.recipeId || null;
@@ -462,9 +465,47 @@ export function AppProvider({ children }: { children: ReactNode }) {
       .eq('id', id)
       .eq('user_id', session.user.id);
 
+    const updatedOrder = { ...existingOrder!, ...updates };
+
     setOrders(prev =>
       prev.map(order => (order.id === id ? { ...order, ...updates } : order))
     );
+
+    // If status changed to completed (paid), register income transaction
+    if (updates.status === 'completed' && existingOrder?.status !== 'completed') {
+      const { syncTransaction } = await import('@/lib/transactionSync');
+      await syncTransaction({
+        userId: session.user.id,
+        sourceId: id,
+        sourceType: 'order',
+        type: 'income',
+        description: `Pedido pagado: ${updatedOrder.recipeName} x${updatedOrder.quantity} - ${updatedOrder.clientName}`,
+        amount: updatedOrder.totalPrice,
+        category: 'ingreso por pedido',
+        date: new Date().toISOString(),
+      });
+    }
+
+    // If status changed away from completed, remove the income transaction
+    if (updates.status && updates.status !== 'completed' && existingOrder?.status === 'completed') {
+      const { deleteTransactionBySource } = await import('@/lib/transactionSync');
+      await deleteTransactionBySource(session.user.id, id, 'order');
+    }
+
+    // If order is completed and amount changed, update the transaction
+    if (updatedOrder.status === 'completed' && updates.totalPrice !== undefined && existingOrder?.status === 'completed') {
+      const { syncTransaction } = await import('@/lib/transactionSync');
+      await syncTransaction({
+        userId: session.user.id,
+        sourceId: id,
+        sourceType: 'order',
+        type: 'income',
+        description: `Pedido pagado: ${updatedOrder.recipeName} x${updatedOrder.quantity} - ${updatedOrder.clientName}`,
+        amount: updatedOrder.totalPrice,
+        category: 'ingreso por pedido',
+        date: new Date().toISOString(),
+      });
+    }
   };
 
   const deleteOrder = async (id: string) => {
@@ -475,6 +516,10 @@ export function AppProvider({ children }: { children: ReactNode }) {
       .delete()
       .eq('id', id)
       .eq('user_id', session.user.id);
+
+    // Delete linked transaction if it was a paid order
+    const { deleteTransactionBySource } = await import('@/lib/transactionSync');
+    await deleteTransactionBySource(session.user.id, id, 'order');
 
     setOrders(prev => prev.filter(order => order.id !== id));
   };
