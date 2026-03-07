@@ -590,8 +590,8 @@ function IngredientForm({
       <div>
         <label className="block text-sm font-medium mb-1.5">Precio de la presentación</label>
         <div className="relative">
-          <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground">
-            {currencySymbol}
+          <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground tracking-wider">
+            {currencySymbol}&nbsp;
           </span>
           <Input
             type="number"
@@ -610,8 +610,8 @@ function IngredientForm({
       <div>
         <label className="block text-sm font-medium mb-1.5">Total pagado</label>
         <div className="relative">
-          <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground">
-            {currencySymbol}
+          <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground tracking-wider">
+            {currencySymbol}&nbsp;
           </span>
           <Input
             type="text"
