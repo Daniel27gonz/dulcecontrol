@@ -1,6 +1,6 @@
 import { useLocation } from 'react-router-dom';
 import {
-  Home, Calculator, FileText, Sparkles, ClipboardList, Wallet,
+  Home, Package, Calculator, FileText, Sparkles, ClipboardList, Wallet,
   HelpCircle, Settings
 } from 'lucide-react';
 import { NavLink } from '@/components/NavLink';
@@ -18,6 +18,7 @@ import {
 
 const mainItems = [
   { title: 'Inicio', url: '/dashboard', icon: Home },
+  { title: 'Ingredientes', url: '/ingredients', icon: Package },
   { title: 'Calcular', url: '/calculator', icon: Calculator },
   { title: 'Cotizar', url: '/quotations', icon: FileText },
   { title: 'Diseño', url: '/personalization', icon: Sparkles },

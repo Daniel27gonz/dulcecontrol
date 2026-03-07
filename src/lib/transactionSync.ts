@@ -12,13 +12,15 @@ interface SyncTransactionParams {
 }
 
 export async function syncTransaction(params: SyncTransactionParams) {
-  const { data: existing } = await supabase
+  // Check if transaction already exists for this source
+  const { data: allTransactions } = await supabase
     .from('transactions')
-    .select('id')
-    .eq('user_id', params.userId)
-    .eq('source_id' as any, params.sourceId)
-    .eq('source_type' as any, params.sourceType)
-    .maybeSingle();
+    .select('*')
+    .eq('user_id', params.userId);
+
+  const existing = allTransactions?.find(
+    (t: any) => t.source_id === params.sourceId && t.source_type === params.sourceType
+  );
 
   if (existing) {
     await supabase
@@ -28,7 +30,7 @@ export async function syncTransaction(params: SyncTransactionParams) {
         amount: params.amount,
         category: params.category,
         date: params.date,
-      } as any)
+      })
       .eq('id', existing.id)
       .eq('user_id', params.userId);
   } else {
@@ -48,10 +50,22 @@ export async function syncTransaction(params: SyncTransactionParams) {
 }
 
 export async function deleteTransactionBySource(userId: string, sourceId: string, sourceType: string) {
-  await supabase
+  const { data: allTransactions } = await supabase
     .from('transactions')
-    .delete()
-    .eq('user_id', userId)
-    .eq('source_id' as any, sourceId)
-    .eq('source_type' as any, sourceType);
+    .select('*')
+    .eq('user_id', userId);
+
+  const toDelete = allTransactions?.filter(
+    (t: any) => t.source_id === sourceId && t.source_type === sourceType
+  );
+
+  if (toDelete && toDelete.length > 0) {
+    for (const t of toDelete) {
+      await supabase
+        .from('transactions')
+        .delete()
+        .eq('id', t.id)
+        .eq('user_id', userId);
+    }
+  }
 }
