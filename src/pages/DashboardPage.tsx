@@ -3,7 +3,6 @@ import { useNavigate } from 'react-router-dom';
 import { Plus, ClipboardList, TrendingUp, Wallet, TrendingDown, ChefHat, FileText, Users, Receipt } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useApp } from '@/context/AppContext';
-import { BottomNav } from '@/components/BottomNav';
 import { AppLayout } from '@/components/AppLayout';
 import { AppHeader } from '@/components/AppHeader';
 import { HeroSection } from '@/components/dashboard/HeroSection';
