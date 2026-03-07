@@ -87,29 +87,29 @@ export function calculateCostPerBaseUnit(
 
 // Default ingredients for new users
 const DEFAULT_INGREDIENTS: Omit<BaseIngredient, 'id' | 'lastUpdated' | 'costPerBaseUnit' | 'purchaseDate'>[] = [
-  { name: 'Harina de trigo', category: 'harinas', purchaseUnit: 'kg', presentationQuantity: 1, presentationPrice: 25 },
-  { name: 'Harina integral', category: 'harinas', purchaseUnit: 'kg', presentationQuantity: 1, presentationPrice: 35 },
-  { name: 'Maicena', category: 'harinas', purchaseUnit: 'g', presentationQuantity: 400, presentationPrice: 28 },
-  { name: 'Harina de almendra', category: 'harinas', purchaseUnit: 'g', presentationQuantity: 500, presentationPrice: 180 },
-  { name: 'Azúcar blanca', category: 'azucares', purchaseUnit: 'kg', presentationQuantity: 1, presentationPrice: 30 },
-  { name: 'Azúcar glass', category: 'azucares', purchaseUnit: 'g', presentationQuantity: 500, presentationPrice: 35 },
-  { name: 'Azúcar morena', category: 'azucares', purchaseUnit: 'kg', presentationQuantity: 1, presentationPrice: 40 },
-  { name: 'Miel', category: 'azucares', purchaseUnit: 'g', presentationQuantity: 500, presentationPrice: 85 },
-  { name: 'Leche entera', category: 'lacteos', purchaseUnit: 'L', presentationQuantity: 1, presentationPrice: 28 },
-  { name: 'Leche condensada', category: 'lacteos', purchaseUnit: 'g', presentationQuantity: 397, presentationPrice: 45 },
-  { name: 'Crema de leche', category: 'lacteos', purchaseUnit: 'ml', presentationQuantity: 500, presentationPrice: 65 },
-  { name: 'Queso crema', category: 'lacteos', purchaseUnit: 'g', presentationQuantity: 190, presentationPrice: 48 },
-  { name: 'Huevo', category: 'huevos', purchaseUnit: 'pza', presentationQuantity: 30, presentationPrice: 90 },
-  { name: 'Mantequilla', category: 'grasas', purchaseUnit: 'g', presentationQuantity: 200, presentationPrice: 55 },
-  { name: 'Aceite vegetal', category: 'grasas', purchaseUnit: 'L', presentationQuantity: 1, presentationPrice: 42 },
-  { name: 'Cacao en polvo', category: 'chocolates', purchaseUnit: 'g', presentationQuantity: 250, presentationPrice: 65 },
-  { name: 'Chocolate amargo', category: 'chocolates', purchaseUnit: 'g', presentationQuantity: 500, presentationPrice: 120 },
-  { name: 'Polvo para hornear', category: 'levaduras', purchaseUnit: 'g', presentationQuantity: 200, presentationPrice: 25 },
-  { name: 'Esencia de vainilla', category: 'esencias', purchaseUnit: 'ml', presentationQuantity: 120, presentationPrice: 45 },
-  { name: 'Dulce de leche', category: 'rellenos', purchaseUnit: 'g', presentationQuantity: 500, presentationPrice: 75 },
-  { name: 'Fondant', category: 'coberturas', purchaseUnit: 'g', presentationQuantity: 500, presentationPrice: 85 },
-  { name: 'Almendras', category: 'frutos_secos', purchaseUnit: 'g', presentationQuantity: 200, presentationPrice: 95 },
-  { name: 'Sal', category: 'otros', purchaseUnit: 'kg', presentationQuantity: 1, presentationPrice: 15 },
+  { name: 'Harina de trigo', category: 'harinas', purchaseUnit: 'kg', presentationQuantity: 1, presentationPrice: 25, quantityPurchased: 1 },
+  { name: 'Harina integral', category: 'harinas', purchaseUnit: 'kg', presentationQuantity: 1, presentationPrice: 35, quantityPurchased: 1 },
+  { name: 'Maicena', category: 'harinas', purchaseUnit: 'g', presentationQuantity: 400, presentationPrice: 28, quantityPurchased: 1 },
+  { name: 'Harina de almendra', category: 'harinas', purchaseUnit: 'g', presentationQuantity: 500, presentationPrice: 180, quantityPurchased: 1 },
+  { name: 'Azúcar blanca', category: 'azucares', purchaseUnit: 'kg', presentationQuantity: 1, presentationPrice: 30, quantityPurchased: 1 },
+  { name: 'Azúcar glass', category: 'azucares', purchaseUnit: 'g', presentationQuantity: 500, presentationPrice: 35, quantityPurchased: 1 },
+  { name: 'Azúcar morena', category: 'azucares', purchaseUnit: 'kg', presentationQuantity: 1, presentationPrice: 40, quantityPurchased: 1 },
+  { name: 'Miel', category: 'azucares', purchaseUnit: 'g', presentationQuantity: 500, presentationPrice: 85, quantityPurchased: 1 },
+  { name: 'Leche entera', category: 'lacteos', purchaseUnit: 'L', presentationQuantity: 1, presentationPrice: 28, quantityPurchased: 1 },
+  { name: 'Leche condensada', category: 'lacteos', purchaseUnit: 'g', presentationQuantity: 397, presentationPrice: 45, quantityPurchased: 1 },
+  { name: 'Crema de leche', category: 'lacteos', purchaseUnit: 'ml', presentationQuantity: 500, presentationPrice: 65, quantityPurchased: 1 },
+  { name: 'Queso crema', category: 'lacteos', purchaseUnit: 'g', presentationQuantity: 190, presentationPrice: 48, quantityPurchased: 1 },
+  { name: 'Huevo', category: 'huevos', purchaseUnit: 'pza', presentationQuantity: 30, presentationPrice: 90, quantityPurchased: 1 },
+  { name: 'Mantequilla', category: 'grasas', purchaseUnit: 'g', presentationQuantity: 200, presentationPrice: 55, quantityPurchased: 1 },
+  { name: 'Aceite vegetal', category: 'grasas', purchaseUnit: 'L', presentationQuantity: 1, presentationPrice: 42, quantityPurchased: 1 },
+  { name: 'Cacao en polvo', category: 'chocolates', purchaseUnit: 'g', presentationQuantity: 250, presentationPrice: 65, quantityPurchased: 1 },
+  { name: 'Chocolate amargo', category: 'chocolates', purchaseUnit: 'g', presentationQuantity: 500, presentationPrice: 120, quantityPurchased: 1 },
+  { name: 'Polvo para hornear', category: 'levaduras', purchaseUnit: 'g', presentationQuantity: 200, presentationPrice: 25, quantityPurchased: 1 },
+  { name: 'Esencia de vainilla', category: 'esencias', purchaseUnit: 'ml', presentationQuantity: 120, presentationPrice: 45, quantityPurchased: 1 },
+  { name: 'Dulce de leche', category: 'rellenos', purchaseUnit: 'g', presentationQuantity: 500, presentationPrice: 75, quantityPurchased: 1 },
+  { name: 'Fondant', category: 'coberturas', purchaseUnit: 'g', presentationQuantity: 500, presentationPrice: 85, quantityPurchased: 1 },
+  { name: 'Almendras', category: 'frutos_secos', purchaseUnit: 'g', presentationQuantity: 200, presentationPrice: 95, quantityPurchased: 1 },
+  { name: 'Sal', category: 'otros', purchaseUnit: 'kg', presentationQuantity: 1, presentationPrice: 15, quantityPurchased: 1 },
 ];
 
 interface BaseIngredientsContextType {
@@ -172,6 +172,7 @@ export function BaseIngredientsProvider({ children }: { children: ReactNode }) {
         purchaseUnit: ing.purchase_unit as BaseIngredient['purchaseUnit'],
         presentationQuantity: Number(ing.presentation_quantity),
         presentationPrice: Number(ing.presentation_price),
+        quantityPurchased: Number((ing as any).quantity_purchased) || 1,
         purchaseDate: (ing as any).purchase_date || null,
         lastUpdated: ing.last_updated,
       })));
@@ -187,6 +188,7 @@ export function BaseIngredientsProvider({ children }: { children: ReactNode }) {
           presentation_quantity: ing.presentationQuantity,
           presentation_price: ing.presentationPrice,
           cost_per_base_unit: costPerBaseUnit,
+          quantity_purchased: ing.quantityPurchased,
         };
       });
 
@@ -205,6 +207,7 @@ export function BaseIngredientsProvider({ children }: { children: ReactNode }) {
           purchaseUnit: ing.purchase_unit as BaseIngredient['purchaseUnit'],
           presentationQuantity: Number(ing.presentation_quantity),
           presentationPrice: Number(ing.presentation_price),
+          quantityPurchased: Number((ing as any).quantity_purchased) || 1,
           purchaseDate: (ing as any).purchase_date || null,
           lastUpdated: ing.last_updated,
         })));
