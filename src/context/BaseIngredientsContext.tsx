@@ -74,15 +74,18 @@ export function getMultiplier(purchaseUnit: string): number {
 
 export function calculateCostPerBaseUnit(
   presentationPrice: number,
-  presentationQuantity: number,
+  _presentationQuantity: number,
   purchaseUnit: string
 ): number {
-  if (presentationQuantity <= 0 || presentationPrice <= 0) return 0;
+  if (presentationPrice <= 0) return 0;
   
   const multiplier = getMultiplier(purchaseUnit);
-  const totalBaseUnits = presentationQuantity * multiplier;
   
-  return presentationPrice / totalBaseUnits;
+  // Cost per base unit = price / multiplier
+  // e.g. kg: $15 / 1000 = $0.015/g
+  // e.g. g: $15 / 1 = $15/g
+  // e.g. pza: $15 / 1 = $15/pza
+  return presentationPrice / multiplier;
 }
 
 // Default ingredients for new users

@@ -94,9 +94,8 @@ export default function IngredientsPage() {
 
   const previewCost = useMemo(() => {
     const price = parseFloat(formData.presentationPrice) || 0;
-    const qty = parseFloat(formData.presentationQuantity) || 0;
-    return calculateCostPerBaseUnit(price, qty, formData.purchaseUnit);
-  }, [formData]);
+    return calculateCostPerBaseUnit(price, 0, formData.purchaseUnit);
+  }, [formData.presentationPrice, formData.purchaseUnit]);
 
   const previewTotalPaid = useMemo(() => {
     const price = parseFloat(formData.presentationPrice) || 0;
