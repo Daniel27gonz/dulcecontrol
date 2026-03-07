@@ -40,6 +40,10 @@ interface IndirectCostsContextType {
   getTotalVariableExpenses: () => number;
   getTotalIndirectCosts: () => number;
   getTotalIndirectCostsLastMonth: () => number;
+  getTotalFixedExpensesLastMonth: () => number;
+  getTotalFixedWithDepreciationLastMonth: () => number;
+  getTotalVariableExpensesLastMonth: () => number;
+  getLastMonthLabel: () => string;
   refreshCosts: () => Promise<void>;
 }
 
