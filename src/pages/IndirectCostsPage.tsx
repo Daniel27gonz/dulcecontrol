@@ -21,6 +21,7 @@ type ModalMode = 'expense' | 'equipment';
 interface ExpenseFormData {
   concept: string;
   amount: number;
+  paymentDate: string;
 }
 
 interface EquipmentFormData {
@@ -32,6 +33,7 @@ interface EquipmentFormData {
 const initialExpenseFormData: ExpenseFormData = {
   concept: '',
   amount: 0,
+  paymentDate: '',
 };
 
 const initialEquipmentFormData: EquipmentFormData = {
@@ -98,6 +100,7 @@ export default function IndirectCostsPage() {
     setExpenseFormData({
       concept: expense.concept,
       amount: expense.amount,
+      paymentDate: expense.paymentDate || '',
     });
     setShowModal(true);
   };
@@ -130,16 +133,16 @@ export default function IndirectCostsPage() {
 
     if (editingExpense) {
       if (modalType === 'fixed') {
-        updateFixedExpense(editingExpense.id, { concept: expenseFormData.concept, amount });
+        updateFixedExpense(editingExpense.id, { concept: expenseFormData.concept, amount, paymentDate: expenseFormData.paymentDate || null });
       } else {
-        updateVariableExpense(editingExpense.id, { concept: expenseFormData.concept, amount });
+        updateVariableExpense(editingExpense.id, { concept: expenseFormData.concept, amount, paymentDate: expenseFormData.paymentDate || null });
       }
       toast({ title: '✅ Gasto actualizado', description: expenseFormData.concept });
     } else {
       if (modalType === 'fixed') {
-        addFixedExpense({ concept: expenseFormData.concept, amount });
+        addFixedExpense({ concept: expenseFormData.concept, amount, paymentDate: expenseFormData.paymentDate || null });
       } else {
-        addVariableExpense({ concept: expenseFormData.concept, amount });
+        addVariableExpense({ concept: expenseFormData.concept, amount, paymentDate: expenseFormData.paymentDate || null });
       }
       toast({ title: '✅ Gasto agregado', description: expenseFormData.concept });
     }
@@ -221,9 +224,16 @@ export default function IndirectCostsPage() {
 
   const ExpenseCard = ({ expense, type }: { expense: Expense; type: ExpenseType }) => (
     <div className="flex flex-col sm:flex-row sm:items-center justify-between py-3 border-b border-border last:border-0 gap-2">
-      <div className="flex items-center justify-between sm:flex-1 sm:min-w-0 gap-2">
-        <p className="font-medium text-foreground text-sm">{expense.concept}</p>
-        <span className="font-semibold text-foreground text-sm sm:hidden">{formatCurrency(expense.amount)}</span>
+      <div className="flex-1 min-w-0">
+        <div className="flex items-center justify-between gap-2">
+          <p className="font-medium text-foreground text-sm">{expense.concept}</p>
+          <span className="font-semibold text-foreground text-sm sm:hidden">{formatCurrency(expense.amount)}</span>
+        </div>
+        {expense.paymentDate && (
+          <p className="text-xs text-muted-foreground mt-0.5">
+            Fecha de pago: {new Date(expense.paymentDate).toLocaleDateString('es-MX')}
+          </p>
+        )}
       </div>
       <div className="flex items-center justify-between sm:justify-end gap-2 sm:gap-2 shrink-0">
         <span className="font-semibold text-foreground text-sm hidden sm:block">{formatCurrency(expense.amount)}</span>
@@ -315,7 +325,7 @@ export default function IndirectCostsPage() {
 
   return (
     <div className="min-h-screen bg-background pb-24">
-      <AppHeader title="Gastos Indirectos" showBack />
+      <AppHeader title="Gastos del Mes" showBack />
 
       <ScrollArea className="h-[calc(100vh-140px)]">
         <motion.div
@@ -360,7 +370,7 @@ export default function IndirectCostsPage() {
               <CardContent className="p-4">
                 <div className="flex items-center justify-between">
                   <div className="min-w-0 flex-1">
-                    <p className="text-sm text-muted-foreground">Total Gastos Indirectos</p>
+                    <p className="text-sm text-muted-foreground">Total Gastos del Mes</p>
                     <p className="text-xl sm:text-2xl font-bold text-warm">{formatCurrency(totalIndirectCosts)}</p>
                   </div>
                   <Receipt className="w-8 h-8 sm:w-10 sm:h-10 text-warm/50 shrink-0" />
@@ -571,6 +581,17 @@ export default function IndirectCostsPage() {
                   value={expenseFormData.amount || ''}
                   onChange={(e) => setExpenseFormData({ ...expenseFormData, amount: Math.max(0, Number(e.target.value) || 0) })}
                   placeholder="0.00"
+                  className="mt-1"
+                />
+              </div>
+
+              <div>
+                <Label htmlFor="paymentDate">Fecha de pago</Label>
+                <Input
+                  id="paymentDate"
+                  type="date"
+                  value={expenseFormData.paymentDate || ''}
+                  onChange={(e) => setExpenseFormData({ ...expenseFormData, paymentDate: e.target.value })}
                   className="mt-1"
                 />
               </div>
