@@ -71,7 +71,7 @@ Si tu torta cuesta $500 en ingredientes + gastos:
           question: "¿Cómo sé si mi precio es correcto?",
           answer: `Tu precio es correcto cuando:
 
-✅ Cubre TODOS tus costos (ingredientes + gastos indirectos)
+✅ Cubre TODOS tus costos (ingredientes + gastos del mes)
 ✅ Te deja una ganancia justa por tu trabajo
 ✅ Es competitivo en tu mercado
 ✅ Tus clientes están dispuestos a pagarlo

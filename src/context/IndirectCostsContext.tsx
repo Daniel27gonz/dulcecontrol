@@ -6,6 +6,7 @@ export interface Expense {
   id: string;
   concept: string;
   amount: number;
+  paymentDate: string | null;
   lastUpdated: string;
 }
 
