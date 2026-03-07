@@ -496,8 +496,8 @@ export function AppProvider({ children }: { children: ReactNode }) {
       await deleteTransactionBySource(session.user.id, id, 'order');
     }
 
-    // If order is completed and amount changed, update the transaction
-    if (updatedOrder.status === 'completed' && updates.totalPrice !== undefined && existingOrder?.status === 'completed') {
+    // If order is paid and amount changed, update the transaction
+    if (updatedOrder.status === 'paid' && updates.totalPrice !== undefined && existingOrder?.status === 'paid') {
       const { syncTransaction } = await import('@/lib/transactionSync');
       await syncTransaction({
         userId: session.user.id,
