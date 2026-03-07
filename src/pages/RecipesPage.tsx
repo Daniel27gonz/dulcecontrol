@@ -59,8 +59,8 @@ import { toast } from '@/hooks/use-toast';
 export default function RecipesPage() {
   const navigate = useNavigate();
   const { recipes, settings, deleteRecipe } = useApp();
-  const { getLastMonthLaborCostPerHour, getLastMonthTotalHours } = useLabor();
-  const { getTotalIndirectCostsLastMonth } = useIndirectCosts();
+  const { getLaborCostPerHour, getTotalMonthlyHours } = useLabor();
+  const { getTotalIndirectCosts } = useIndirectCosts();
   const { getCurrentIngredientCost } = useBaseIngredients();
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedRecipe, setSelectedRecipe] = useState<Recipe | null>(null);
@@ -88,9 +88,9 @@ export default function RecipesPage() {
 
     const totalProductHours = Math.max(0, totalElaborationTimeMinutes / 60);
 
-    const laborCostPerHour = getLastMonthLaborCostPerHour();
-    const totalMonthlyHours = getLastMonthTotalHours();
-    const totalIndirectCosts = getTotalIndirectCostsLastMonth();
+    const laborCostPerHour = getLaborCostPerHour();
+    const totalMonthlyHours = getTotalMonthlyHours();
+    const totalIndirectCosts = getTotalIndirectCosts();
     const indirectCostPerHour = totalMonthlyHours > 0 ? totalIndirectCosts / totalMonthlyHours : 0;
 
     const laborFinalCost = totalProductHours * laborCostPerHour;
