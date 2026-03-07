@@ -1,6 +1,7 @@
 import React, { createContext, useContext, useState, useEffect, useCallback, ReactNode } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useApp } from './AppContext';
+import { syncTransaction, deleteTransactionBySource } from '@/lib/transactionSync';
 
 export interface Expense {
   id: string;
@@ -43,7 +44,6 @@ interface IndirectCostsContextType {
 
 const IndirectCostsContext = createContext<IndirectCostsContextType | undefined>(undefined);
 
-// Default expenses for new users
 const DEFAULT_FIXED_EXPENSES = [
   'Renta del local',
   'Parte proporcional de renta de casa',
@@ -130,7 +130,6 @@ export function IndirectCostsProvider({ children }: { children: ReactNode }) {
       setVariableExpenses(variable);
       setEquipment(equip);
     } else {
-      // Initialize defaults for new users
       const defaultsToInsert = [
         ...DEFAULT_FIXED_EXPENSES.map(concept => ({
           user_id: session.user.id,
@@ -188,6 +187,21 @@ export function IndirectCostsProvider({ children }: { children: ReactNode }) {
     loadCosts();
   }, [loadCosts]);
 
+  // Helper to sync expense with transactions
+  const syncExpenseTransaction = useCallback(async (expense: { id: string; concept: string; amount: number; paymentDate: string | null }, costType: string) => {
+    if (!session?.user || expense.amount <= 0) return;
+    await syncTransaction({
+      userId: session.user.id,
+      sourceId: expense.id,
+      sourceType: 'indirect_cost',
+      type: 'expense',
+      description: `Gasto: ${expense.concept}`,
+      amount: expense.amount,
+      category: costType === 'fixed' ? 'gasto fijo' : 'gasto variable',
+      date: expense.paymentDate || new Date().toISOString(),
+    });
+  }, [session?.user]);
+
   // Fixed Expenses
   const addFixedExpense = useCallback(async (expense: Omit<Expense, 'id' | 'lastUpdated'>) => {
     if (!session?.user) return;
@@ -216,7 +230,9 @@ export function IndirectCostsProvider({ children }: { children: ReactNode }) {
       paymentDate: data.payment_date || null,
       lastUpdated: data.last_updated,
     }]);
-  }, [session?.user]);
+
+    await syncExpenseTransaction({ id: data.id, concept: data.concept, amount: Number(data.amount), paymentDate: data.payment_date || null }, 'fixed');
+  }, [session?.user, syncExpenseTransaction]);
 
   const updateFixedExpense = useCallback(async (id: string, updates: Partial<Omit<Expense, 'id' | 'lastUpdated'>>) => {
     if (!session?.user) return;
@@ -237,10 +253,15 @@ export function IndirectCostsProvider({ children }: { children: ReactNode }) {
       return;
     }
 
+    const existing = fixedExpenses.find(e => e.id === id);
+    const updated = { ...existing!, ...updates };
+
     setFixedExpenses(prev => prev.map(exp =>
       exp.id === id ? { ...exp, ...updates, lastUpdated: new Date().toISOString() } : exp
     ));
-  }, [session?.user]);
+
+    await syncExpenseTransaction({ id, concept: updated.concept, amount: updated.amount, paymentDate: updated.paymentDate }, 'fixed');
+  }, [session?.user, fixedExpenses, syncExpenseTransaction]);
 
   const deleteFixedExpense = useCallback(async (id: string) => {
     if (!session?.user) return;
@@ -257,6 +278,7 @@ export function IndirectCostsProvider({ children }: { children: ReactNode }) {
     }
 
     setFixedExpenses(prev => prev.filter(exp => exp.id !== id));
+    await deleteTransactionBySource(session.user.id, id, 'indirect_cost');
   }, [session?.user]);
 
   // Variable Expenses
@@ -287,7 +309,9 @@ export function IndirectCostsProvider({ children }: { children: ReactNode }) {
       paymentDate: data.payment_date || null,
       lastUpdated: data.last_updated,
     }]);
-  }, [session?.user]);
+
+    await syncExpenseTransaction({ id: data.id, concept: data.concept, amount: Number(data.amount), paymentDate: data.payment_date || null }, 'variable');
+  }, [session?.user, syncExpenseTransaction]);
 
   const updateVariableExpense = useCallback(async (id: string, updates: Partial<Omit<Expense, 'id' | 'lastUpdated'>>) => {
     if (!session?.user) return;
@@ -308,10 +332,15 @@ export function IndirectCostsProvider({ children }: { children: ReactNode }) {
       return;
     }
 
+    const existing = variableExpenses.find(e => e.id === id);
+    const updated = { ...existing!, ...updates };
+
     setVariableExpenses(prev => prev.map(exp =>
       exp.id === id ? { ...exp, ...updates, lastUpdated: new Date().toISOString() } : exp
     ));
-  }, [session?.user]);
+
+    await syncExpenseTransaction({ id, concept: updated.concept, amount: updated.amount, paymentDate: updated.paymentDate }, 'variable');
+  }, [session?.user, variableExpenses, syncExpenseTransaction]);
 
   const deleteVariableExpense = useCallback(async (id: string) => {
     if (!session?.user) return;
@@ -328,6 +357,7 @@ export function IndirectCostsProvider({ children }: { children: ReactNode }) {
     }
 
     setVariableExpenses(prev => prev.filter(exp => exp.id !== id));
+    await deleteTransactionBySource(session.user.id, id, 'indirect_cost');
   }, [session?.user]);
 
   // Equipment

@@ -1,6 +1,6 @@
 import { useState, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Search, Plus, Filter, Pencil, Trash2, Package, ChevronDown, X } from 'lucide-react';
+import { Search, Plus, Filter, Pencil, Trash2, Package, X } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
@@ -36,6 +36,7 @@ interface IngredientFormData {
   purchaseUnit: string;
   presentationQuantity: string;
   presentationPrice: string;
+  purchaseDate: string;
 }
 
 const initialFormData: IngredientFormData = {
@@ -44,6 +45,7 @@ const initialFormData: IngredientFormData = {
   purchaseUnit: 'g',
   presentationQuantity: '',
   presentationPrice: '',
+  purchaseDate: new Date().toISOString().split('T')[0],
 };
 
 export default function IngredientsPage() {
@@ -62,7 +64,6 @@ export default function IngredientsPage() {
   const [formData, setFormData] = useState<IngredientFormData>(initialFormData);
   const [formError, setFormError] = useState<string | null>(null);
 
-  // Filter and group ingredients
   const filteredIngredients = useMemo(() => {
     return ingredients.filter(ing => {
       const matchesSearch = ing.name.toLowerCase().includes(searchTerm.toLowerCase());
@@ -89,7 +90,6 @@ export default function IngredientsPage() {
     });
   }, [groupedIngredients]);
 
-  // Calculate preview cost
   const previewCost = useMemo(() => {
     const price = parseFloat(formData.presentationPrice) || 0;
     const qty = parseFloat(formData.presentationQuantity) || 0;
@@ -110,6 +110,7 @@ export default function IngredientsPage() {
       purchaseUnit: ingredient.purchaseUnit,
       presentationQuantity: ingredient.presentationQuantity.toString(),
       presentationPrice: ingredient.presentationPrice.toString(),
+      purchaseDate: ingredient.purchaseDate ? new Date(ingredient.purchaseDate).toISOString().split('T')[0] : new Date().toISOString().split('T')[0],
     });
     setFormError(null);
     setShowEditModal(true);
@@ -139,6 +140,11 @@ export default function IngredientsPage() {
       return false;
     }
 
+    if (!formData.purchaseDate) {
+      setFormError('La fecha de compra es obligatoria');
+      return false;
+    }
+
     return true;
   };
 
@@ -151,6 +157,7 @@ export default function IngredientsPage() {
       purchaseUnit: formData.purchaseUnit as any,
       presentationQuantity: parseFloat(formData.presentationQuantity),
       presentationPrice: parseFloat(formData.presentationPrice),
+      purchaseDate: new Date(formData.purchaseDate).toISOString(),
     });
 
     if (result) {
@@ -175,6 +182,7 @@ export default function IngredientsPage() {
       purchaseUnit: formData.purchaseUnit as any,
       presentationQuantity: parseFloat(formData.presentationQuantity),
       presentationPrice: parseFloat(formData.presentationPrice),
+      purchaseDate: new Date(formData.purchaseDate).toISOString(),
     });
 
     toast({
@@ -341,7 +349,7 @@ export default function IngredientsPage() {
                                   {settings.currencySymbol}{ingredient.costPerBaseUnit.toFixed(4)}/{getBaseUnit(ingredient.purchaseUnit)}
                                 </span>
                                 <span className="text-xs text-muted-foreground">
-                                  • Actualizado: {formatDate(ingredient.lastUpdated)}
+                                  • Compra: {ingredient.purchaseDate ? formatDate(ingredient.purchaseDate) : formatDate(ingredient.lastUpdated)}
                                 </span>
                               </div>
                             </div>
@@ -571,6 +579,18 @@ function IngredientForm({
             className="pl-8"
           />
         </div>
+      </div>
+
+      <div>
+        <label className="block text-sm font-medium mb-1.5">Fecha de compra *</label>
+        <Input
+          type="date"
+          value={formData.purchaseDate}
+          onChange={(e) => {
+            setFormData(prev => ({ ...prev, purchaseDate: e.target.value }));
+            setFormError(null);
+          }}
+        />
       </div>
 
       {/* Preview */}
