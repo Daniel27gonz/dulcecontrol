@@ -388,7 +388,7 @@ export default function IndirectCostsPage() {
                   </div>
                   <Receipt className="w-8 h-8 sm:w-10 sm:h-10 text-warm/50 shrink-0" />
                 </div>
-                <p className="text-xs text-muted-foreground mt-2">Mensuales</p>
+                <p className="text-xs text-muted-foreground mt-2">{lastMonthLabel ? `Mes: ${lastMonthLabel}` : 'Mensuales'}</p>
               </CardContent>
             </Card>
           </motion.div>
