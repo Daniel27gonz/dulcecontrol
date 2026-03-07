@@ -47,7 +47,7 @@ export function AppSidebar() {
         {/* Main nav */}
         <SidebarGroup>
           <SidebarGroupLabel className="text-xs text-muted-foreground uppercase tracking-wider">
-            {!collapsed && 'Menú'}
+            Menú
           </SidebarGroupLabel>
           <SidebarGroupContent>
             <SidebarMenu>
@@ -61,7 +61,7 @@ export function AppSidebar() {
                       activeClassName="bg-primary/10 text-primary font-semibold"
                     >
                       <item.icon className="w-5 h-5 shrink-0" />
-                      {!collapsed && <span className="text-sm">{item.title}</span>}
+                      <span className="text-sm">{item.title}</span>
                     </NavLink>
                   </SidebarMenuButton>
                 </SidebarMenuItem>
@@ -84,7 +84,7 @@ export function AppSidebar() {
                   activeClassName="bg-primary/10 text-primary font-semibold"
                 >
                   <item.icon className="w-5 h-5 shrink-0" />
-                  {!collapsed && <span className="text-sm">{item.title}</span>}
+                  <span className="text-sm">{item.title}</span>
                 </NavLink>
               </SidebarMenuButton>
             </SidebarMenuItem>
