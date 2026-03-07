@@ -602,7 +602,7 @@ function IngredientForm({
               setFormError(null);
             }}
             placeholder="0.00"
-            className="pl-10"
+            className="pl-12"
           />
         </div>
       </div>
@@ -618,7 +618,7 @@ function IngredientForm({
             value={previewTotalPaid.toFixed(2)}
             readOnly
             disabled
-            className="pl-10 bg-muted/50 font-semibold"
+            className="pl-12 bg-muted/50 font-semibold"
           />
         </div>
         <p className="text-xs text-muted-foreground mt-1">Precio × Cantidad de presentación (se registra en Finanzas)</p>
