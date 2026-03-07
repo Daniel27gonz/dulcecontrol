@@ -25,8 +25,8 @@ import { ScrollArea } from '@/components/ui/scroll-area';
 export default function FinancesPage() {
   const { settings, transactions, orders, deleteTransaction } = useApp();
   const { ingredients: baseIngredients } = useBaseIngredients();
-  const { fixedExpenses, variableExpenses, equipment, getTotalFixedWithDepreciation, getTotalVariableExpenses } = useIndirectCosts();
-  const { workers } = useLabor();
+  const { } = useIndirectCosts();
+  const { } = useLabor();
   const { quotations } = useQuotations();
 
   const [selectedMonth, setSelectedMonth] = useState(new Date());
