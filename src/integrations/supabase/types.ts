@@ -24,6 +24,7 @@ export type Database = {
           name: string
           presentation_price: number
           presentation_quantity: number
+          purchase_date: string | null
           purchase_unit: string
           user_id: string
         }
@@ -36,6 +37,7 @@ export type Database = {
           name: string
           presentation_price: number
           presentation_quantity: number
+          purchase_date?: string | null
           purchase_unit: string
           user_id: string
         }
@@ -48,6 +50,7 @@ export type Database = {
           name?: string
           presentation_price?: number
           presentation_quantity?: number
+          purchase_date?: string | null
           purchase_unit?: string
           user_id?: string
         }
@@ -351,6 +354,8 @@ export type Database = {
           date: string
           description: string
           id: string
+          source_id: string | null
+          source_type: string | null
           type: string
           user_id: string
         }
@@ -361,6 +366,8 @@ export type Database = {
           date?: string
           description: string
           id?: string
+          source_id?: string | null
+          source_type?: string | null
           type: string
           user_id: string
         }
@@ -371,6 +378,8 @@ export type Database = {
           date?: string
           description?: string
           id?: string
+          source_id?: string | null
+          source_type?: string | null
           type?: string
           user_id?: string
         }
@@ -421,6 +430,7 @@ export type Database = {
           monthly_hours: number
           monthly_salary: number
           name: string
+          payment_date: string | null
           user_id: string
         }
         Insert: {
@@ -434,6 +444,7 @@ export type Database = {
           monthly_hours: number
           monthly_salary: number
           name: string
+          payment_date?: string | null
           user_id: string
         }
         Update: {
@@ -447,6 +458,7 @@ export type Database = {
           monthly_hours?: number
           monthly_salary?: number
           name?: string
+          payment_date?: string | null
           user_id?: string
         }
         Relationships: []
