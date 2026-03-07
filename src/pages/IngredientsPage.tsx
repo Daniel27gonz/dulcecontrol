@@ -563,7 +563,7 @@ function IngredientForm({
           </Select>
         </div>
         <div>
-          <label className="block text-sm font-medium mb-1.5">Cantidad presentación</label>
+          <label className="block text-sm font-medium mb-1.5">Cantidad ({formData.purchaseUnit})</label>
           <Input
             type="number"
             value={formData.presentationQuantity}
@@ -572,18 +572,31 @@ function IngredientForm({
               setFormError(null);
             }}
             placeholder={
-              formData.purchaseUnit === 'kg' ? 'Ej: 1000 (g por kg)' :
-              formData.purchaseUnit === 'g' ? 'Ej: 500 (g)' :
-              formData.purchaseUnit === 'lb' ? 'Ej: 454 (g por lb)' :
-              formData.purchaseUnit === 'oz' ? 'Ej: 28 (g por oz)' :
-              formData.purchaseUnit === 'L' ? 'Ej: 1000 (ml por L)' :
-              formData.purchaseUnit === 'ml' ? 'Ej: 500 (ml)' :
-              formData.purchaseUnit === 'pza' ? 'Ej: 12 (piezas)' :
-              formData.purchaseUnit === 'paquete' ? 'Ej: 10 (pzas por paq)' :
-              formData.purchaseUnit === 'caja' ? 'Ej: 24 (pzas por caja)' :
-              'Ej: 1000'
+              formData.purchaseUnit === 'kg' ? 'Ej: 1' :
+              formData.purchaseUnit === 'g' ? 'Ej: 500' :
+              formData.purchaseUnit === 'lb' ? 'Ej: 1' :
+              formData.purchaseUnit === 'oz' ? 'Ej: 1' :
+              formData.purchaseUnit === 'L' ? 'Ej: 1' :
+              formData.purchaseUnit === 'ml' ? 'Ej: 500' :
+              formData.purchaseUnit === 'pza' ? 'Ej: 30' :
+              formData.purchaseUnit === 'paquete' ? 'Ej: 1' :
+              formData.purchaseUnit === 'caja' ? 'Ej: 1' :
+              'Ej: 1'
             }
           />
+          {(() => {
+            const unit = PURCHASE_UNITS.find(u => u.id === formData.purchaseUnit);
+            const qty = parseFloat(formData.presentationQuantity) || 0;
+            if (unit && unit.multiplier > 1 && qty > 0) {
+              const totalBase = qty * unit.multiplier;
+              return (
+                <p className="text-xs text-muted-foreground mt-1">
+                  = {totalBase.toLocaleString()} {unit.baseUnit} (conversión automática)
+                </p>
+              );
+            }
+            return null;
+          })()}
         </div>
       </div>
 
