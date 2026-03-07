@@ -4,6 +4,7 @@ import { Plus, ClipboardList, TrendingUp, Wallet, TrendingDown, ChefHat, FileTex
 import { Button } from '@/components/ui/button';
 import { useApp } from '@/context/AppContext';
 import { BottomNav } from '@/components/BottomNav';
+import { AppLayout } from '@/components/AppLayout';
 import { AppHeader } from '@/components/AppHeader';
 import { HeroSection } from '@/components/dashboard/HeroSection';
 import { MetricCard } from '@/components/dashboard/MetricCard';
