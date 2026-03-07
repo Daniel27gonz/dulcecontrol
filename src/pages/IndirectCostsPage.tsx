@@ -60,6 +60,7 @@ export default function IndirectCostsPage() {
     getTotalDepreciation,
     getTotalFixedWithDepreciation,
     getTotalIndirectCostsLastMonth,
+    getTotalFixedExpensesLastMonth,
     getTotalFixedWithDepreciationLastMonth,
     getTotalVariableExpensesLastMonth,
     getLastMonthLabel,
