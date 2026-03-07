@@ -100,9 +100,9 @@ export default function IngredientsPage() {
 
   const previewTotalPaid = useMemo(() => {
     const price = parseFloat(formData.presentationPrice) || 0;
-    const qtyPurchased = parseFloat(formData.quantityPurchased) || 1;
-    return price * qtyPurchased;
-  }, [formData.presentationPrice, formData.quantityPurchased]);
+    const qty = parseFloat(formData.presentationQuantity) || 0;
+    return price * qty;
+  }, [formData.presentationPrice, formData.presentationQuantity]);
 
   const handleOpenAdd = () => {
     setFormData(initialFormData);
@@ -594,6 +594,23 @@ function IngredientForm({
             className="pl-8"
           />
         </div>
+      </div>
+
+      <div>
+        <label className="block text-sm font-medium mb-1.5">Total pagado</label>
+        <div className="relative">
+          <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground">
+            {currencySymbol}
+          </span>
+          <Input
+            type="text"
+            value={previewTotalPaid.toFixed(2)}
+            readOnly
+            disabled
+            className="pl-8 bg-muted/50 font-semibold"
+          />
+        </div>
+        <p className="text-xs text-muted-foreground mt-1">Precio × Cantidad de presentación (se registra en Finanzas)</p>
       </div>
 
       <div>

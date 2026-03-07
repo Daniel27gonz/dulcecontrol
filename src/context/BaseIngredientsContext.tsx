@@ -260,14 +260,14 @@ export function BaseIngredientsProvider({ children }: { children: ReactNode }) {
 
     setIngredients(prev => [...prev, newIngredient].sort((a, b) => a.name.localeCompare(b.name)));
 
-    // Sync with transactions - amount = presentationPrice * quantityPurchased
-    const totalAmount = ingredient.presentationPrice * (ingredient.quantityPurchased || 1);
+    // Sync with transactions - total = presentationPrice * presentationQuantity
+    const totalAmount = ingredient.presentationPrice * ingredient.presentationQuantity;
     await syncTransaction({
       userId: session.user.id,
       sourceId: data.id,
       sourceType: 'ingredient',
       type: 'expense',
-      description: `Compra: ${ingredient.name} (x${ingredient.quantityPurchased || 1})`,
+      description: `Compra: ${ingredient.name}`,
       amount: totalAmount,
       category: 'ingredientes',
       date: ingredient.purchaseDate || new Date().toISOString(),
@@ -313,14 +313,14 @@ export function BaseIngredientsProvider({ children }: { children: ReactNode }) {
       }).sort((a, b) => a.name.localeCompare(b.name))
     );
 
-    // Sync with transactions - amount = presentationPrice * quantityPurchased
-    const totalAmount = updatedIng.presentationPrice * (updatedIng.quantityPurchased || 1);
+    // Sync with transactions - total = presentationPrice * presentationQuantity
+    const totalAmount = updatedIng.presentationPrice * updatedIng.presentationQuantity;
     await syncTransaction({
       userId: session.user.id,
       sourceId: id,
       sourceType: 'ingredient',
       type: 'expense',
-      description: `Compra: ${updatedIng.name} (x${updatedIng.quantityPurchased || 1})`,
+      description: `Compra: ${updatedIng.name}`,
       amount: totalAmount,
       category: 'ingredientes',
       date: updatedIng.purchaseDate || new Date().toISOString(),
