@@ -26,6 +26,7 @@ export type Database = {
           presentation_quantity: number
           purchase_date: string | null
           purchase_unit: string
+          quantity_purchased: number
           user_id: string
         }
         Insert: {
@@ -39,6 +40,7 @@ export type Database = {
           presentation_quantity: number
           purchase_date?: string | null
           purchase_unit: string
+          quantity_purchased?: number
           user_id: string
         }
         Update: {
@@ -52,6 +54,7 @@ export type Database = {
           presentation_quantity?: number
           purchase_date?: string | null
           purchase_unit?: string
+          quantity_purchased?: number
           user_id?: string
         }
         Relationships: []
