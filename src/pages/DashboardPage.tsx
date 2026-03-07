@@ -36,7 +36,7 @@ export default function DashboardPage() {
               Bienvenida a DulceControl
             </h1>
             <p className="text-sm text-muted-foreground mt-1">
-              Tu panel de control para gestionar tu negocio de repostería y gastronomía 🧁
+              Tu panel de control para gestionar tu negocio de repostería 🧁
             </p>
           </motion.div>
 
