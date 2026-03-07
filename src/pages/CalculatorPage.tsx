@@ -36,8 +36,8 @@ export default function CalculatorPage() {
   const editId = searchParams.get('edit');
   
   const { settings, recipes, addRecipe, updateRecipe, calculateRecipeCost, updateSettings } = useApp();
-  const { getLaborCostPerHour, getTotalMonthlyHours } = useLabor();
-  const { getTotalIndirectCosts } = useIndirectCosts();
+  const { getLastMonthLaborCostPerHour, getLastMonthTotalHours } = useLabor();
+  const { getTotalIndirectCostsLastMonth } = useIndirectCosts();
   
   const [currentStep, setCurrentStep] = useState(0);
   const [isEditing, setIsEditing] = useState(false);
@@ -110,10 +110,10 @@ export default function CalculatorPage() {
     }
   }, [editId, recipes]);
 
-  // Obtener costos globales
-  const laborCostPerHour = getLaborCostPerHour();
-  const totalMonthlyHours = getTotalMonthlyHours();
-  const totalIndirectCosts = getTotalIndirectCosts();
+  // Obtener costos globales (último mes registrado)
+  const laborCostPerHour = getLastMonthLaborCostPerHour();
+  const totalMonthlyHours = getLastMonthTotalHours();
+  const totalIndirectCosts = getTotalIndirectCostsLastMonth();
   const indirectCostPerHour = totalMonthlyHours > 0 ? totalIndirectCosts / totalMonthlyHours : 0;
 
   // Ingredientes

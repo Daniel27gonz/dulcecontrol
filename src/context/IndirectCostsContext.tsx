@@ -39,6 +39,7 @@ interface IndirectCostsContextType {
   getTotalFixedWithDepreciation: () => number;
   getTotalVariableExpenses: () => number;
   getTotalIndirectCosts: () => number;
+  getTotalIndirectCostsLastMonth: () => number;
   refreshCosts: () => Promise<void>;
 }
 
@@ -458,6 +459,37 @@ export function IndirectCostsProvider({ children }: { children: ReactNode }) {
     return Math.round((getTotalFixedWithDepreciation() + getTotalVariableExpenses()) * 100) / 100;
   }, [getTotalFixedWithDepreciation, getTotalVariableExpenses]);
 
+  // Filter expenses by the last registered month (based on paymentDate)
+  const getTotalIndirectCostsLastMonth = useCallback((): number => {
+    const allExpenses = [...fixedExpenses, ...variableExpenses];
+    const withDate = allExpenses.filter(e => e.paymentDate);
+    
+    if (withDate.length === 0) {
+      // No dates, fallback to all + depreciation
+      return getTotalIndirectCosts();
+    }
+    
+    // Find the latest payment date
+    const latestDate = withDate.reduce((latest, e) => {
+      const d = new Date(e.paymentDate!);
+      return d > latest ? d : latest;
+    }, new Date(0));
+    
+    const latestYear = latestDate.getFullYear();
+    const latestMonth = latestDate.getMonth();
+    
+    // Filter expenses to that month
+    const filteredTotal = withDate
+      .filter(e => {
+        const d = new Date(e.paymentDate!);
+        return d.getFullYear() === latestYear && d.getMonth() === latestMonth;
+      })
+      .reduce((sum, e) => sum + (e.amount || 0), 0);
+    
+    // Add equipment depreciation (always applies monthly)
+    return Math.round((filteredTotal + getTotalDepreciation()) * 100) / 100;
+  }, [fixedExpenses, variableExpenses, getTotalIndirectCosts, getTotalDepreciation]);
+
   const refreshCosts = useCallback(async () => {
     await loadCosts();
   }, [loadCosts]);
@@ -483,6 +515,7 @@ export function IndirectCostsProvider({ children }: { children: ReactNode }) {
       getTotalFixedWithDepreciation,
       getTotalVariableExpenses,
       getTotalIndirectCosts,
+      getTotalIndirectCostsLastMonth,
       refreshCosts,
     }}>
       {children}
