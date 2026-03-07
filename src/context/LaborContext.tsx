@@ -28,6 +28,7 @@ interface LaborContextType {
   getLaborCostPerHour: () => number;
   getLastMonthLaborCostPerHour: () => number;
   getLastMonthTotalHours: () => number;
+  getLastMonthLabel: () => string;
   refreshWorkers: () => Promise<void>;
 }
 
@@ -267,6 +268,19 @@ export function LaborProvider({ children }: { children: ReactNode }) {
     return filtered.reduce((sum, w) => sum + w.monthlyHours, 0);
   }, [getLastMonthWorkers]);
 
+  const getLastMonthLabel = useCallback(() => {
+    const workersWithDate = workers.filter(w => w.paymentDate);
+    if (workersWithDate.length === 0) return '';
+    
+    const latestDate = workersWithDate.reduce((latest, w) => {
+      const d = new Date(w.paymentDate!);
+      return d > latest ? d : latest;
+    }, new Date(0));
+    
+    const monthNames = ['Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio', 'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre'];
+    return `${monthNames[latestDate.getMonth()]} ${latestDate.getFullYear()}`;
+  }, [workers]);
+
   const refreshWorkers = useCallback(async () => {
     await loadWorkers();
   }, [loadWorkers]);
@@ -284,6 +298,7 @@ export function LaborProvider({ children }: { children: ReactNode }) {
       getLaborCostPerHour,
       getLastMonthLaborCostPerHour,
       getLastMonthTotalHours,
+      getLastMonthLabel,
       refreshWorkers,
     }}>
       {children}
