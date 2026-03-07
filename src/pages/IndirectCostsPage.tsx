@@ -131,18 +131,28 @@ export default function IndirectCostsPage() {
 
     const amount = Math.max(0, Math.round((expenseFormData.amount || 0) * 100) / 100);
 
+    if (amount <= 0) {
+      toast({ title: 'Error', description: 'El monto debe ser mayor a 0', variant: 'destructive' });
+      return;
+    }
+
+    if (!expenseFormData.paymentDate) {
+      toast({ title: 'Error', description: 'La fecha de pago es obligatoria', variant: 'destructive' });
+      return;
+    }
+
     if (editingExpense) {
       if (modalType === 'fixed') {
-        updateFixedExpense(editingExpense.id, { concept: expenseFormData.concept, amount, paymentDate: expenseFormData.paymentDate || null });
+        updateFixedExpense(editingExpense.id, { concept: expenseFormData.concept, amount, paymentDate: expenseFormData.paymentDate });
       } else {
-        updateVariableExpense(editingExpense.id, { concept: expenseFormData.concept, amount, paymentDate: expenseFormData.paymentDate || null });
+        updateVariableExpense(editingExpense.id, { concept: expenseFormData.concept, amount, paymentDate: expenseFormData.paymentDate });
       }
       toast({ title: '✅ Gasto actualizado', description: expenseFormData.concept });
     } else {
       if (modalType === 'fixed') {
-        addFixedExpense({ concept: expenseFormData.concept, amount, paymentDate: expenseFormData.paymentDate || null });
+        addFixedExpense({ concept: expenseFormData.concept, amount, paymentDate: expenseFormData.paymentDate });
       } else {
-        addVariableExpense({ concept: expenseFormData.concept, amount, paymentDate: expenseFormData.paymentDate || null });
+        addVariableExpense({ concept: expenseFormData.concept, amount, paymentDate: expenseFormData.paymentDate });
       }
       toast({ title: '✅ Gasto agregado', description: expenseFormData.concept });
     }
