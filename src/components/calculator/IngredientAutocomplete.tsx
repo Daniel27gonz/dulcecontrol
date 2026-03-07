@@ -172,6 +172,7 @@ export function IngredientAutocomplete({
       purchaseUnit: quickAddForm.purchaseUnit as any,
       presentationQuantity: qty,
       presentationPrice: price,
+      quantityPurchased: 1,
       purchaseDate: new Date().toISOString(),
     });
 

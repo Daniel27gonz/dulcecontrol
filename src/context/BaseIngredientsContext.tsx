@@ -236,6 +236,7 @@ export function BaseIngredientsProvider({ children }: { children: ReactNode }) {
         presentation_price: ingredient.presentationPrice,
         cost_per_base_unit: costPerBaseUnit,
         purchase_date: ingredient.purchaseDate || null,
+        quantity_purchased: ingredient.quantityPurchased || 1,
       } as any])
       .select()
       .single();
@@ -252,20 +253,22 @@ export function BaseIngredientsProvider({ children }: { children: ReactNode }) {
       purchaseUnit: data.purchase_unit as BaseIngredient['purchaseUnit'],
       presentationQuantity: Number(data.presentation_quantity),
       presentationPrice: Number(data.presentation_price),
+      quantityPurchased: Number((data as any).quantity_purchased) || 1,
       purchaseDate: (data as any).purchase_date || null,
       lastUpdated: data.last_updated,
     });
 
     setIngredients(prev => [...prev, newIngredient].sort((a, b) => a.name.localeCompare(b.name)));
 
-    // Sync with transactions
+    // Sync with transactions - amount = presentationPrice * quantityPurchased
+    const totalAmount = ingredient.presentationPrice * (ingredient.quantityPurchased || 1);
     await syncTransaction({
       userId: session.user.id,
       sourceId: data.id,
       sourceType: 'ingredient',
       type: 'expense',
-      description: `Compra: ${ingredient.name}`,
-      amount: ingredient.presentationPrice,
+      description: `Compra: ${ingredient.name} (x${ingredient.quantityPurchased || 1})`,
+      amount: totalAmount,
       category: 'ingredientes',
       date: ingredient.purchaseDate || new Date().toISOString(),
     });
