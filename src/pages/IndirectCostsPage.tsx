@@ -21,6 +21,7 @@ type ModalMode = 'expense' | 'equipment';
 interface ExpenseFormData {
   concept: string;
   amount: number;
+  paymentDate: string;
 }
 
 interface EquipmentFormData {
@@ -32,6 +33,7 @@ interface EquipmentFormData {
 const initialExpenseFormData: ExpenseFormData = {
   concept: '',
   amount: 0,
+  paymentDate: '',
 };
 
 const initialEquipmentFormData: EquipmentFormData = {

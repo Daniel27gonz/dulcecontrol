@@ -292,12 +292,14 @@ export function IndirectCostsProvider({ children }: { children: ReactNode }) {
   const updateVariableExpense = useCallback(async (id: string, updates: Partial<Omit<Expense, 'id' | 'lastUpdated'>>) => {
     if (!session?.user) return;
 
+    const updateData: Record<string, unknown> = { last_updated: new Date().toISOString() };
+    if (updates.concept !== undefined) updateData.concept = updates.concept;
+    if (updates.amount !== undefined) updateData.amount = updates.amount;
+    if (updates.paymentDate !== undefined) updateData.payment_date = updates.paymentDate;
+
     const { error } = await supabase
       .from('indirect_costs')
-      .update({
-        ...updates,
-        last_updated: new Date().toISOString(),
-      })
+      .update(updateData)
       .eq('id', id)
       .eq('user_id', session.user.id);
 
