@@ -74,7 +74,7 @@ export default function DashboardPage() {
           {/* Quick Actions - moved to top */}
           <motion.div variants={itemVariants}>
             <h2 className="text-base sm:text-lg font-bold text-foreground mb-3">Acceso rápido</h2>
-            <div className="grid grid-cols-3 sm:grid-cols-6 gap-3">
+            <div className="flex flex-wrap gap-2.5">
               {[
                 { icon: Plus, label: 'Nueva receta', path: '/calculator', accent: true },
                 { icon: ChefHat, label: 'Mis recetas', path: '/recipes' },
@@ -86,12 +86,12 @@ export default function DashboardPage() {
                 <button
                   key={path}
                   onClick={() => navigate(path)}
-                  className="flex flex-col items-center gap-2 p-4 rounded-2xl bg-card border border-border/50 shadow-soft hover:shadow-card transition-all duration-300 active:scale-[0.96] group"
+                  className="flex items-center gap-2.5 px-4 py-2.5 rounded-xl bg-card border border-border/50 shadow-soft hover:shadow-card transition-all duration-300 active:scale-[0.97] group"
                 >
-                  <div className={`w-11 h-11 rounded-full flex items-center justify-center transition-colors duration-300 ${accent ? 'bg-primary text-primary-foreground' : 'bg-secondary text-secondary-foreground group-hover:bg-primary/10 group-hover:text-primary'}`}>
-                    <Icon className="w-5 h-5" />
+                  <div className={`w-9 h-9 rounded-full flex items-center justify-center shrink-0 transition-colors duration-300 ${accent ? 'bg-primary text-primary-foreground' : 'bg-secondary text-secondary-foreground group-hover:bg-primary/10 group-hover:text-primary'}`}>
+                    <Icon className="w-4 h-4" />
                   </div>
-                  <span className="text-xs font-semibold text-foreground leading-tight text-center">{label}</span>
+                  <span className="text-xs font-semibold text-foreground whitespace-nowrap">{label}</span>
                 </button>
               ))}
             </div>
