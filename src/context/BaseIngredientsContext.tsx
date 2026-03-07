@@ -55,9 +55,9 @@ export const PURCHASE_UNITS = [
   { id: 'oz', name: 'Onza (oz)', baseUnit: 'g', multiplier: 28.3495 },
   { id: 'L', name: 'Litro (L)', baseUnit: 'ml', multiplier: 1000 },
   { id: 'ml', name: 'Mililitro (ml)', baseUnit: 'ml', multiplier: 1 },
-  { id: 'pza', name: 'Pieza', baseUnit: 'pza', multiplier: 1 },
-  { id: 'paquete', name: 'Paquete', baseUnit: 'pza', multiplier: 1 },
-  { id: 'caja', name: 'Caja', baseUnit: 'pza', multiplier: 1 },
+  { id: 'pza', name: 'Pieza', baseUnit: 'pieza', multiplier: 1 },
+  { id: 'paquete', name: 'Paquete', baseUnit: 'paquete', multiplier: 1 },
+  { id: 'caja', name: 'Caja', baseUnit: 'caja', multiplier: 1 },
 ] as const;
 
 export type PurchaseUnit = typeof PURCHASE_UNITS[number]['id'];
