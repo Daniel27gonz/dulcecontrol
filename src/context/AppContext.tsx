@@ -56,7 +56,7 @@ export interface Order {
   recipeName: string;
   quantity: number;
   totalPrice: number;
-  status: 'pending' | 'in_progress' | 'completed' | 'cancelled';
+  status: 'pending' | 'in_progress' | 'completed' | 'paid' | 'cancelled';
   deliveryDate: string;
   createdAt: string;
 }
@@ -475,8 +475,8 @@ export function AppProvider({ children }: { children: ReactNode }) {
       prev.map(order => (order.id === id ? { ...order, ...updates } : order))
     );
 
-    // If status changed to completed (paid), register income transaction
-    if (updates.status === 'completed' && existingOrder?.status !== 'completed') {
+    // If status changed to paid, register income transaction
+    if (updates.status === 'paid' && existingOrder?.status !== 'paid') {
       const { syncTransaction } = await import('@/lib/transactionSync');
       await syncTransaction({
         userId: session.user.id,
@@ -490,14 +490,14 @@ export function AppProvider({ children }: { children: ReactNode }) {
       });
     }
 
-    // If status changed away from completed, remove the income transaction
-    if (updates.status && updates.status !== 'completed' && existingOrder?.status === 'completed') {
+    // If status changed away from paid, remove the income transaction
+    if (updates.status && updates.status !== 'paid' && existingOrder?.status === 'paid') {
       const { deleteTransactionBySource } = await import('@/lib/transactionSync');
       await deleteTransactionBySource(session.user.id, id, 'order');
     }
 
-    // If order is completed and amount changed, update the transaction
-    if (updatedOrder.status === 'completed' && updates.totalPrice !== undefined && existingOrder?.status === 'completed') {
+    // If order is paid and amount changed, update the transaction
+    if (updatedOrder.status === 'paid' && updates.totalPrice !== undefined && existingOrder?.status === 'paid') {
       const { syncTransaction } = await import('@/lib/transactionSync');
       await syncTransaction({
         userId: session.user.id,
