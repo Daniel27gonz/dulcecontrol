@@ -49,6 +49,12 @@ export interface Recipe {
   createdAt: string;
 }
 
+export interface OrderAdvance {
+  id: string;
+  amount: number;
+  date: string;
+}
+
 export interface Order {
   id: string;
   clientName: string;
@@ -58,6 +64,8 @@ export interface Order {
   totalPrice: number;
   status: 'pending' | 'in_progress' | 'completed' | 'paid' | 'cancelled';
   deliveryDate: string;
+  paymentDate: string | null;
+  advances: OrderAdvance[];
   createdAt: string;
 }
 
@@ -211,6 +219,8 @@ export function AppProvider({ children }: { children: ReactNode }) {
         totalPrice: Number(o.total_price),
         status: o.status as Order['status'],
         deliveryDate: o.delivery_date,
+        paymentDate: (o as any).payment_date || null,
+        advances: ((o as any).advances || []) as OrderAdvance[],
         createdAt: o.created_at,
       })));
     }
@@ -432,6 +442,8 @@ export function AppProvider({ children }: { children: ReactNode }) {
         totalPrice: Number(data.total_price),
         status: data.status as Order['status'],
         deliveryDate: data.delivery_date,
+        paymentDate: (data as any).payment_date || null,
+        advances: ((data as any).advances || []) as OrderAdvance[],
         createdAt: data.created_at,
       };
       
@@ -462,6 +474,8 @@ export function AppProvider({ children }: { children: ReactNode }) {
     if (updates.totalPrice !== undefined) updateData.total_price = updates.totalPrice;
     if (updates.status !== undefined) updateData.status = updates.status;
     if (updates.deliveryDate !== undefined) updateData.delivery_date = updates.deliveryDate;
+    if (updates.paymentDate !== undefined) updateData.payment_date = updates.paymentDate;
+    if (updates.advances !== undefined) updateData.advances = updates.advances;
 
     await supabase
       .from('orders')
@@ -478,6 +492,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
     // If status changed to paid, register income transaction
     if (updates.status === 'paid' && existingOrder?.status !== 'paid') {
       const { syncTransaction } = await import('@/lib/transactionSync');
+      const paymentDate = updates.paymentDate || updatedOrder.paymentDate || new Date().toISOString();
       await syncTransaction({
         userId: session.user.id,
         sourceId: id,
@@ -486,7 +501,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
         description: `Pedido pagado: ${updatedOrder.recipeName} x${updatedOrder.quantity} - ${updatedOrder.clientName}`,
         amount: updatedOrder.totalPrice,
         category: 'ingreso por pedido',
-        date: new Date().toISOString(),
+        date: paymentDate,
       });
     }
 
@@ -507,8 +522,36 @@ export function AppProvider({ children }: { children: ReactNode }) {
         description: `Pedido pagado: ${updatedOrder.recipeName} x${updatedOrder.quantity} - ${updatedOrder.clientName}`,
         amount: updatedOrder.totalPrice,
         category: 'ingreso por pedido',
-        date: new Date().toISOString(),
+        date: updatedOrder.paymentDate || new Date().toISOString(),
       });
+    }
+
+    // Sync advances with transactions
+    if (updates.advances !== undefined) {
+      const { syncTransaction, deleteTransactionBySource } = await import('@/lib/transactionSync');
+      const previousAdvances = existingOrder?.advances || [];
+      const newAdvances = updates.advances;
+
+      // Delete removed advances
+      for (const prev of previousAdvances) {
+        if (!newAdvances.find(a => a.id === prev.id)) {
+          await deleteTransactionBySource(session.user.id, prev.id, 'order_advance');
+        }
+      }
+
+      // Sync current advances
+      for (const advance of newAdvances) {
+        await syncTransaction({
+          userId: session.user.id,
+          sourceId: advance.id,
+          sourceType: 'order_advance' as any,
+          type: 'income',
+          description: `Anticipo: ${updatedOrder.recipeName} - ${updatedOrder.clientName}`,
+          amount: advance.amount,
+          category: 'anticipo de pedido',
+          date: advance.date,
+        });
+      }
     }
   };
 
