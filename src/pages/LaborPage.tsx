@@ -18,6 +18,7 @@ interface WorkerFormData {
   hoursPerDay: number;
   daysPerMonth: number;
   monthlySalary: number;
+  paymentDate: string;
 }
 
 const initialFormData: WorkerFormData = {
@@ -25,6 +26,7 @@ const initialFormData: WorkerFormData = {
   hoursPerDay: 8,
   daysPerMonth: 24,
   monthlySalary: 0,
+  paymentDate: new Date().toISOString().split('T')[0],
 };
 
 export default function LaborPage() {
@@ -36,7 +38,6 @@ export default function LaborPage() {
   const [editingWorker, setEditingWorker] = useState<Worker | null>(null);
   const [formData, setFormData] = useState<WorkerFormData>(initialFormData);
 
-  // Cálculos en tiempo real del formulario
   const previewMonthlyHours = formData.hoursPerDay * formData.daysPerMonth;
   const previewDailySalary = formData.daysPerMonth > 0 ? formData.monthlySalary / formData.daysPerMonth : 0;
   const previewHourlyRate = previewMonthlyHours > 0 ? formData.monthlySalary / previewMonthlyHours : 0;
@@ -58,6 +59,7 @@ export default function LaborPage() {
       hoursPerDay: worker.hoursPerDay,
       daysPerMonth: worker.daysPerMonth,
       monthlySalary: worker.monthlySalary,
+      paymentDate: worker.paymentDate ? new Date(worker.paymentDate).toISOString().split('T')[0] : new Date().toISOString().split('T')[0],
     });
     setShowModal(true);
   };
@@ -71,12 +73,24 @@ export default function LaborPage() {
       toast({ title: 'Error', description: 'Las horas y días deben ser mayores a 0', variant: 'destructive' });
       return;
     }
+    if (!formData.paymentDate) {
+      toast({ title: 'Error', description: 'La fecha de pago es obligatoria', variant: 'destructive' });
+      return;
+    }
+
+    const workerPayload = {
+      name: formData.name,
+      hoursPerDay: formData.hoursPerDay,
+      daysPerMonth: formData.daysPerMonth,
+      monthlySalary: formData.monthlySalary,
+      paymentDate: new Date(formData.paymentDate).toISOString(),
+    };
 
     if (editingWorker) {
-      updateWorker(editingWorker.id, formData);
+      updateWorker(editingWorker.id, workerPayload);
       toast({ title: '✅ Trabajador actualizado', description: formData.name });
     } else {
-      addWorker(formData);
+      addWorker(workerPayload);
       toast({ title: '✅ Trabajador agregado', description: formData.name });
     }
     
@@ -171,7 +185,7 @@ export default function LaborPage() {
                     <div>
                       <h3 className="font-semibold text-foreground">{worker.name}</h3>
                       <p className="text-xs text-muted-foreground">
-                        Actualizado: {new Date(worker.lastUpdated).toLocaleDateString('es-MX')}
+                        Fecha de pago: {worker.paymentDate ? new Date(worker.paymentDate).toLocaleDateString('es-MX') : 'Sin fecha'}
                       </p>
                     </div>
                     <div className="flex gap-1">
@@ -290,6 +304,16 @@ export default function LaborPage() {
                 value={formData.monthlySalary}
                 onChange={(e) => setFormData({ ...formData, monthlySalary: Number(e.target.value) })}
                 placeholder="0.00"
+              />
+            </div>
+
+            <div>
+              <Label htmlFor="paymentDate">Fecha de pago *</Label>
+              <Input
+                id="paymentDate"
+                type="date"
+                value={formData.paymentDate}
+                onChange={(e) => setFormData({ ...formData, paymentDate: e.target.value })}
               />
             </div>
 

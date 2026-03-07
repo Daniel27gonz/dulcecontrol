@@ -1,6 +1,7 @@
 import React, { createContext, useContext, useState, useEffect, useCallback, ReactNode } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useApp, Ingredient } from './AppContext';
+import { syncTransaction, deleteTransactionBySource } from '@/lib/transactionSync';
 
 // Types
 export interface BaseIngredient {
@@ -11,6 +12,7 @@ export interface BaseIngredient {
   presentationQuantity: number;
   presentationPrice: number;
   costPerBaseUnit: number;
+  purchaseDate: string | null;
   lastUpdated: string;
 }
 
@@ -83,7 +85,7 @@ export function calculateCostPerBaseUnit(
 }
 
 // Default ingredients for new users
-const DEFAULT_INGREDIENTS: Omit<BaseIngredient, 'id' | 'lastUpdated' | 'costPerBaseUnit'>[] = [
+const DEFAULT_INGREDIENTS: Omit<BaseIngredient, 'id' | 'lastUpdated' | 'costPerBaseUnit' | 'purchaseDate'>[] = [
   { name: 'Harina de trigo', category: 'harinas', purchaseUnit: 'kg', presentationQuantity: 1, presentationPrice: 25 },
   { name: 'Harina integral', category: 'harinas', purchaseUnit: 'kg', presentationQuantity: 1, presentationPrice: 35 },
   { name: 'Maicena', category: 'harinas', purchaseUnit: 'g', presentationQuantity: 400, presentationPrice: 28 },
@@ -119,7 +121,6 @@ interface BaseIngredientsContextType {
   getIngredientById: (id: string) => BaseIngredient | undefined;
   findDuplicate: (name: string, excludeId?: string) => BaseIngredient | undefined;
   refreshIngredients: () => Promise<void>;
-  // New: Get current price for recipe ingredient calculation
   getCurrentIngredientCost: (recipeIngredient: Ingredient) => number;
   calculateIngredientsWithCurrentPrices: (recipeIngredients: Ingredient[]) => { ingredient: Ingredient; currentCost: number }[];
 }
@@ -170,6 +171,7 @@ export function BaseIngredientsProvider({ children }: { children: ReactNode }) {
         purchaseUnit: ing.purchase_unit as BaseIngredient['purchaseUnit'],
         presentationQuantity: Number(ing.presentation_quantity),
         presentationPrice: Number(ing.presentation_price),
+        purchaseDate: (ing as any).purchase_date || null,
         lastUpdated: ing.last_updated,
       })));
     } else {
@@ -202,6 +204,7 @@ export function BaseIngredientsProvider({ children }: { children: ReactNode }) {
           purchaseUnit: ing.purchase_unit as BaseIngredient['purchaseUnit'],
           presentationQuantity: Number(ing.presentation_quantity),
           presentationPrice: Number(ing.presentation_price),
+          purchaseDate: (ing as any).purchase_date || null,
           lastUpdated: ing.last_updated,
         })));
       }
@@ -228,7 +231,8 @@ export function BaseIngredientsProvider({ children }: { children: ReactNode }) {
         presentation_quantity: ingredient.presentationQuantity,
         presentation_price: ingredient.presentationPrice,
         cost_per_base_unit: costPerBaseUnit,
-      }])
+        purchase_date: ingredient.purchaseDate || null,
+      } as any])
       .select()
       .single();
 
@@ -244,10 +248,24 @@ export function BaseIngredientsProvider({ children }: { children: ReactNode }) {
       purchaseUnit: data.purchase_unit as BaseIngredient['purchaseUnit'],
       presentationQuantity: Number(data.presentation_quantity),
       presentationPrice: Number(data.presentation_price),
+      purchaseDate: (data as any).purchase_date || null,
       lastUpdated: data.last_updated,
     });
 
     setIngredients(prev => [...prev, newIngredient].sort((a, b) => a.name.localeCompare(b.name)));
+
+    // Sync with transactions
+    await syncTransaction({
+      userId: session.user.id,
+      sourceId: data.id,
+      sourceType: 'ingredient',
+      type: 'expense',
+      description: `Compra: ${ingredient.name}`,
+      amount: ingredient.presentationPrice,
+      category: 'ingredientes',
+      date: ingredient.purchaseDate || new Date().toISOString(),
+    });
+
     return newIngredient;
   }, [session?.user]);
 
@@ -269,8 +287,9 @@ export function BaseIngredientsProvider({ children }: { children: ReactNode }) {
         presentation_quantity: updatedIng.presentationQuantity,
         presentation_price: updatedIng.presentationPrice,
         cost_per_base_unit: costPerBaseUnit,
+        purchase_date: updatedIng.purchaseDate || null,
         last_updated: new Date().toISOString(),
-      })
+      } as any)
       .eq('id', id)
       .eq('user_id', session.user.id);
 
@@ -285,6 +304,18 @@ export function BaseIngredientsProvider({ children }: { children: ReactNode }) {
         return recalculateCostPerBaseUnit({ ...updatedIng, lastUpdated: new Date().toISOString() });
       }).sort((a, b) => a.name.localeCompare(b.name))
     );
+
+    // Sync with transactions
+    await syncTransaction({
+      userId: session.user.id,
+      sourceId: id,
+      sourceType: 'ingredient',
+      type: 'expense',
+      description: `Compra: ${updatedIng.name}`,
+      amount: updatedIng.presentationPrice,
+      category: 'ingredientes',
+      date: updatedIng.purchaseDate || new Date().toISOString(),
+    });
   }, [session?.user, ingredients]);
 
   const deleteIngredient = useCallback(async (id: string) => {
@@ -302,6 +333,9 @@ export function BaseIngredientsProvider({ children }: { children: ReactNode }) {
     }
 
     setIngredients(prev => prev.filter(ing => ing.id !== id));
+
+    // Delete linked transaction
+    await deleteTransactionBySource(session.user.id, id, 'ingredient');
   }, [session?.user]);
 
   const getIngredientsByCategory = useCallback((category: string) => {
@@ -323,9 +357,6 @@ export function BaseIngredientsProvider({ children }: { children: ReactNode }) {
     await loadIngredients();
   }, [loadIngredients]);
 
-  // Get the current cost for a recipe ingredient using master data
-  // If the ingredient has a baseIngredientId, use the current price from the base ingredient
-  // Otherwise, fall back to the stored pricePerUnit
   const getCurrentIngredientCost = useCallback((recipeIngredient: Ingredient): number => {
     if (recipeIngredient.baseIngredientId) {
       const baseIngredient = ingredients.find(ing => ing.id === recipeIngredient.baseIngredientId);
@@ -333,18 +364,15 @@ export function BaseIngredientsProvider({ children }: { children: ReactNode }) {
         return baseIngredient.costPerBaseUnit * recipeIngredient.quantityUsed;
       }
     }
-    // Fallback: try to find by name if no baseIngredientId (legacy recipes)
     const byName = ingredients.find(ing => 
       ing.name.toLowerCase().trim() === recipeIngredient.name.toLowerCase().trim()
     );
     if (byName) {
       return byName.costPerBaseUnit * recipeIngredient.quantityUsed;
     }
-    // Final fallback: use stored price
     return recipeIngredient.pricePerUnit * recipeIngredient.quantityUsed;
   }, [ingredients]);
 
-  // Calculate all ingredients with current prices for a recipe
   const calculateIngredientsWithCurrentPrices = useCallback((recipeIngredients: Ingredient[]) => {
     return recipeIngredients.map(ing => ({
       ingredient: ing,
