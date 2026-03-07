@@ -36,6 +36,7 @@ interface IngredientFormData {
   purchaseUnit: string;
   presentationQuantity: string;
   presentationPrice: string;
+  quantityPurchased: string;
   purchaseDate: string;
 }
 
@@ -45,6 +46,7 @@ const initialFormData: IngredientFormData = {
   purchaseUnit: 'g',
   presentationQuantity: '',
   presentationPrice: '',
+  quantityPurchased: '1',
   purchaseDate: new Date().toISOString().split('T')[0],
 };
 

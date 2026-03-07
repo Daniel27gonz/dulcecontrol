@@ -11,6 +11,7 @@ export interface BaseIngredient {
   purchaseUnit: 'kg' | 'g' | 'lb' | 'oz' | 'L' | 'ml' | 'pza' | 'paquete' | 'caja';
   presentationQuantity: number;
   presentationPrice: number;
+  quantityPurchased: number;
   costPerBaseUnit: number;
   purchaseDate: string | null;
   lastUpdated: string;
