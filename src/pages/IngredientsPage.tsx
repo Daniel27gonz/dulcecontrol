@@ -597,7 +597,7 @@ function IngredientForm({
       </div>
 
       <div>
-        <label className="block text-sm font-medium mb-1.5">Cantidad comprada</label>
+        <label className="block text-sm font-medium mb-1.5">Total pagado</label>
         <Input
           type="number"
           min="1"
