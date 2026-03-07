@@ -58,19 +58,21 @@ export default function IndirectCostsPage() {
     deleteEquipment,
     getEquipmentDepreciation,
     getTotalDepreciation,
-    getTotalFixedExpenses,
     getTotalFixedWithDepreciation,
-    getTotalVariableExpenses,
-    getTotalIndirectCosts,
+    getTotalIndirectCostsLastMonth,
+    getTotalFixedWithDepreciationLastMonth,
+    getTotalVariableExpensesLastMonth,
+    getLastMonthLabel,
   } = useIndirectCosts();
   const { getTotalMonthlyHours } = useLabor();
   const { settings } = useApp();
   const { toast } = useToast();
 
-  // Cálculo del costo indirecto por hora
+  // Cálculo del costo indirecto por hora - solo último mes registrado
   const totalMonthlyHours = getTotalMonthlyHours();
-  const totalIndirectCosts = getTotalIndirectCosts();
+  const totalIndirectCosts = getTotalIndirectCostsLastMonth();
   const indirectCostPerHour = totalMonthlyHours > 0 ? Math.round((totalIndirectCosts / totalMonthlyHours) * 100) / 100 : 0;
+  const lastMonthLabel = getLastMonthLabel();
 
   const [showModal, setShowModal] = useState(false);
   const [modalMode, setModalMode] = useState<ModalMode>('expense');

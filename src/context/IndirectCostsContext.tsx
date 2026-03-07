@@ -537,6 +537,10 @@ export function IndirectCostsProvider({ children }: { children: ReactNode }) {
       getTotalVariableExpenses,
       getTotalIndirectCosts,
       getTotalIndirectCostsLastMonth,
+      getTotalFixedExpensesLastMonth,
+      getTotalFixedWithDepreciationLastMonth,
+      getTotalVariableExpensesLastMonth,
+      getLastMonthLabel,
       refreshCosts,
     }}>
       {children}
