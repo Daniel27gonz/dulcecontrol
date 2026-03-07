@@ -458,7 +458,7 @@ export default function IndirectCostsPage() {
                 )}
                 <div className="mt-3 pt-3 border-t border-border flex justify-between items-center">
                   <span className="font-medium text-muted-foreground text-sm">Subtotal:</span>
-                  <span className="font-bold text-foreground">{formatCurrency(getTotalFixedExpenses())}</span>
+                  <span className="font-bold text-foreground">{formatCurrency(getTotalFixedExpensesLastMonth())}</span>
                 </div>
               </CardContent>
             </Card>
@@ -549,7 +549,7 @@ export default function IndirectCostsPage() {
                 )}
                 <div className="mt-3 pt-3 border-t border-border flex justify-between items-center">
                   <span className="font-medium text-muted-foreground text-sm">Subtotal:</span>
-                  <span className="font-bold text-foreground">{formatCurrency(getTotalVariableExpenses())}</span>
+                  <span className="font-bold text-foreground">{formatCurrency(getTotalVariableExpensesLastMonth())}</span>
                 </div>
               </CardContent>
             </Card>
