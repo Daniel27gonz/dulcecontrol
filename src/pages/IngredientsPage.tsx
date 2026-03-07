@@ -572,16 +572,16 @@ function IngredientForm({
               setFormError(null);
             }}
             placeholder={
-              formData.purchaseUnit === 'kg' ? 'Ej: 1000 (g por kg)' :
+              formData.purchaseUnit === 'kg' ? 'Ej: 1 (kg)' :
               formData.purchaseUnit === 'g' ? 'Ej: 500 (g)' :
-              formData.purchaseUnit === 'lb' ? 'Ej: 454 (g por lb)' :
-              formData.purchaseUnit === 'oz' ? 'Ej: 28 (g por oz)' :
-              formData.purchaseUnit === 'L' ? 'Ej: 1000 (ml por L)' :
+              formData.purchaseUnit === 'lb' ? 'Ej: 1 (lb)' :
+              formData.purchaseUnit === 'oz' ? 'Ej: 8 (oz)' :
+              formData.purchaseUnit === 'L' ? 'Ej: 1 (L)' :
               formData.purchaseUnit === 'ml' ? 'Ej: 500 (ml)' :
               formData.purchaseUnit === 'pza' ? 'Ej: 12 (piezas)' :
-              formData.purchaseUnit === 'paquete' ? 'Ej: 10 (pzas por paq)' :
-              formData.purchaseUnit === 'caja' ? 'Ej: 24 (pzas por caja)' :
-              'Ej: 1000'
+              formData.purchaseUnit === 'paquete' ? 'Ej: 1 (paquete)' :
+              formData.purchaseUnit === 'caja' ? 'Ej: 1 (caja)' :
+              'Ej: 1'
             }
           />
         </div>
