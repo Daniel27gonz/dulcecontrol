@@ -530,10 +530,6 @@ export default function IndirectCostsPage() {
                     ))}
                   </div>
                 )}
-                <div className="mt-3 pt-3 border-t border-border flex justify-between items-center">
-                  <span className="font-medium text-muted-foreground text-sm">Subtotal:</span>
-                  <span className="font-bold text-foreground">{formatCurrency(getTotalVariableExpensesLastMonth())}</span>
-                </div>
               </CardContent>
             </Card>
           </motion.div>
