@@ -100,9 +100,9 @@ export default function IngredientsPage() {
 
   const previewTotalPaid = useMemo(() => {
     const price = parseFloat(formData.presentationPrice) || 0;
-    const qtyPurchased = parseFloat(formData.quantityPurchased) || 1;
-    return price * qtyPurchased;
-  }, [formData.presentationPrice, formData.quantityPurchased]);
+    const qty = parseFloat(formData.presentationQuantity) || 0;
+    return price * qty;
+  }, [formData.presentationPrice, formData.presentationQuantity]);
 
   const handleOpenAdd = () => {
     setFormData(initialFormData);
