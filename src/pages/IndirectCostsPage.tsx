@@ -58,19 +58,22 @@ export default function IndirectCostsPage() {
     deleteEquipment,
     getEquipmentDepreciation,
     getTotalDepreciation,
-    getTotalFixedExpenses,
     getTotalFixedWithDepreciation,
-    getTotalVariableExpenses,
-    getTotalIndirectCosts,
+    getTotalIndirectCostsLastMonth,
+    getTotalFixedExpensesLastMonth,
+    getTotalFixedWithDepreciationLastMonth,
+    getTotalVariableExpensesLastMonth,
+    getLastMonthLabel,
   } = useIndirectCosts();
   const { getTotalMonthlyHours } = useLabor();
   const { settings } = useApp();
   const { toast } = useToast();
 
-  // Cálculo del costo indirecto por hora
+  // Cálculo del costo indirecto por hora - solo último mes registrado
   const totalMonthlyHours = getTotalMonthlyHours();
-  const totalIndirectCosts = getTotalIndirectCosts();
+  const totalIndirectCosts = getTotalIndirectCostsLastMonth();
   const indirectCostPerHour = totalMonthlyHours > 0 ? Math.round((totalIndirectCosts / totalMonthlyHours) * 100) / 100 : 0;
+  const lastMonthLabel = getLastMonthLabel();
 
   const [showModal, setShowModal] = useState(false);
   const [modalMode, setModalMode] = useState<ModalMode>('expense');
@@ -362,14 +365,14 @@ export default function IndirectCostsPage() {
               <CardContent className="p-3 text-center">
                 <Building2 className="w-5 h-5 sm:w-6 sm:h-6 mx-auto text-muted-foreground mb-1" />
                 <p className="text-xs text-muted-foreground">Fijos + Deprec.</p>
-                <p className="font-bold text-foreground text-sm sm:text-base">{formatCurrency(getTotalFixedWithDepreciation())}</p>
+                <p className="font-bold text-foreground text-sm sm:text-base">{formatCurrency(getTotalFixedWithDepreciationLastMonth())}</p>
               </CardContent>
             </Card>
             <Card className="bg-muted/50">
               <CardContent className="p-3 text-center">
                 <Zap className="w-5 h-5 sm:w-6 sm:h-6 mx-auto text-muted-foreground mb-1" />
                 <p className="text-xs text-muted-foreground">Variables</p>
-                <p className="font-bold text-foreground text-sm sm:text-base">{formatCurrency(getTotalVariableExpenses())}</p>
+                <p className="font-bold text-foreground text-sm sm:text-base">{formatCurrency(getTotalVariableExpensesLastMonth())}</p>
               </CardContent>
             </Card>
           </motion.div>
@@ -385,7 +388,7 @@ export default function IndirectCostsPage() {
                   </div>
                   <Receipt className="w-8 h-8 sm:w-10 sm:h-10 text-warm/50 shrink-0" />
                 </div>
-                <p className="text-xs text-muted-foreground mt-2">Mensuales</p>
+                <p className="text-xs text-muted-foreground mt-2">{lastMonthLabel ? `Mes: ${lastMonthLabel}` : 'Mensuales'}</p>
               </CardContent>
             </Card>
           </motion.div>
@@ -456,7 +459,7 @@ export default function IndirectCostsPage() {
                 )}
                 <div className="mt-3 pt-3 border-t border-border flex justify-between items-center">
                   <span className="font-medium text-muted-foreground text-sm">Subtotal:</span>
-                  <span className="font-bold text-foreground">{formatCurrency(getTotalFixedExpenses())}</span>
+                  <span className="font-bold text-foreground">{formatCurrency(getTotalFixedExpensesLastMonth())}</span>
                 </div>
               </CardContent>
             </Card>
@@ -547,7 +550,7 @@ export default function IndirectCostsPage() {
                 )}
                 <div className="mt-3 pt-3 border-t border-border flex justify-between items-center">
                   <span className="font-medium text-muted-foreground text-sm">Subtotal:</span>
-                  <span className="font-bold text-foreground">{formatCurrency(getTotalVariableExpenses())}</span>
+                  <span className="font-bold text-foreground">{formatCurrency(getTotalVariableExpensesLastMonth())}</span>
                 </div>
               </CardContent>
             </Card>
