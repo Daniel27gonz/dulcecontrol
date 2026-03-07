@@ -32,6 +32,7 @@ const ORDER_STATUSES = [
   { value: 'pending', label: 'Pendiente', color: 'bg-yellow-500', textColor: 'text-yellow-700', bgLight: 'bg-yellow-100' },
   { value: 'in_progress', label: 'En Proceso', color: 'bg-blue-500', textColor: 'text-blue-700', bgLight: 'bg-blue-100' },
   { value: 'completed', label: 'Completado', color: 'bg-green-500', textColor: 'text-green-700', bgLight: 'bg-green-100' },
+  { value: 'paid', label: 'Pagado', color: 'bg-emerald-600', textColor: 'text-emerald-700', bgLight: 'bg-emerald-100' },
   { value: 'cancelled', label: 'Cancelado', color: 'bg-red-500', textColor: 'text-red-700', bgLight: 'bg-red-100' },
 ] as const;
 
@@ -45,7 +46,7 @@ export function OrderCard({ order }: OrderCardProps) {
 
   const statusInfo = ORDER_STATUSES.find(s => s.value === order.status) || ORDER_STATUSES[0];
   const deliveryDate = new Date(order.deliveryDate);
-  const isOverdue = deliveryDate < new Date() && order.status !== 'completed' && order.status !== 'cancelled';
+  const isOverdue = deliveryDate < new Date() && order.status !== 'completed' && order.status !== 'paid' && order.status !== 'cancelled';
 
   const handleStatusChange = (newStatus: string) => {
     updateOrder(order.id, { status: newStatus as Order['status'] });

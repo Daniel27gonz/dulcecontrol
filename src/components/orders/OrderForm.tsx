@@ -33,6 +33,7 @@ const ORDER_STATUSES = [
   { value: 'pending', label: 'Pendiente', color: 'bg-yellow-500' },
   { value: 'in_progress', label: 'En Proceso', color: 'bg-blue-500' },
   { value: 'completed', label: 'Completado', color: 'bg-green-500' },
+  { value: 'paid', label: 'Pagado', color: 'bg-emerald-600' },
   { value: 'cancelled', label: 'Cancelado', color: 'bg-red-500' },
 ] as const;
 
