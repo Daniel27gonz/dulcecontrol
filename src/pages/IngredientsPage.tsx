@@ -352,12 +352,12 @@ export default function IngredientsPage() {
                             <div className="flex-1 min-w-0">
                               <h4 className="font-medium text-sm truncate">{ingredient.name}</h4>
                               <p className="text-xs text-muted-foreground mt-0.5">
-                                {settings.currencySymbol}{ingredient.presentationPrice.toFixed(2)} por{' '}
+                                {settings.currencySymbol} {ingredient.presentationPrice.toFixed(2)} por{' '}
                                 {ingredient.presentationQuantity} {ingredient.purchaseUnit}
                               </p>
                               <div className="flex items-center gap-2 mt-1">
                                 <span className="text-xs font-semibold text-primary">
-                                  {settings.currencySymbol}{ingredient.costPerBaseUnit.toFixed(4)}/{getBaseUnit(ingredient.purchaseUnit)}
+                                  {settings.currencySymbol} {ingredient.costPerBaseUnit.toFixed(4)}/{getBaseUnit(ingredient.purchaseUnit)}
                                 </span>
                                 <span className="text-xs text-muted-foreground">
                                   • Compra: {ingredient.purchaseDate ? formatDate(ingredient.purchaseDate) : formatDate(ingredient.lastUpdated)}
@@ -643,7 +643,7 @@ function IngredientForm({
             <div className="text-center">
               <p className="text-xs text-muted-foreground mb-1">Costo calculado por unidad base</p>
               <p className="text-2xl font-bold text-primary">
-                {currencySymbol}{previewCost.toFixed(4)} / {baseUnit}
+                {currencySymbol} {previewCost.toFixed(4)} / {baseUnit}
               </p>
               <p className="text-xs text-muted-foreground mt-1">
                 Este es el costo que se usará en tus recetas
