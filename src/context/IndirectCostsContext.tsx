@@ -221,12 +221,14 @@ export function IndirectCostsProvider({ children }: { children: ReactNode }) {
   const updateFixedExpense = useCallback(async (id: string, updates: Partial<Omit<Expense, 'id' | 'lastUpdated'>>) => {
     if (!session?.user) return;
 
+    const updateData: Record<string, unknown> = { last_updated: new Date().toISOString() };
+    if (updates.concept !== undefined) updateData.concept = updates.concept;
+    if (updates.amount !== undefined) updateData.amount = updates.amount;
+    if (updates.paymentDate !== undefined) updateData.payment_date = updates.paymentDate;
+
     const { error } = await supabase
       .from('indirect_costs')
-      .update({
-        ...updates,
-        last_updated: new Date().toISOString(),
-      })
+      .update(updateData)
       .eq('id', id)
       .eq('user_id', session.user.id);
 
@@ -268,6 +270,7 @@ export function IndirectCostsProvider({ children }: { children: ReactNode }) {
         cost_type: 'variable',
         concept: expense.concept,
         amount: expense.amount,
+        payment_date: expense.paymentDate || null,
       }])
       .select()
       .single();
@@ -281,6 +284,7 @@ export function IndirectCostsProvider({ children }: { children: ReactNode }) {
       id: data.id,
       concept: data.concept,
       amount: Number(data.amount),
+      paymentDate: data.payment_date || null,
       lastUpdated: data.last_updated,
     }]);
   }, [session?.user]);
