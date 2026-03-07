@@ -145,6 +145,8 @@ export function OrderForm({ order, trigger, onClose }: OrderFormProps) {
         totalPrice: finalPrice,
         status,
         deliveryDate: deliveryDate.toISOString(),
+        paymentDate: null,
+        advances: [],
         createdAt: new Date().toISOString(),
       };
 
