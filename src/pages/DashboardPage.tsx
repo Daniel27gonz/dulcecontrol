@@ -1,6 +1,7 @@
 import { motion } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
-import { Plus, ClipboardList, ChefHat, FileText, Users, Receipt } from 'lucide-react';
+import { Plus, ClipboardList, ChefHat, FileText, Users, Receipt, RefreshCw } from 'lucide-react';
+import { APP_VERSION } from '@/config/appVersion';
 import { useApp } from '@/context/AppContext';
 import { AppLayout } from '@/components/AppLayout';
 
