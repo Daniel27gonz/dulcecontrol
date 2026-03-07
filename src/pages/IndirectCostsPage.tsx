@@ -364,14 +364,14 @@ export default function IndirectCostsPage() {
               <CardContent className="p-3 text-center">
                 <Building2 className="w-5 h-5 sm:w-6 sm:h-6 mx-auto text-muted-foreground mb-1" />
                 <p className="text-xs text-muted-foreground">Fijos + Deprec.</p>
-                <p className="font-bold text-foreground text-sm sm:text-base">{formatCurrency(getTotalFixedWithDepreciation())}</p>
+                <p className="font-bold text-foreground text-sm sm:text-base">{formatCurrency(getTotalFixedWithDepreciationLastMonth())}</p>
               </CardContent>
             </Card>
             <Card className="bg-muted/50">
               <CardContent className="p-3 text-center">
                 <Zap className="w-5 h-5 sm:w-6 sm:h-6 mx-auto text-muted-foreground mb-1" />
                 <p className="text-xs text-muted-foreground">Variables</p>
-                <p className="font-bold text-foreground text-sm sm:text-base">{formatCurrency(getTotalVariableExpenses())}</p>
+                <p className="font-bold text-foreground text-sm sm:text-base">{formatCurrency(getTotalVariableExpensesLastMonth())}</p>
               </CardContent>
             </Card>
           </motion.div>
