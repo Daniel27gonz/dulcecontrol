@@ -495,28 +495,10 @@ export default function IndirectCostsPage() {
                     ))}
                   </div>
                 )}
-                <div className="mt-3 pt-3 border-t border-border flex justify-between items-center">
-                  <span className="font-medium text-muted-foreground text-sm">Subtotal:</span>
-                  <span className="font-bold text-foreground">{formatCurrency(getTotalFixedExpensesLastMonth())}</span>
-                </div>
               </CardContent>
             </Card>
           </motion.div>
 
-          {/* Total Fixed with Depreciation */}
-          <motion.div variants={itemVariants}>
-            <Card className="bg-primary/5 border-primary/20">
-              <CardContent className="p-4">
-                <div className="flex justify-between items-center">
-                  <div>
-                    <p className="text-sm text-muted-foreground">Total Gastos Fijos</p>
-                    <p className="text-xs text-muted-foreground">(incluye depreciación)</p>
-                  </div>
-                  <p className="text-lg sm:text-xl font-bold text-primary">{formatCurrency(getTotalFixedWithDepreciation())}</p>
-                </div>
-              </CardContent>
-            </Card>
-          </motion.div>
 
           {/* Variable Expenses Section */}
           <motion.div variants={itemVariants}>
