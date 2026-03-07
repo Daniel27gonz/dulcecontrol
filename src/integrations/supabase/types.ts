@@ -100,10 +100,12 @@ export type Database = {
       }
       orders: {
         Row: {
+          advances: Json
           client_name: string
           created_at: string
           delivery_date: string
           id: string
+          payment_date: string | null
           quantity: number
           recipe_id: string | null
           recipe_name: string
@@ -113,10 +115,12 @@ export type Database = {
           user_id: string
         }
         Insert: {
+          advances?: Json
           client_name: string
           created_at?: string
           delivery_date: string
           id?: string
+          payment_date?: string | null
           quantity?: number
           recipe_id?: string | null
           recipe_name: string
@@ -126,10 +130,12 @@ export type Database = {
           user_id: string
         }
         Update: {
+          advances?: Json
           client_name?: string
           created_at?: string
           delivery_date?: string
           id?: string
+          payment_date?: string | null
           quantity?: number
           recipe_id?: string | null
           recipe_name?: string
