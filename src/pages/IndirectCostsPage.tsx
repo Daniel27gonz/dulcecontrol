@@ -427,6 +427,44 @@ export default function IndirectCostsPage() {
             </Card>
           </motion.div>
 
+          {/* Depreciation Section */}
+          <motion.div variants={itemVariants}>
+            <Card className="border-amber-500/30 bg-amber-500/5">
+              <CardHeader className="pb-2">
+                <div className="flex items-center justify-between gap-2">
+                  <div className="flex items-center gap-2 min-w-0">
+                    <Wrench className="w-5 h-5 text-amber-600 shrink-0" />
+                    <CardTitle className="text-base truncate">Depreciación de Equipos</CardTitle>
+                  </div>
+                  <Button variant="outline" size="sm" onClick={handleOpenAddEquipment} className="shrink-0 border-amber-500/50 text-amber-700 hover:bg-amber-500/10">
+                    <Plus className="w-4 h-4" />
+                    <span className="hidden sm:inline ml-1">Agregar</span>
+                  </Button>
+                </div>
+                <p className="text-xs text-muted-foreground mt-1">
+                  Divide el costo de tus equipos entre su vida útil para incluirlo como gasto fijo.
+                </p>
+              </CardHeader>
+              <CardContent className="pt-0">
+                {equipment.length === 0 ? (
+                  <p className="text-sm text-muted-foreground text-center py-4">
+                    Sin equipos registrados
+                  </p>
+                ) : (
+                  <div className="divide-y divide-border">
+                    {equipment.map((equip) => (
+                      <EquipmentCard key={equip.id} equip={equip} />
+                    ))}
+                  </div>
+                )}
+                <div className="mt-3 pt-3 border-t border-amber-500/30 flex justify-between items-center">
+                  <span className="font-medium text-amber-700 text-sm">Depreciación mensual:</span>
+                  <span className="font-bold text-amber-700">{formatCurrency(getTotalDepreciation())}</span>
+                </div>
+              </CardContent>
+            </Card>
+          </motion.div>
+
           {/* Fixed Expenses Section */}
           <motion.div variants={itemVariants}>
             <Card>
@@ -460,44 +498,6 @@ export default function IndirectCostsPage() {
                 <div className="mt-3 pt-3 border-t border-border flex justify-between items-center">
                   <span className="font-medium text-muted-foreground text-sm">Subtotal:</span>
                   <span className="font-bold text-foreground">{formatCurrency(getTotalFixedExpensesLastMonth())}</span>
-                </div>
-              </CardContent>
-            </Card>
-          </motion.div>
-
-          {/* Depreciation Section - Inside Fixed Expenses concept */}
-          <motion.div variants={itemVariants}>
-            <Card className="border-amber-500/30 bg-amber-500/5">
-              <CardHeader className="pb-2">
-                <div className="flex items-center justify-between gap-2">
-                  <div className="flex items-center gap-2 min-w-0">
-                    <Wrench className="w-5 h-5 text-amber-600 shrink-0" />
-                    <CardTitle className="text-base truncate">Depreciación de Equipos</CardTitle>
-                  </div>
-                  <Button variant="outline" size="sm" onClick={handleOpenAddEquipment} className="shrink-0 border-amber-500/50 text-amber-700 hover:bg-amber-500/10">
-                    <Plus className="w-4 h-4" />
-                    <span className="hidden sm:inline ml-1">Agregar</span>
-                  </Button>
-                </div>
-                <p className="text-xs text-muted-foreground mt-1">
-                  Divide el costo de tus equipos entre su vida útil para incluirlo como gasto fijo.
-                </p>
-              </CardHeader>
-              <CardContent className="pt-0">
-                {equipment.length === 0 ? (
-                  <p className="text-sm text-muted-foreground text-center py-4">
-                    Sin equipos registrados
-                  </p>
-                ) : (
-                  <div className="divide-y divide-border">
-                    {equipment.map((equip) => (
-                      <EquipmentCard key={equip.id} equip={equip} />
-                    ))}
-                  </div>
-                )}
-                <div className="mt-3 pt-3 border-t border-amber-500/30 flex justify-between items-center">
-                  <span className="font-medium text-amber-700 text-sm">Depreciación mensual:</span>
-                  <span className="font-bold text-amber-700">{formatCurrency(getTotalDepreciation())}</span>
                 </div>
               </CardContent>
             </Card>
