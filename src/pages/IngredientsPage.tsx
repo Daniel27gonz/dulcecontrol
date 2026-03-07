@@ -478,6 +478,7 @@ interface IngredientFormProps {
   formError: string | null;
   setFormError: React.Dispatch<React.SetStateAction<string | null>>;
   previewCost: number;
+  previewTotalPaid: number;
   currencySymbol: string;
   onSave: () => void;
   onCancel: () => void;
@@ -490,6 +491,7 @@ function IngredientForm({
   formError,
   setFormError,
   previewCost,
+  previewTotalPaid,
   currencySymbol,
   onSave,
   onCancel,
