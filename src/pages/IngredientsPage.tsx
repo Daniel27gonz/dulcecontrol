@@ -352,12 +352,12 @@ export default function IngredientsPage() {
                             <div className="flex-1 min-w-0">
                               <h4 className="font-medium text-sm truncate">{ingredient.name}</h4>
                               <p className="text-xs text-muted-foreground mt-0.5">
-                                {settings.currencySymbol} {ingredient.presentationPrice.toFixed(2)} por{' '}
+                                {settings.currencySymbol}{ingredient.presentationPrice.toFixed(2)} por{' '}
                                 {ingredient.presentationQuantity} {ingredient.purchaseUnit}
                               </p>
                               <div className="flex items-center gap-2 mt-1">
                                 <span className="text-xs font-semibold text-primary">
-                                  {settings.currencySymbol} {ingredient.costPerBaseUnit.toFixed(4)}/{getBaseUnit(ingredient.purchaseUnit)}
+                                  {settings.currencySymbol}{ingredient.costPerBaseUnit.toFixed(4)}/{getBaseUnit(ingredient.purchaseUnit)}
                                 </span>
                                 <span className="text-xs text-muted-foreground">
                                   • Compra: {ingredient.purchaseDate ? formatDate(ingredient.purchaseDate) : formatDate(ingredient.lastUpdated)}
@@ -572,16 +572,16 @@ function IngredientForm({
               setFormError(null);
             }}
             placeholder={
-              formData.purchaseUnit === 'kg' ? 'Ej: 1 (kg)' :
+              formData.purchaseUnit === 'kg' ? 'Ej: 1000 (g por kg)' :
               formData.purchaseUnit === 'g' ? 'Ej: 500 (g)' :
-              formData.purchaseUnit === 'lb' ? 'Ej: 1 (lb)' :
-              formData.purchaseUnit === 'oz' ? 'Ej: 8 (oz)' :
-              formData.purchaseUnit === 'L' ? 'Ej: 1 (L)' :
+              formData.purchaseUnit === 'lb' ? 'Ej: 454 (g por lb)' :
+              formData.purchaseUnit === 'oz' ? 'Ej: 28 (g por oz)' :
+              formData.purchaseUnit === 'L' ? 'Ej: 1000 (ml por L)' :
               formData.purchaseUnit === 'ml' ? 'Ej: 500 (ml)' :
               formData.purchaseUnit === 'pza' ? 'Ej: 12 (piezas)' :
-              formData.purchaseUnit === 'paquete' ? 'Ej: 1 (paquete)' :
-              formData.purchaseUnit === 'caja' ? 'Ej: 1 (caja)' :
-              'Ej: 1'
+              formData.purchaseUnit === 'paquete' ? 'Ej: 10 (pzas por paq)' :
+              formData.purchaseUnit === 'caja' ? 'Ej: 24 (pzas por caja)' :
+              'Ej: 1000'
             }
           />
         </div>
@@ -590,8 +590,8 @@ function IngredientForm({
       <div>
         <label className="block text-sm font-medium mb-1.5">Precio de la presentación</label>
         <div className="relative">
-          <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground tracking-wider">
-            {currencySymbol}&nbsp;
+          <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground">
+            {currencySymbol}
           </span>
           <Input
             type="number"
@@ -602,7 +602,7 @@ function IngredientForm({
               setFormError(null);
             }}
             placeholder="0.00"
-            className="pl-12"
+            className="pl-8"
           />
         </div>
       </div>
@@ -610,15 +610,15 @@ function IngredientForm({
       <div>
         <label className="block text-sm font-medium mb-1.5">Total pagado</label>
         <div className="relative">
-          <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground tracking-wider">
-            {currencySymbol}&nbsp;
+          <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground">
+            {currencySymbol}
           </span>
           <Input
             type="text"
             value={previewTotalPaid.toFixed(2)}
             readOnly
             disabled
-            className="pl-12 bg-muted/50 font-semibold"
+            className="pl-8 bg-muted/50 font-semibold"
           />
         </div>
         <p className="text-xs text-muted-foreground mt-1">Precio × Cantidad de presentación (se registra en Finanzas)</p>
@@ -643,7 +643,7 @@ function IngredientForm({
             <div className="text-center">
               <p className="text-xs text-muted-foreground mb-1">Costo calculado por unidad base</p>
               <p className="text-2xl font-bold text-primary">
-                {currencySymbol} {previewCost.toFixed(4)} / {baseUnit}
+                {currencySymbol}{previewCost.toFixed(4)} / {baseUnit}
               </p>
               <p className="text-xs text-muted-foreground mt-1">
                 Este es el costo que se usará en tus recetas
