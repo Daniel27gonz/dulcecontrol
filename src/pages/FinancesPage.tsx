@@ -62,22 +62,35 @@ export default function FinancesPage() {
     // Quotations this month
     const monthQuotations = quotations.filter(q => isInMonth(q.createdAt));
 
-    // Material costs (from base ingredients - total value of inventory)
-    const materialsCost = baseIngredients.reduce((sum, ing) => sum + ing.presentationPrice, 0);
+    // === GROUPED DATA FOR RESUMEN ===
 
-    // Indirect costs (monthly)
-    const totalFixedCosts = getTotalFixedWithDepreciation();
-    const totalVariableCosts = getTotalVariableExpenses();
-    const totalIndirectCosts = totalFixedCosts + totalVariableCosts;
+    // 1. Ingredients grouped by category
+    const ingredientTransactions = expenseTransactions.filter(t => t.sourceType === 'ingredient');
+    const ingredientsByCategory: Record<string, number> = {};
+    ingredientTransactions.forEach(t => {
+      // Find the ingredient to get its category
+      const ingredient = baseIngredients.find(ing => ing.id === t.sourceId);
+      const catId = ingredient?.category || 'otros';
+      const catLabel = INGREDIENT_CATEGORIES.find(c => c.id === catId)?.name || catId;
+      ingredientsByCategory[catLabel] = (ingredientsByCategory[catLabel] || 0) + t.amount;
+    });
 
-    // Labor costs (monthly)
-    const totalLaborCost = workers.reduce((sum, w) => sum + w.monthlySalary, 0);
+    // 2. Labor total from transactions
+    const laborTransactions = expenseTransactions.filter(t => t.sourceType === 'worker');
+    const totalLaborCost = laborTransactions.reduce((sum, t) => sum + t.amount, 0);
 
-    // Income from orders completed this month
-    const ordersIncome = completedOrders.reduce((sum, o) => sum + o.totalPrice, 0);
+    // 3. Indirect costs grouped by description (concept)
+    const indirectTransactions = expenseTransactions.filter(t => t.sourceType === 'indirect_cost');
+    const indirectByCategory: Record<string, number> = {};
+    indirectTransactions.forEach(t => {
+      indirectByCategory[t.description] = (indirectByCategory[t.description] || 0) + t.amount;
+    });
 
-    // Combined expenses for the month
-    const combinedExpenses = totalExpenses + totalIndirectCosts + totalLaborCost;
+    // 4. Other manual transactions (no source)
+    const otherExpenses = expenseTransactions.filter(t => !t.sourceType);
+
+    // Combined expenses for the month (all from transactions)
+    const combinedExpenses = totalExpenses;
 
     // Profit
     const profit = totalIncome - combinedExpenses;
@@ -97,14 +110,13 @@ export default function FinancesPage() {
       incomeTransactions,
       expenseTransactions,
       monthTransactions,
-      totalIndirectCosts,
       totalLaborCost,
-      materialsCost,
       totalAnticipos,
-      totalFixedCosts,
-      totalVariableCosts,
+      ingredientsByCategory,
+      indirectByCategory,
+      otherExpenses,
     };
-  }, [transactions, orders, quotations, baseIngredients, fixedExpenses, variableExpenses, equipment, workers, selectedMonth]);
+  }, [transactions, orders, quotations, baseIngredients, selectedMonth]);
 
   const containerVariants = {
     hidden: { opacity: 0 },
