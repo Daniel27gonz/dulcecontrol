@@ -49,7 +49,7 @@ export function OrderForm({ order, trigger, onClose }: OrderFormProps) {
   const [clientName, setClientName] = useState('');
   const [selectedRecipeId, setSelectedRecipeId] = useState('');
   const [quantity, setQuantity] = useState(1);
-  const [status, setStatus] = useState<'pending' | 'in_progress' | 'completed' | 'cancelled'>('pending');
+  const [status, setStatus] = useState<'pending' | 'in_progress' | 'completed' | 'paid' | 'cancelled'>('pending');
   const [deliveryDate, setDeliveryDate] = useState<Date>();
   const [customPrice, setCustomPrice] = useState<string>('');
 

@@ -56,7 +56,7 @@ export interface Order {
   recipeName: string;
   quantity: number;
   totalPrice: number;
-  status: 'pending' | 'in_progress' | 'completed' | 'cancelled';
+  status: 'pending' | 'in_progress' | 'completed' | 'paid' | 'cancelled';
   deliveryDate: string;
   createdAt: string;
 }
