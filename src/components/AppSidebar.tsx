@@ -32,8 +32,6 @@ const bottomItems = [
 ];
 
 export function AppSidebar() {
-  const { state } = useSidebar();
-  const collapsed = state === 'collapsed';
   const location = useLocation();
 
   const isActive = (path: string) => location.pathname === path;
@@ -43,11 +41,7 @@ export function AppSidebar() {
       <SidebarContent className="bg-card">
         {/* Logo / Brand */}
         <div className="px-4 py-5 border-b border-border/50">
-          {collapsed ? (
-            <span className="text-lg font-extrabold text-primary block text-center">DC</span>
-          ) : (
-            <span className="text-xl font-extrabold text-primary tracking-tight">DulceControl</span>
-          )}
+          <span className="text-xl font-extrabold text-primary tracking-tight">DulceControl</span>
         </div>
 
         {/* Main nav */}
