@@ -489,41 +489,51 @@ export function AppProvider({ children }: { children: ReactNode }) {
       prev.map(order => (order.id === id ? { ...order, ...updates } : order))
     );
 
-    // If status changed to paid, register income transaction
+    // If status changed to paid, register the remaining balance as income
     if (updates.status === 'paid' && existingOrder?.status !== 'paid') {
       const { syncTransaction } = await import('@/lib/transactionSync');
       const paymentDate = updates.paymentDate || updatedOrder.paymentDate || new Date().toISOString();
-      await syncTransaction({
-        userId: session.user.id,
-        sourceId: id,
-        sourceType: 'order',
-        type: 'income',
-        description: `Pedido pagado: ${updatedOrder.recipeName} x${updatedOrder.quantity} - ${updatedOrder.clientName}`,
-        amount: updatedOrder.totalPrice,
-        category: 'ingreso por pedido',
-        date: paymentDate,
-      });
+      const totalAdvances = (updatedOrder.advances || []).reduce((sum: number, a: OrderAdvance) => sum + a.amount, 0);
+      const remainingBalance = Math.max(0, updatedOrder.totalPrice - totalAdvances);
+
+      if (remainingBalance > 0) {
+        await syncTransaction({
+          userId: session.user.id,
+          sourceId: id,
+          sourceType: 'order',
+          type: 'income',
+          description: `Pago de pedido: ${updatedOrder.recipeName} x${updatedOrder.quantity} - ${updatedOrder.clientName}`,
+          amount: remainingBalance,
+          category: 'pago de pedido',
+          date: paymentDate,
+        });
+      }
     }
 
-    // If status changed away from paid, remove the income transaction
+    // If status changed away from paid, remove the payment transaction
     if (updates.status && updates.status !== 'paid' && existingOrder?.status === 'paid') {
       const { deleteTransactionBySource } = await import('@/lib/transactionSync');
       await deleteTransactionBySource(session.user.id, id, 'order');
     }
 
-    // If order is paid and amount changed, update the transaction
+    // If order is paid and amount changed, update the payment transaction
     if (updatedOrder.status === 'paid' && updates.totalPrice !== undefined && existingOrder?.status === 'paid') {
       const { syncTransaction } = await import('@/lib/transactionSync');
-      await syncTransaction({
-        userId: session.user.id,
-        sourceId: id,
-        sourceType: 'order',
-        type: 'income',
-        description: `Pedido pagado: ${updatedOrder.recipeName} x${updatedOrder.quantity} - ${updatedOrder.clientName}`,
-        amount: updatedOrder.totalPrice,
-        category: 'ingreso por pedido',
-        date: updatedOrder.paymentDate || new Date().toISOString(),
-      });
+      const totalAdvances = (updatedOrder.advances || []).reduce((sum: number, a: OrderAdvance) => sum + a.amount, 0);
+      const remainingBalance = Math.max(0, updatedOrder.totalPrice - totalAdvances);
+
+      if (remainingBalance > 0) {
+        await syncTransaction({
+          userId: session.user.id,
+          sourceId: id,
+          sourceType: 'order',
+          type: 'income',
+          description: `Pago de pedido: ${updatedOrder.recipeName} x${updatedOrder.quantity} - ${updatedOrder.clientName}`,
+          amount: remainingBalance,
+          category: 'pago de pedido',
+          date: updatedOrder.paymentDate || new Date().toISOString(),
+        });
+      }
     }
 
     // Sync advances with transactions

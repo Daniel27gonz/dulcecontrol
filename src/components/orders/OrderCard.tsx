@@ -67,6 +67,8 @@ export function OrderCard({ order }: OrderCardProps) {
   const isOverdue = deliveryDate < new Date() && order.status !== 'completed' && order.status !== 'paid' && order.status !== 'cancelled';
 
   const totalAdvances = (order.advances || []).reduce((sum, a) => sum + a.amount, 0);
+  const remainingBalance = Math.max(0, order.totalPrice - totalAdvances);
+  const isPaid = order.status === 'paid';
 
   const handleStatusChange = (newStatus: string) => {
     if (newStatus === 'paid') {
@@ -188,20 +190,27 @@ export function OrderCard({ order }: OrderCardProps) {
                 </div>
               )}
 
-              {/* Price */}
-              <div className="text-lg font-bold text-primary">
-                {settings.currencySymbol}{order.totalPrice.toFixed(2)}
+              {/* Price & Balance */}
+              <div className="flex items-baseline gap-3">
+                <div className="text-lg font-bold text-primary">
+                  {settings.currencySymbol}{order.totalPrice.toFixed(2)}
+                </div>
+                {!isPaid && totalAdvances > 0 && (
+                  <div className="text-sm font-semibold text-amber-600">
+                    Saldo: {settings.currencySymbol}{remainingBalance.toFixed(2)}
+                  </div>
+                )}
+                {isPaid && (
+                  <div className="text-sm font-semibold text-emerald-600">
+                    Saldo: {settings.currencySymbol}0.00
+                  </div>
+                )}
               </div>
 
               {/* Advances summary */}
               {(order.advances || []).length > 0 && (
-                <div className="mt-2 text-sm text-muted-foreground">
-                  <span className="text-emerald-600 font-medium">
-                    Anticipos: {settings.currencySymbol}{totalAdvances.toFixed(2)}
-                  </span>
-                  <span className="ml-2">
-                    (Resta: {settings.currencySymbol}{(order.totalPrice - totalAdvances).toFixed(2)})
-                  </span>
+                <div className="mt-1 text-sm text-emerald-600 font-medium">
+                  Anticipos: {settings.currencySymbol}{totalAdvances.toFixed(2)}
                 </div>
               )}
             </div>
@@ -267,19 +276,21 @@ export function OrderCard({ order }: OrderCardProps) {
                 ))}
               </SelectContent>
             </Select>
-            <Button
-              variant="outline"
-              size="sm"
-              className="h-9 text-emerald-700 border-emerald-300 hover:bg-emerald-50"
-              onClick={() => {
-                setAdvanceAmount(0);
-                setAdvanceDate(new Date().toISOString().split('T')[0]);
-                setShowAdvanceDialog(true);
-              }}
-            >
-              <Plus className="w-4 h-4 mr-1" />
-              Anticipo
-            </Button>
+            {!isPaid && (
+              <Button
+                variant="outline"
+                size="sm"
+                className="h-9 text-emerald-700 border-emerald-300 hover:bg-emerald-50"
+                onClick={() => {
+                  setAdvanceAmount(0);
+                  setAdvanceDate(new Date().toISOString().split('T')[0]);
+                  setShowAdvanceDialog(true);
+                }}
+              >
+                <Plus className="w-4 h-4 mr-1" />
+                Anticipo
+              </Button>
+            )}
           </div>
 
           {/* Advances list */}
@@ -340,9 +351,13 @@ export function OrderCard({ order }: OrderCardProps) {
                 onChange={(e) => setPaymentDate(e.target.value)}
               />
             </div>
-            <div className="p-3 bg-muted/50 rounded-lg text-sm">
+            <div className="p-3 bg-muted/50 rounded-lg text-sm space-y-1">
               <p className="text-muted-foreground">Cliente: <span className="font-medium text-foreground">{order.clientName}</span></p>
-              <p className="text-muted-foreground">Monto: <span className="font-bold text-primary">{settings.currencySymbol}{order.totalPrice.toFixed(2)}</span></p>
+              <p className="text-muted-foreground">Total del pedido: <span className="font-medium text-foreground">{settings.currencySymbol}{order.totalPrice.toFixed(2)}</span></p>
+              {totalAdvances > 0 && (
+                <p className="text-muted-foreground">Anticipos: <span className="font-medium text-emerald-600">-{settings.currencySymbol}{totalAdvances.toFixed(2)}</span></p>
+              )}
+              <p className="text-muted-foreground font-semibold border-t pt-1 mt-1">Saldo a pagar: <span className="font-bold text-primary">{settings.currencySymbol}{remainingBalance.toFixed(2)}</span></p>
             </div>
           </div>
           <DialogFooter className="flex-col gap-2 sm:flex-row">
