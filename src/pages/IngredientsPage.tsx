@@ -597,38 +597,6 @@ function IngredientForm({
       </div>
 
       <div>
-        <label className="block text-sm font-medium mb-1.5">Cantidad comprada</label>
-        <Input
-          type="number"
-          min="1"
-          step="1"
-          value={formData.quantityPurchased}
-          onChange={(e) => {
-            setFormData(prev => ({ ...prev, quantityPurchased: e.target.value }));
-            setFormError(null);
-          }}
-          placeholder="Ej: 2"
-        />
-      </div>
-
-      <div>
-        <label className="block text-sm font-medium mb-1.5">Total pagado</label>
-        <div className="relative">
-          <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground">
-            {currencySymbol}
-          </span>
-          <Input
-            type="text"
-            value={previewTotalPaid.toFixed(2)}
-            readOnly
-            disabled
-            className="pl-8 bg-muted/50 font-semibold"
-          />
-        </div>
-        <p className="text-xs text-muted-foreground mt-1">Se calcula automáticamente y se registra en Finanzas</p>
-      </div>
-
-      <div>
         <label className="block text-sm font-medium mb-1.5">Fecha de compra *</label>
         <Input
           type="date"
