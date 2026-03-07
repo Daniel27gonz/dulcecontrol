@@ -280,7 +280,7 @@ export default function FinancesPage() {
                   </h3>
                   <div className="space-y-2">
                     <div className="flex justify-between items-center py-1.5 px-2 rounded-lg bg-muted/30 text-sm">
-                      <span className="text-foreground">Gastos indirectos</span>
+                      <span className="text-foreground">Gastos del mes</span>
                       <span className="text-destructive font-medium">{cs}{monthlyData.totalIndirectCosts.toFixed(2)}</span>
                     </div>
                     <div className="flex justify-between items-center py-1.5 px-2 rounded-lg bg-muted/30 text-sm">

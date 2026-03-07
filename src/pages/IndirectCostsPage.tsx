@@ -315,7 +315,7 @@ export default function IndirectCostsPage() {
 
   return (
     <div className="min-h-screen bg-background pb-24">
-      <AppHeader title="Gastos Indirectos" showBack />
+      <AppHeader title="Gastos del Mes" showBack />
 
       <ScrollArea className="h-[calc(100vh-140px)]">
         <motion.div
@@ -360,7 +360,7 @@ export default function IndirectCostsPage() {
               <CardContent className="p-4">
                 <div className="flex items-center justify-between">
                   <div className="min-w-0 flex-1">
-                    <p className="text-sm text-muted-foreground">Total Gastos Indirectos</p>
+                    <p className="text-sm text-muted-foreground">Total Gastos del Mes</p>
                     <p className="text-xl sm:text-2xl font-bold text-warm">{formatCurrency(totalIndirectCosts)}</p>
                   </div>
                   <Receipt className="w-8 h-8 sm:w-10 sm:h-10 text-warm/50 shrink-0" />

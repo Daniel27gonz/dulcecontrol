@@ -37,7 +37,7 @@ const HelpPage = () => {
 - Precio por unidad: $2 (porque 2000/1000 = 2 por gramo)`
         },
         {
-          question: "¿Qué son los gastos indirectos?",
+          question: "¿Qué son los gastos del mes?",
           answer: `Los gastos indirectos son costos que no van directo al producto pero igual afectan tu negocio:
 
 🔥 Gas: El gas que usas para hornear

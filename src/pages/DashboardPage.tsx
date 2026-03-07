@@ -48,7 +48,7 @@ export default function DashboardPage() {
                 { icon: Plus, label: 'Nueva receta', path: '/calculator', accent: true },
                 { icon: ChefHat, label: 'Mis recetas', path: '/recipes' },
                 { icon: Users, label: 'Mano de Obra', path: '/labor' },
-                { icon: Receipt, label: 'Gastos Indirectos', path: '/indirect-costs' },
+                { icon: Receipt, label: 'Gastos del Mes', path: '/indirect-costs' },
                 { icon: FileText, label: 'Cotizaciones', path: '/quotations' },
                 { icon: ClipboardList, label: 'Pedidos', path: '/orders' },
               ].map(({ icon: Icon, label, path, accent }) => (
