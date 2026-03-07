@@ -112,6 +112,7 @@ export default function IngredientsPage() {
       purchaseUnit: ingredient.purchaseUnit,
       presentationQuantity: ingredient.presentationQuantity.toString(),
       presentationPrice: ingredient.presentationPrice.toString(),
+      quantityPurchased: (ingredient.quantityPurchased || 1).toString(),
       purchaseDate: ingredient.purchaseDate ? new Date(ingredient.purchaseDate).toISOString().split('T')[0] : new Date().toISOString().split('T')[0],
     });
     setFormError(null);
@@ -159,6 +160,7 @@ export default function IngredientsPage() {
       purchaseUnit: formData.purchaseUnit as any,
       presentationQuantity: parseFloat(formData.presentationQuantity),
       presentationPrice: parseFloat(formData.presentationPrice),
+      quantityPurchased: parseFloat(formData.quantityPurchased) || 1,
       purchaseDate: new Date(formData.purchaseDate).toISOString(),
     });
 
@@ -184,6 +186,7 @@ export default function IngredientsPage() {
       purchaseUnit: formData.purchaseUnit as any,
       presentationQuantity: parseFloat(formData.presentationQuantity),
       presentationPrice: parseFloat(formData.presentationPrice),
+      quantityPurchased: parseFloat(formData.quantityPurchased) || 1,
       purchaseDate: new Date(formData.purchaseDate).toISOString(),
     });
 

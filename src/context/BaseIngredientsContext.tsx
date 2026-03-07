@@ -295,6 +295,7 @@ export function BaseIngredientsProvider({ children }: { children: ReactNode }) {
         presentation_price: updatedIng.presentationPrice,
         cost_per_base_unit: costPerBaseUnit,
         purchase_date: updatedIng.purchaseDate || null,
+        quantity_purchased: updatedIng.quantityPurchased || 1,
         last_updated: new Date().toISOString(),
       } as any)
       .eq('id', id)
@@ -312,14 +313,15 @@ export function BaseIngredientsProvider({ children }: { children: ReactNode }) {
       }).sort((a, b) => a.name.localeCompare(b.name))
     );
 
-    // Sync with transactions
+    // Sync with transactions - amount = presentationPrice * quantityPurchased
+    const totalAmount = updatedIng.presentationPrice * (updatedIng.quantityPurchased || 1);
     await syncTransaction({
       userId: session.user.id,
       sourceId: id,
       sourceType: 'ingredient',
       type: 'expense',
-      description: `Compra: ${updatedIng.name}`,
-      amount: updatedIng.presentationPrice,
+      description: `Compra: ${updatedIng.name} (x${updatedIng.quantityPurchased || 1})`,
+      amount: totalAmount,
       category: 'ingredientes',
       date: updatedIng.purchaseDate || new Date().toISOString(),
     });
