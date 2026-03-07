@@ -30,7 +30,7 @@ const initialFormData: WorkerFormData = {
 };
 
 export default function LaborPage() {
-  const { workers, addWorker, updateWorker, deleteWorker, getAverageHourlyRate } = useLabor();
+  const { workers, addWorker, updateWorker, deleteWorker, getLastMonthLaborCostPerHour, getLastMonthLabel } = useLabor();
   const { settings } = useApp();
   const { toast } = useToast();
   
@@ -143,11 +143,12 @@ export default function LaborPage() {
                 <div className="flex items-center justify-between">
                   <div>
                     <p className="text-sm text-muted-foreground">Costo promedio por hora</p>
-                    <p className="text-2xl font-bold text-warm">{formatCurrency(getAverageHourlyRate())}</p>
+                    <p className="text-2xl font-bold text-warm">{formatCurrency(getLastMonthLaborCostPerHour())}</p>
                   </div>
                   <Users className="w-10 h-10 text-warm/50" />
                 </div>
                 <p className="text-xs text-muted-foreground mt-2">
+                  {getLastMonthLabel() ? `Mes: ${getLastMonthLabel()} · ` : ''}
                   {workers.length} trabajador{workers.length !== 1 ? 'es' : ''} registrado{workers.length !== 1 ? 's' : ''}
                 </p>
               </CardContent>
