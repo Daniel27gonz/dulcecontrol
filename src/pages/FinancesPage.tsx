@@ -262,52 +262,53 @@ export default function FinancesPage() {
             </CardHeader>
             <CardContent>
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                {/* Column 1: Materials */}
+                {/* Column 1: Materials grouped by category */}
                 <div className="space-y-3">
                   <h3 className="text-sm font-semibold text-foreground flex items-center gap-2">
                     <Package className="w-4 h-4 text-muted-foreground" />
-                    Materiales comprados
+                    Compras de ingredientes
                   </h3>
                   <div className="space-y-2 max-h-48 overflow-y-auto">
-                    {monthlyData.expenseTransactions
-                      .filter(t => t.category === 'ingredientes' || t.category === 'empaques')
-                      .map(t => (
-                        <div key={t.id} className="flex justify-between items-center py-1.5 px-2 rounded-lg bg-muted/30 text-sm">
-                          <span className="text-foreground truncate mr-2">{t.description}</span>
-                          <span className="text-destructive font-medium whitespace-nowrap">{cs}{t.amount.toFixed(2)}</span>
-                        </div>
-                      ))
-                    }
-                    {monthlyData.expenseTransactions.filter(t => t.category === 'ingredientes' || t.category === 'empaques').length === 0 && (
+                    {Object.entries(monthlyData.ingredientsByCategory).map(([category, total]) => (
+                      <div key={category} className="flex justify-between items-center py-1.5 px-2 rounded-lg bg-muted/30 text-sm">
+                        <span className="text-foreground truncate mr-2">{category}</span>
+                        <span className="text-destructive font-medium whitespace-nowrap">{cs}{total.toFixed(2)}</span>
+                      </div>
+                    ))}
+                    {Object.keys(monthlyData.ingredientsByCategory).length === 0 && (
                       <p className="text-xs text-muted-foreground italic">Sin compras registradas</p>
                     )}
                   </div>
                 </div>
 
-                {/* Column 2: Expenses */}
+                {/* Column 2: Expenses grouped */}
                 <div className="space-y-3">
                   <h3 className="text-sm font-semibold text-foreground flex items-center gap-2">
                     <Wrench className="w-4 h-4 text-muted-foreground" />
                     Gastos del mes
                   </h3>
                   <div className="space-y-2">
-                    <div className="flex justify-between items-center py-1.5 px-2 rounded-lg bg-muted/30 text-sm">
-                      <span className="text-foreground">Gastos del mes</span>
-                      <span className="text-destructive font-medium">{cs}{monthlyData.totalIndirectCosts.toFixed(2)}</span>
-                    </div>
-                    <div className="flex justify-between items-center py-1.5 px-2 rounded-lg bg-muted/30 text-sm">
-                      <span className="text-foreground">Mano de obra</span>
-                      <span className="text-destructive font-medium">{cs}{monthlyData.totalLaborCost.toFixed(2)}</span>
-                    </div>
-                    {monthlyData.expenseTransactions
-                      .filter(t => t.category !== 'ingredientes' && t.category !== 'empaques')
-                      .map(t => (
-                        <div key={t.id} className="flex justify-between items-center py-1.5 px-2 rounded-lg bg-muted/30 text-sm">
-                          <span className="text-foreground truncate mr-2">{t.description}</span>
-                          <span className="text-destructive font-medium whitespace-nowrap">{cs}{t.amount.toFixed(2)}</span>
-                        </div>
-                      ))
-                    }
+                    {Object.entries(monthlyData.indirectByCategory).map(([concept, total]) => (
+                      <div key={concept} className="flex justify-between items-center py-1.5 px-2 rounded-lg bg-muted/30 text-sm">
+                        <span className="text-foreground truncate mr-2">{concept}</span>
+                        <span className="text-destructive font-medium whitespace-nowrap">{cs}{total.toFixed(2)}</span>
+                      </div>
+                    ))}
+                    {monthlyData.totalLaborCost > 0 && (
+                      <div className="flex justify-between items-center py-1.5 px-2 rounded-lg bg-muted/30 text-sm">
+                        <span className="text-foreground">Mano de obra</span>
+                        <span className="text-destructive font-medium">{cs}{monthlyData.totalLaborCost.toFixed(2)}</span>
+                      </div>
+                    )}
+                    {monthlyData.otherExpenses.map(t => (
+                      <div key={t.id} className="flex justify-between items-center py-1.5 px-2 rounded-lg bg-muted/30 text-sm">
+                        <span className="text-foreground truncate mr-2">{t.description}</span>
+                        <span className="text-destructive font-medium whitespace-nowrap">{cs}{t.amount.toFixed(2)}</span>
+                      </div>
+                    ))}
+                    {Object.keys(monthlyData.indirectByCategory).length === 0 && monthlyData.totalLaborCost === 0 && monthlyData.otherExpenses.length === 0 && (
+                      <p className="text-xs text-muted-foreground italic">Sin gastos registrados</p>
+                    )}
                   </div>
                 </div>
 
