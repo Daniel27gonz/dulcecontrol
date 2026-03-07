@@ -224,9 +224,16 @@ export default function IndirectCostsPage() {
 
   const ExpenseCard = ({ expense, type }: { expense: Expense; type: ExpenseType }) => (
     <div className="flex flex-col sm:flex-row sm:items-center justify-between py-3 border-b border-border last:border-0 gap-2">
-      <div className="flex items-center justify-between sm:flex-1 sm:min-w-0 gap-2">
-        <p className="font-medium text-foreground text-sm">{expense.concept}</p>
-        <span className="font-semibold text-foreground text-sm sm:hidden">{formatCurrency(expense.amount)}</span>
+      <div className="flex-1 min-w-0">
+        <div className="flex items-center justify-between gap-2">
+          <p className="font-medium text-foreground text-sm">{expense.concept}</p>
+          <span className="font-semibold text-foreground text-sm sm:hidden">{formatCurrency(expense.amount)}</span>
+        </div>
+        {expense.paymentDate && (
+          <p className="text-xs text-muted-foreground mt-0.5">
+            Fecha de pago: {new Date(expense.paymentDate).toLocaleDateString('es-MX')}
+          </p>
+        )}
       </div>
       <div className="flex items-center justify-between sm:justify-end gap-2 sm:gap-2 shrink-0">
         <span className="font-semibold text-foreground text-sm hidden sm:block">{formatCurrency(expense.amount)}</span>
@@ -574,6 +581,17 @@ export default function IndirectCostsPage() {
                   value={expenseFormData.amount || ''}
                   onChange={(e) => setExpenseFormData({ ...expenseFormData, amount: Math.max(0, Number(e.target.value) || 0) })}
                   placeholder="0.00"
+                  className="mt-1"
+                />
+              </div>
+
+              <div>
+                <Label htmlFor="paymentDate">Fecha de pago</Label>
+                <Input
+                  id="paymentDate"
+                  type="date"
+                  value={expenseFormData.paymentDate || ''}
+                  onChange={(e) => setExpenseFormData({ ...expenseFormData, paymentDate: e.target.value })}
                   className="mt-1"
                 />
               </div>
