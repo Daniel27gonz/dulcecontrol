@@ -8,7 +8,7 @@ import {
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { useApp } from '@/context/AppContext';
-import { useBaseIngredients } from '@/context/BaseIngredientsContext';
+import { useBaseIngredients, INGREDIENT_CATEGORIES } from '@/context/BaseIngredientsContext';
 import { useIndirectCosts } from '@/context/IndirectCostsContext';
 import { useLabor } from '@/context/LaborContext';
 import { useQuotations } from '@/context/QuotationsContext';
@@ -25,8 +25,8 @@ import { ScrollArea } from '@/components/ui/scroll-area';
 export default function FinancesPage() {
   const { settings, transactions, orders, deleteTransaction } = useApp();
   const { ingredients: baseIngredients } = useBaseIngredients();
-  const { fixedExpenses, variableExpenses, equipment, getTotalFixedWithDepreciation, getTotalVariableExpenses } = useIndirectCosts();
-  const { workers } = useLabor();
+  const { } = useIndirectCosts();
+  const { } = useLabor();
   const { quotations } = useQuotations();
 
   const [selectedMonth, setSelectedMonth] = useState(new Date());
@@ -62,22 +62,35 @@ export default function FinancesPage() {
     // Quotations this month
     const monthQuotations = quotations.filter(q => isInMonth(q.createdAt));
 
-    // Material costs (from base ingredients - total value of inventory)
-    const materialsCost = baseIngredients.reduce((sum, ing) => sum + ing.presentationPrice, 0);
+    // === GROUPED DATA FOR RESUMEN ===
 
-    // Indirect costs (monthly)
-    const totalFixedCosts = getTotalFixedWithDepreciation();
-    const totalVariableCosts = getTotalVariableExpenses();
-    const totalIndirectCosts = totalFixedCosts + totalVariableCosts;
+    // 1. Ingredients grouped by category
+    const ingredientTransactions = expenseTransactions.filter(t => t.sourceType === 'ingredient');
+    const ingredientsByCategory: Record<string, number> = {};
+    ingredientTransactions.forEach(t => {
+      // Find the ingredient to get its category
+      const ingredient = baseIngredients.find(ing => ing.id === t.sourceId);
+      const catId = ingredient?.category || 'otros';
+      const catLabel = INGREDIENT_CATEGORIES.find(c => c.id === catId)?.name || catId;
+      ingredientsByCategory[catLabel] = (ingredientsByCategory[catLabel] || 0) + t.amount;
+    });
 
-    // Labor costs (monthly)
-    const totalLaborCost = workers.reduce((sum, w) => sum + w.monthlySalary, 0);
+    // 2. Labor total from transactions
+    const laborTransactions = expenseTransactions.filter(t => t.sourceType === 'worker');
+    const totalLaborCost = laborTransactions.reduce((sum, t) => sum + t.amount, 0);
 
-    // Income from orders completed this month
-    const ordersIncome = completedOrders.reduce((sum, o) => sum + o.totalPrice, 0);
+    // 3. Indirect costs grouped by description (concept)
+    const indirectTransactions = expenseTransactions.filter(t => t.sourceType === 'indirect_cost');
+    const indirectByCategory: Record<string, number> = {};
+    indirectTransactions.forEach(t => {
+      indirectByCategory[t.description] = (indirectByCategory[t.description] || 0) + t.amount;
+    });
 
-    // Combined expenses for the month
-    const combinedExpenses = totalExpenses + totalIndirectCosts + totalLaborCost;
+    // 4. Other manual transactions (no source)
+    const otherExpenses = expenseTransactions.filter(t => !t.sourceType);
+
+    // Combined expenses for the month (all from transactions)
+    const combinedExpenses = totalExpenses;
 
     // Profit
     const profit = totalIncome - combinedExpenses;
@@ -97,14 +110,13 @@ export default function FinancesPage() {
       incomeTransactions,
       expenseTransactions,
       monthTransactions,
-      totalIndirectCosts,
       totalLaborCost,
-      materialsCost,
       totalAnticipos,
-      totalFixedCosts,
-      totalVariableCosts,
+      ingredientsByCategory,
+      indirectByCategory,
+      otherExpenses,
     };
-  }, [transactions, orders, quotations, baseIngredients, fixedExpenses, variableExpenses, equipment, workers, selectedMonth]);
+  }, [transactions, orders, quotations, baseIngredients, selectedMonth]);
 
   const containerVariants = {
     hidden: { opacity: 0 },
@@ -250,52 +262,53 @@ export default function FinancesPage() {
             </CardHeader>
             <CardContent>
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                {/* Column 1: Materials */}
+                {/* Column 1: Materials grouped by category */}
                 <div className="space-y-3">
                   <h3 className="text-sm font-semibold text-foreground flex items-center gap-2">
                     <Package className="w-4 h-4 text-muted-foreground" />
-                    Materiales comprados
+                    Compras de ingredientes
                   </h3>
                   <div className="space-y-2 max-h-48 overflow-y-auto">
-                    {monthlyData.expenseTransactions
-                      .filter(t => t.category === 'ingredientes' || t.category === 'empaques')
-                      .map(t => (
-                        <div key={t.id} className="flex justify-between items-center py-1.5 px-2 rounded-lg bg-muted/30 text-sm">
-                          <span className="text-foreground truncate mr-2">{t.description}</span>
-                          <span className="text-destructive font-medium whitespace-nowrap">{cs}{t.amount.toFixed(2)}</span>
-                        </div>
-                      ))
-                    }
-                    {monthlyData.expenseTransactions.filter(t => t.category === 'ingredientes' || t.category === 'empaques').length === 0 && (
+                    {Object.entries(monthlyData.ingredientsByCategory).map(([category, total]) => (
+                      <div key={category} className="flex justify-between items-center py-1.5 px-2 rounded-lg bg-muted/30 text-sm">
+                        <span className="text-foreground truncate mr-2">{category}</span>
+                        <span className="text-destructive font-medium whitespace-nowrap">{cs}{total.toFixed(2)}</span>
+                      </div>
+                    ))}
+                    {Object.keys(monthlyData.ingredientsByCategory).length === 0 && (
                       <p className="text-xs text-muted-foreground italic">Sin compras registradas</p>
                     )}
                   </div>
                 </div>
 
-                {/* Column 2: Expenses */}
+                {/* Column 2: Expenses grouped */}
                 <div className="space-y-3">
                   <h3 className="text-sm font-semibold text-foreground flex items-center gap-2">
                     <Wrench className="w-4 h-4 text-muted-foreground" />
                     Gastos del mes
                   </h3>
                   <div className="space-y-2">
-                    <div className="flex justify-between items-center py-1.5 px-2 rounded-lg bg-muted/30 text-sm">
-                      <span className="text-foreground">Gastos del mes</span>
-                      <span className="text-destructive font-medium">{cs}{monthlyData.totalIndirectCosts.toFixed(2)}</span>
-                    </div>
-                    <div className="flex justify-between items-center py-1.5 px-2 rounded-lg bg-muted/30 text-sm">
-                      <span className="text-foreground">Mano de obra</span>
-                      <span className="text-destructive font-medium">{cs}{monthlyData.totalLaborCost.toFixed(2)}</span>
-                    </div>
-                    {monthlyData.expenseTransactions
-                      .filter(t => t.category !== 'ingredientes' && t.category !== 'empaques')
-                      .map(t => (
-                        <div key={t.id} className="flex justify-between items-center py-1.5 px-2 rounded-lg bg-muted/30 text-sm">
-                          <span className="text-foreground truncate mr-2">{t.description}</span>
-                          <span className="text-destructive font-medium whitespace-nowrap">{cs}{t.amount.toFixed(2)}</span>
-                        </div>
-                      ))
-                    }
+                    {Object.entries(monthlyData.indirectByCategory).map(([concept, total]) => (
+                      <div key={concept} className="flex justify-between items-center py-1.5 px-2 rounded-lg bg-muted/30 text-sm">
+                        <span className="text-foreground truncate mr-2">{concept}</span>
+                        <span className="text-destructive font-medium whitespace-nowrap">{cs}{total.toFixed(2)}</span>
+                      </div>
+                    ))}
+                    {monthlyData.totalLaborCost > 0 && (
+                      <div className="flex justify-between items-center py-1.5 px-2 rounded-lg bg-muted/30 text-sm">
+                        <span className="text-foreground">Mano de obra</span>
+                        <span className="text-destructive font-medium">{cs}{monthlyData.totalLaborCost.toFixed(2)}</span>
+                      </div>
+                    )}
+                    {monthlyData.otherExpenses.map(t => (
+                      <div key={t.id} className="flex justify-between items-center py-1.5 px-2 rounded-lg bg-muted/30 text-sm">
+                        <span className="text-foreground truncate mr-2">{t.description}</span>
+                        <span className="text-destructive font-medium whitespace-nowrap">{cs}{t.amount.toFixed(2)}</span>
+                      </div>
+                    ))}
+                    {Object.keys(monthlyData.indirectByCategory).length === 0 && monthlyData.totalLaborCost === 0 && monthlyData.otherExpenses.length === 0 && (
+                      <p className="text-xs text-muted-foreground italic">Sin gastos registrados</p>
+                    )}
                   </div>
                 </div>
 

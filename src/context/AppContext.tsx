@@ -68,6 +68,8 @@ export interface Transaction {
   amount: number;
   category: string;
   date: string;
+  sourceId?: string | null;
+  sourceType?: string | null;
 }
 
 export interface UserSettings {
@@ -228,6 +230,8 @@ export function AppProvider({ children }: { children: ReactNode }) {
         amount: Number(t.amount),
         category: t.category,
         date: t.date,
+        sourceId: t.source_id,
+        sourceType: t.source_type,
       })));
     }
   };
@@ -549,6 +553,8 @@ export function AppProvider({ children }: { children: ReactNode }) {
         amount: Number(data.amount),
         category: data.category,
         date: data.date,
+        sourceId: data.source_id,
+        sourceType: data.source_type,
       }, ...prev]);
     }
   };
