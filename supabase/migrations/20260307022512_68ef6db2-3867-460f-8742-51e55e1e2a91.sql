@@ -1,0 +1,1 @@
+ALTER TABLE public.indirect_costs ADD COLUMN payment_date timestamp with time zone DEFAULT NULL;

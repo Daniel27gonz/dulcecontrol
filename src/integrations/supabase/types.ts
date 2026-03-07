@@ -61,6 +61,7 @@ export type Database = {
           created_at: string
           id: string
           last_updated: string
+          payment_date: string | null
           purchase_cost: number | null
           useful_life_months: number | null
           user_id: string
@@ -72,6 +73,7 @@ export type Database = {
           created_at?: string
           id?: string
           last_updated?: string
+          payment_date?: string | null
           purchase_cost?: number | null
           useful_life_months?: number | null
           user_id: string
@@ -83,6 +85,7 @@ export type Database = {
           created_at?: string
           id?: string
           last_updated?: string
+          payment_date?: string | null
           purchase_cost?: number | null
           useful_life_months?: number | null
           user_id?: string
