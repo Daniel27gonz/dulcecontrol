@@ -148,8 +148,7 @@ export default function LaborPage() {
                   <Users className="w-10 h-10 text-warm/50" />
                 </div>
                 <p className="text-xs text-muted-foreground mt-2">
-                  {getLastMonthLabel() ? `Mes: ${getLastMonthLabel()} · ` : ''}
-                  {workers.length} trabajador{workers.length !== 1 ? 'es' : ''} registrado{workers.length !== 1 ? 's' : ''}
+                  {getLastMonthLabel() ? `Mes: ${getLastMonthLabel()}` : 'Mensuales'}
                 </p>
               </CardContent>
             </Card>
