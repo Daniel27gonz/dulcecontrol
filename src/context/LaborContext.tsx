@@ -26,6 +26,8 @@ interface LaborContextType {
   getAverageHourlyRate: () => number;
   getTotalMonthlyHours: () => number;
   getLaborCostPerHour: () => number;
+  getLastMonthLaborCostPerHour: () => number;
+  getLastMonthTotalHours: () => number;
   refreshWorkers: () => Promise<void>;
 }
 
@@ -231,6 +233,40 @@ export function LaborProvider({ children }: { children: ReactNode }) {
     return getAverageHourlyRate();
   }, [getAverageHourlyRate]);
 
+  // Filter workers by the last registered month (based on paymentDate)
+  const getLastMonthWorkers = useCallback(() => {
+    const workersWithDate = workers.filter(w => w.paymentDate);
+    if (workersWithDate.length === 0) return workers; // fallback to all
+    
+    // Find the latest payment date
+    const latestDate = workersWithDate.reduce((latest, w) => {
+      const d = new Date(w.paymentDate!);
+      return d > latest ? d : latest;
+    }, new Date(0));
+    
+    const latestYear = latestDate.getFullYear();
+    const latestMonth = latestDate.getMonth();
+    
+    // Filter workers whose paymentDate falls in that month
+    return workersWithDate.filter(w => {
+      const d = new Date(w.paymentDate!);
+      return d.getFullYear() === latestYear && d.getMonth() === latestMonth;
+    });
+  }, [workers]);
+
+  const getLastMonthLaborCostPerHour = useCallback(() => {
+    const filtered = getLastMonthWorkers();
+    if (filtered.length === 0) return 0;
+    const totalSalary = filtered.reduce((sum, w) => sum + w.monthlySalary, 0);
+    const totalHours = filtered.reduce((sum, w) => sum + w.monthlyHours, 0);
+    return totalHours > 0 ? totalSalary / totalHours : 0;
+  }, [getLastMonthWorkers]);
+
+  const getLastMonthTotalHours = useCallback(() => {
+    const filtered = getLastMonthWorkers();
+    return filtered.reduce((sum, w) => sum + w.monthlyHours, 0);
+  }, [getLastMonthWorkers]);
+
   const refreshWorkers = useCallback(async () => {
     await loadWorkers();
   }, [loadWorkers]);
@@ -246,6 +282,8 @@ export function LaborProvider({ children }: { children: ReactNode }) {
       getAverageHourlyRate,
       getTotalMonthlyHours,
       getLaborCostPerHour,
+      getLastMonthLaborCostPerHour,
+      getLastMonthTotalHours,
       refreshWorkers,
     }}>
       {children}
