@@ -8,7 +8,7 @@ import {
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { useApp } from '@/context/AppContext';
-import { useBaseIngredients } from '@/context/BaseIngredientsContext';
+import { useBaseIngredients, INGREDIENT_CATEGORIES } from '@/context/BaseIngredientsContext';
 import { useIndirectCosts } from '@/context/IndirectCostsContext';
 import { useLabor } from '@/context/LaborContext';
 import { useQuotations } from '@/context/QuotationsContext';
