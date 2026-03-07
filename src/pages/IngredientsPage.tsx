@@ -597,7 +597,7 @@ function IngredientForm({
       </div>
 
       <div>
-        <label className="block text-sm font-medium mb-1.5">Total pagado</label>
+        <label className="block text-sm font-medium mb-1.5">Cantidad comprada</label>
         <Input
           type="number"
           min="1"
@@ -609,6 +609,23 @@ function IngredientForm({
           }}
           placeholder="Ej: 2"
         />
+      </div>
+
+      <div>
+        <label className="block text-sm font-medium mb-1.5">Total pagado</label>
+        <div className="relative">
+          <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground">
+            {currencySymbol}
+          </span>
+          <Input
+            type="text"
+            value={previewTotalPaid.toFixed(2)}
+            readOnly
+            disabled
+            className="pl-8 bg-muted/50 font-semibold"
+          />
+        </div>
+        <p className="text-xs text-muted-foreground mt-1">Se calcula automáticamente y se registra en Finanzas</p>
       </div>
 
       <div>
@@ -627,22 +644,14 @@ function IngredientForm({
       {previewCost > 0 && (
         <Card className="bg-primary/5 border-primary/20">
           <CardContent className="p-4">
-            <div className="text-center space-y-3">
-              <div>
-                <p className="text-xs text-muted-foreground mb-1">Costo calculado por unidad base</p>
-                <p className="text-2xl font-bold text-primary">
-                  {currencySymbol}{previewCost.toFixed(4)} / {baseUnit}
-                </p>
-                <p className="text-xs text-muted-foreground mt-1">
-                  Este es el costo que se usará en tus recetas
-                </p>
-              </div>
-              <div className="border-t border-primary/10 pt-3">
-                <p className="text-xs text-muted-foreground mb-1">Monto pagado (se registra en Finanzas)</p>
-                <p className="text-xl font-bold text-foreground">
-                  {currencySymbol}{previewTotalPaid.toFixed(2)}
-                </p>
-              </div>
+            <div className="text-center">
+              <p className="text-xs text-muted-foreground mb-1">Costo calculado por unidad base</p>
+              <p className="text-2xl font-bold text-primary">
+                {currencySymbol}{previewCost.toFixed(4)} / {baseUnit}
+              </p>
+              <p className="text-xs text-muted-foreground mt-1">
+                Este es el costo que se usará en tus recetas
+              </p>
             </div>
           </CardContent>
         </Card>
