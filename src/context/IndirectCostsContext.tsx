@@ -104,6 +104,7 @@ export function IndirectCostsProvider({ children }: { children: ReactNode }) {
             id: item.id,
             concept: item.concept,
             amount: Number(item.amount),
+            paymentDate: item.payment_date || null,
             lastUpdated: item.last_updated,
           });
         } else if (item.cost_type === 'variable') {
@@ -111,6 +112,7 @@ export function IndirectCostsProvider({ children }: { children: ReactNode }) {
             id: item.id,
             concept: item.concept,
             amount: Number(item.amount),
+            paymentDate: item.payment_date || null,
             lastUpdated: item.last_updated,
           });
         } else if (item.cost_type === 'equipment') {
@@ -161,6 +163,7 @@ export function IndirectCostsProvider({ children }: { children: ReactNode }) {
               id: item.id,
               concept: item.concept,
               amount: Number(item.amount),
+              paymentDate: item.payment_date || null,
               lastUpdated: item.last_updated,
             });
           } else if (item.cost_type === 'variable') {
@@ -168,6 +171,7 @@ export function IndirectCostsProvider({ children }: { children: ReactNode }) {
               id: item.id,
               concept: item.concept,
               amount: Number(item.amount),
+              paymentDate: item.payment_date || null,
               lastUpdated: item.last_updated,
             });
           }
@@ -195,6 +199,7 @@ export function IndirectCostsProvider({ children }: { children: ReactNode }) {
         cost_type: 'fixed',
         concept: expense.concept,
         amount: expense.amount,
+        payment_date: expense.paymentDate || null,
       }])
       .select()
       .single();
@@ -208,6 +213,7 @@ export function IndirectCostsProvider({ children }: { children: ReactNode }) {
       id: data.id,
       concept: data.concept,
       amount: Number(data.amount),
+      paymentDate: data.payment_date || null,
       lastUpdated: data.last_updated,
     }]);
   }, [session?.user]);
