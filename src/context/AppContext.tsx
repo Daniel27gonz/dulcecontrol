@@ -558,6 +558,8 @@ export function AppProvider({ children }: { children: ReactNode }) {
   const deleteOrder = async (id: string) => {
     if (!session?.user) return;
 
+    const existingOrder = orders.find(o => o.id === id);
+
     await supabase
       .from('orders')
       .delete()
@@ -567,6 +569,13 @@ export function AppProvider({ children }: { children: ReactNode }) {
     // Delete linked transaction if it was a paid order
     const { deleteTransactionBySource } = await import('@/lib/transactionSync');
     await deleteTransactionBySource(session.user.id, id, 'order');
+
+    // Delete advance transactions
+    if (existingOrder?.advances) {
+      for (const advance of existingOrder.advances) {
+        await deleteTransactionBySource(session.user.id, advance.id, 'order_advance');
+      }
+    }
 
     setOrders(prev => prev.filter(order => order.id !== id));
   };
