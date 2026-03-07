@@ -100,6 +100,7 @@ export default function IndirectCostsPage() {
     setExpenseFormData({
       concept: expense.concept,
       amount: expense.amount,
+      paymentDate: expense.paymentDate || '',
     });
     setShowModal(true);
   };
@@ -132,16 +133,16 @@ export default function IndirectCostsPage() {
 
     if (editingExpense) {
       if (modalType === 'fixed') {
-        updateFixedExpense(editingExpense.id, { concept: expenseFormData.concept, amount });
+        updateFixedExpense(editingExpense.id, { concept: expenseFormData.concept, amount, paymentDate: expenseFormData.paymentDate || null });
       } else {
-        updateVariableExpense(editingExpense.id, { concept: expenseFormData.concept, amount });
+        updateVariableExpense(editingExpense.id, { concept: expenseFormData.concept, amount, paymentDate: expenseFormData.paymentDate || null });
       }
       toast({ title: '✅ Gasto actualizado', description: expenseFormData.concept });
     } else {
       if (modalType === 'fixed') {
-        addFixedExpense({ concept: expenseFormData.concept, amount });
+        addFixedExpense({ concept: expenseFormData.concept, amount, paymentDate: expenseFormData.paymentDate || null });
       } else {
-        addVariableExpense({ concept: expenseFormData.concept, amount });
+        addVariableExpense({ concept: expenseFormData.concept, amount, paymentDate: expenseFormData.paymentDate || null });
       }
       toast({ title: '✅ Gasto agregado', description: expenseFormData.concept });
     }
