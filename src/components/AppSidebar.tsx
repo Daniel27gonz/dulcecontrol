@@ -1,0 +1,102 @@
+import { useLocation } from 'react-router-dom';
+import {
+  Home, Calculator, FileText, Sparkles, ClipboardList, Wallet,
+  HelpCircle, Settings
+} from 'lucide-react';
+import { NavLink } from '@/components/NavLink';
+import {
+  Sidebar,
+  SidebarContent,
+  SidebarGroup,
+  SidebarGroupContent,
+  SidebarGroupLabel,
+  SidebarMenu,
+  SidebarMenuButton,
+  SidebarMenuItem,
+  SidebarFooter,
+  useSidebar,
+} from '@/components/ui/sidebar';
+
+const mainItems = [
+  { title: 'Inicio', url: '/dashboard', icon: Home },
+  { title: 'Calcular', url: '/calculator', icon: Calculator },
+  { title: 'Cotizar', url: '/quotations', icon: FileText },
+  { title: 'Diseño', url: '/personalization', icon: Sparkles },
+  { title: 'Pedidos', url: '/orders', icon: ClipboardList },
+  { title: 'Finanzas', url: '/finances', icon: Wallet },
+];
+
+const bottomItems = [
+  { title: 'Tutorial', url: '/help', icon: HelpCircle },
+  { title: 'Configuración', url: '/settings', icon: Settings },
+];
+
+export function AppSidebar() {
+  const { state } = useSidebar();
+  const collapsed = state === 'collapsed';
+  const location = useLocation();
+
+  const isActive = (path: string) => location.pathname === path;
+
+  return (
+    <Sidebar collapsible="icon" className="border-r border-border/50">
+      <SidebarContent className="bg-card">
+        {/* Logo / Brand */}
+        <div className="px-4 py-5 border-b border-border/50">
+          {collapsed ? (
+            <span className="text-lg font-extrabold text-primary block text-center">DC</span>
+          ) : (
+            <span className="text-xl font-extrabold text-primary tracking-tight">DulceControl</span>
+          )}
+        </div>
+
+        {/* Main nav */}
+        <SidebarGroup>
+          <SidebarGroupLabel className="text-xs text-muted-foreground uppercase tracking-wider">
+            {!collapsed && 'Menú'}
+          </SidebarGroupLabel>
+          <SidebarGroupContent>
+            <SidebarMenu>
+              {mainItems.map((item) => (
+                <SidebarMenuItem key={item.url}>
+                  <SidebarMenuButton asChild>
+                    <NavLink
+                      to={item.url}
+                      end
+                      className="flex items-center gap-3 px-3 py-2.5 rounded-xl text-muted-foreground hover:bg-secondary hover:text-foreground transition-all duration-200"
+                      activeClassName="bg-primary/10 text-primary font-semibold"
+                    >
+                      <item.icon className="w-5 h-5 shrink-0" />
+                      {!collapsed && <span className="text-sm">{item.title}</span>}
+                    </NavLink>
+                  </SidebarMenuButton>
+                </SidebarMenuItem>
+              ))}
+            </SidebarMenu>
+          </SidebarGroupContent>
+        </SidebarGroup>
+      </SidebarContent>
+
+      {/* Bottom items */}
+      <SidebarFooter className="bg-card border-t border-border/50">
+        <SidebarMenu>
+          {bottomItems.map((item) => (
+            <SidebarMenuItem key={item.url}>
+              <SidebarMenuButton asChild>
+                <NavLink
+                  to={item.url}
+                  end
+                  className="flex items-center gap-3 px-3 py-2.5 rounded-xl text-muted-foreground hover:bg-secondary hover:text-foreground transition-all duration-200"
+                  activeClassName="bg-primary/10 text-primary font-semibold"
+                >
+                  <item.icon className="w-5 h-5 shrink-0" />
+                  {!collapsed && <span className="text-sm">{item.title}</span>}
+                </NavLink>
+              </SidebarMenuButton>
+            </SidebarMenuItem>
+          ))}
+        </SidebarMenu>
+      </SidebarFooter>
+    </Sidebar>
+  );
+}
