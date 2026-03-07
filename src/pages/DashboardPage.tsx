@@ -1,6 +1,7 @@
 import { motion } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
-import { Plus, ClipboardList, ChefHat, FileText, Users, Receipt } from 'lucide-react';
+import { Plus, ClipboardList, ChefHat, FileText, Users, Receipt, RefreshCw } from 'lucide-react';
+import { APP_VERSION } from '@/config/appVersion';
 import { useApp } from '@/context/AppContext';
 import { AppLayout } from '@/components/AppLayout';
 
@@ -51,10 +52,17 @@ export default function DashboardPage() {
                 { icon: Receipt, label: 'Gastos del Mes', path: '/indirect-costs' },
                 { icon: FileText, label: 'Cotizaciones', path: '/quotations' },
                 { icon: ClipboardList, label: 'Pedidos', path: '/orders' },
+                { icon: RefreshCw, label: 'Actualizar App', path: '__update__' },
               ].map(({ icon: Icon, label, path, accent }) => (
                 <button
                   key={path}
-                  onClick={() => navigate(path)}
+                  onClick={() => {
+                    if (path === '__update__') {
+                      window.location.reload();
+                    } else {
+                      navigate(path);
+                    }
+                  }}
                   className="flex flex-col items-center gap-2.5 p-5 rounded-2xl bg-card border border-border/50 shadow-soft hover:shadow-card transition-all duration-300 active:scale-[0.96] group"
                 >
                   <div className={`w-12 h-12 rounded-full flex items-center justify-center shrink-0 transition-colors duration-300 ${accent ? 'bg-primary text-primary-foreground' : 'bg-secondary text-secondary-foreground group-hover:bg-primary/10 group-hover:text-primary'}`}>
