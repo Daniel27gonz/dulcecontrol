@@ -36,6 +36,7 @@ interface IngredientFormData {
   purchaseUnit: string;
   presentationQuantity: string;
   presentationPrice: string;
+  quantityPurchased: string;
   purchaseDate: string;
 }
 
@@ -45,6 +46,7 @@ const initialFormData: IngredientFormData = {
   purchaseUnit: 'g',
   presentationQuantity: '',
   presentationPrice: '',
+  quantityPurchased: '1',
   purchaseDate: new Date().toISOString().split('T')[0],
 };
 
@@ -96,6 +98,12 @@ export default function IngredientsPage() {
     return calculateCostPerBaseUnit(price, qty, formData.purchaseUnit);
   }, [formData]);
 
+  const previewTotalPaid = useMemo(() => {
+    const price = parseFloat(formData.presentationPrice) || 0;
+    const qtyPurchased = parseFloat(formData.quantityPurchased) || 1;
+    return price * qtyPurchased;
+  }, [formData.presentationPrice, formData.quantityPurchased]);
+
   const handleOpenAdd = () => {
     setFormData(initialFormData);
     setFormError(null);
@@ -110,6 +118,7 @@ export default function IngredientsPage() {
       purchaseUnit: ingredient.purchaseUnit,
       presentationQuantity: ingredient.presentationQuantity.toString(),
       presentationPrice: ingredient.presentationPrice.toString(),
+      quantityPurchased: (ingredient.quantityPurchased || 1).toString(),
       purchaseDate: ingredient.purchaseDate ? new Date(ingredient.purchaseDate).toISOString().split('T')[0] : new Date().toISOString().split('T')[0],
     });
     setFormError(null);
@@ -157,6 +166,7 @@ export default function IngredientsPage() {
       purchaseUnit: formData.purchaseUnit as any,
       presentationQuantity: parseFloat(formData.presentationQuantity),
       presentationPrice: parseFloat(formData.presentationPrice),
+      quantityPurchased: parseFloat(formData.quantityPurchased) || 1,
       purchaseDate: new Date(formData.purchaseDate).toISOString(),
     });
 
@@ -182,6 +192,7 @@ export default function IngredientsPage() {
       purchaseUnit: formData.purchaseUnit as any,
       presentationQuantity: parseFloat(formData.presentationQuantity),
       presentationPrice: parseFloat(formData.presentationPrice),
+      quantityPurchased: parseFloat(formData.quantityPurchased) || 1,
       purchaseDate: new Date(formData.purchaseDate).toISOString(),
     });
 
@@ -407,6 +418,7 @@ export default function IngredientsPage() {
             formError={formError}
             setFormError={setFormError}
             previewCost={previewCost}
+            previewTotalPaid={previewTotalPaid}
             currencySymbol={settings.currencySymbol}
             onSave={handleSaveAdd}
             onCancel={() => setShowAddModal(false)}
@@ -429,6 +441,7 @@ export default function IngredientsPage() {
             formError={formError}
             setFormError={setFormError}
             previewCost={previewCost}
+            previewTotalPaid={previewTotalPaid}
             currencySymbol={settings.currencySymbol}
             onSave={handleSaveEdit}
             onCancel={() => setShowEditModal(false)}
@@ -467,6 +480,7 @@ interface IngredientFormProps {
   formError: string | null;
   setFormError: React.Dispatch<React.SetStateAction<string | null>>;
   previewCost: number;
+  previewTotalPaid: number;
   currencySymbol: string;
   onSave: () => void;
   onCancel: () => void;
@@ -479,6 +493,7 @@ function IngredientForm({
   formError,
   setFormError,
   previewCost,
+  previewTotalPaid,
   currencySymbol,
   onSave,
   onCancel,
@@ -582,6 +597,21 @@ function IngredientForm({
       </div>
 
       <div>
+        <label className="block text-sm font-medium mb-1.5">Cantidad comprada</label>
+        <Input
+          type="number"
+          min="1"
+          step="1"
+          value={formData.quantityPurchased}
+          onChange={(e) => {
+            setFormData(prev => ({ ...prev, quantityPurchased: e.target.value }));
+            setFormError(null);
+          }}
+          placeholder="Ej: 2"
+        />
+      </div>
+
+      <div>
         <label className="block text-sm font-medium mb-1.5">Fecha de compra *</label>
         <Input
           type="date"
@@ -597,14 +627,22 @@ function IngredientForm({
       {previewCost > 0 && (
         <Card className="bg-primary/5 border-primary/20">
           <CardContent className="p-4">
-            <div className="text-center">
-              <p className="text-xs text-muted-foreground mb-1">Costo calculado por unidad base</p>
-              <p className="text-2xl font-bold text-primary">
-                {currencySymbol}{previewCost.toFixed(4)} / {baseUnit}
-              </p>
-              <p className="text-xs text-muted-foreground mt-2">
-                Este es el costo que se usará en tus recetas
-              </p>
+            <div className="text-center space-y-3">
+              <div>
+                <p className="text-xs text-muted-foreground mb-1">Costo calculado por unidad base</p>
+                <p className="text-2xl font-bold text-primary">
+                  {currencySymbol}{previewCost.toFixed(4)} / {baseUnit}
+                </p>
+                <p className="text-xs text-muted-foreground mt-1">
+                  Este es el costo que se usará en tus recetas
+                </p>
+              </div>
+              <div className="border-t border-primary/10 pt-3">
+                <p className="text-xs text-muted-foreground mb-1">Monto pagado (se registra en Finanzas)</p>
+                <p className="text-xl font-bold text-foreground">
+                  {currencySymbol}{previewTotalPaid.toFixed(2)}
+                </p>
+              </div>
             </div>
           </CardContent>
         </Card>
