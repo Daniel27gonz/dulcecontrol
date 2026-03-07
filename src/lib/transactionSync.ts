@@ -3,7 +3,7 @@ import { supabase } from '@/integrations/supabase/client';
 interface SyncTransactionParams {
   userId: string;
   sourceId: string;
-  sourceType: 'ingredient' | 'indirect_cost' | 'worker' | 'order';
+  sourceType: 'ingredient' | 'indirect_cost' | 'worker' | 'order' | 'order_advance';
   type: 'income' | 'expense';
   description: string;
   amount: number;
