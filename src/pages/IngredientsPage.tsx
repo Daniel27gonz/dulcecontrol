@@ -590,8 +590,8 @@ function IngredientForm({
       <div>
         <label className="block text-sm font-medium mb-1.5">Precio de la presentación</label>
         <div className="relative">
-          <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground pointer-events-none">
-            {currencySymbol}&nbsp;
+          <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground">
+            {currencySymbol}
           </span>
           <Input
             type="number"
@@ -602,7 +602,7 @@ function IngredientForm({
               setFormError(null);
             }}
             placeholder="0.00"
-            className="pl-12"
+            className="pl-8"
           />
         </div>
       </div>
@@ -610,15 +610,15 @@ function IngredientForm({
       <div>
         <label className="block text-sm font-medium mb-1.5">Total pagado</label>
         <div className="relative">
-          <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground pointer-events-none">
-            {currencySymbol}&nbsp;
+          <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground">
+            {currencySymbol}
           </span>
           <Input
             type="text"
             value={previewTotalPaid.toFixed(2)}
             readOnly
             disabled
-            className="pl-12 bg-muted/50 font-semibold"
+            className="pl-8 bg-muted/50 font-semibold"
           />
         </div>
         <p className="text-xs text-muted-foreground mt-1">Precio × Cantidad de presentación (se registra en Finanzas)</p>
