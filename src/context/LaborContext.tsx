@@ -50,7 +50,7 @@ function calculateWorkerValues(worker: Omit<Worker, 'monthlyHours' | 'dailySalar
 export function LaborProvider({ children }: { children: ReactNode }) {
   const [workers, setWorkers] = useState<Worker[]>([]);
   const [isLoading, setIsLoading] = useState(true);
-  const { session } = useApp();
+  const { session, refreshTransactions } = useApp();
 
   const loadWorkers = useCallback(async () => {
     if (!session?.user) {
@@ -149,7 +149,8 @@ export function LaborProvider({ children }: { children: ReactNode }) {
       category: 'mano de obra',
       date: workerData.paymentDate || new Date().toISOString(),
     });
-  }, [session?.user]);
+    await refreshTransactions();
+  }, [session?.user, refreshTransactions]);
 
   const updateWorker = useCallback(async (id: string, updates: Partial<Omit<Worker, 'id' | 'monthlyHours' | 'dailySalary' | 'hourlyRate' | 'lastUpdated'>>) => {
     if (!session?.user) return;
@@ -197,7 +198,8 @@ export function LaborProvider({ children }: { children: ReactNode }) {
       category: 'mano de obra',
       date: calculated.paymentDate || new Date().toISOString(),
     });
-  }, [session?.user, workers]);
+    await refreshTransactions();
+  }, [session?.user, workers, refreshTransactions]);
 
   const deleteWorker = useCallback(async (id: string) => {
     if (!session?.user) return;
@@ -215,7 +217,8 @@ export function LaborProvider({ children }: { children: ReactNode }) {
 
     setWorkers(prev => prev.filter(w => w.id !== id));
     await deleteTransactionBySource(session.user.id, id, 'worker');
-  }, [session?.user]);
+    await refreshTransactions();
+  }, [session?.user, refreshTransactions]);
 
   const getTotalHourlyRate = useCallback(() => {
     return workers.reduce((sum, w) => sum + w.hourlyRate, 0);
