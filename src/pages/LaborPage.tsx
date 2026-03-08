@@ -1,6 +1,6 @@
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import { motion } from 'framer-motion';
-import { Plus, Users, Edit2, Trash2, Clock, DollarSign, Calendar, HelpCircle } from 'lucide-react';
+import { Plus, Users, Edit2, Trash2, Clock, DollarSign, Calendar, HelpCircle, CalendarDays, ChevronLeft, ChevronRight } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
