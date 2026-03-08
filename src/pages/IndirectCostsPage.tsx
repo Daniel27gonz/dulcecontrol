@@ -1,6 +1,8 @@
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import { motion } from 'framer-motion';
-import { Plus, Edit2, Trash2, Building2, Zap, HelpCircle, Receipt, Clock, AlertCircle, Wrench } from 'lucide-react';
+import { Plus, Edit2, Trash2, Building2, Zap, HelpCircle, Receipt, Clock, AlertCircle, Wrench, ChevronLeft, ChevronRight, CalendarDays } from 'lucide-react';
+import { format, startOfMonth, endOfMonth, addMonths, subMonths } from 'date-fns';
+import { es } from 'date-fns/locale';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
