@@ -74,7 +74,7 @@ export function IndirectCostsProvider({ children }: { children: ReactNode }) {
   const [variableExpenses, setVariableExpenses] = useState<Expense[]>([]);
   const [equipment, setEquipment] = useState<Equipment[]>([]);
   const [isLoading, setIsLoading] = useState(true);
-  const { session } = useApp();
+  const { session, refreshTransactions } = useApp();
 
   const loadCosts = useCallback(async () => {
     if (!session?.user) {
@@ -237,7 +237,8 @@ export function IndirectCostsProvider({ children }: { children: ReactNode }) {
     }]);
 
     await syncExpenseTransaction({ id: data.id, concept: data.concept, amount: Number(data.amount), paymentDate: data.payment_date || null }, 'fixed');
-  }, [session?.user, syncExpenseTransaction]);
+    await refreshTransactions();
+  }, [session?.user, syncExpenseTransaction, refreshTransactions]);
 
   const updateFixedExpense = useCallback(async (id: string, updates: Partial<Omit<Expense, 'id' | 'lastUpdated'>>) => {
     if (!session?.user) return;
@@ -266,7 +267,8 @@ export function IndirectCostsProvider({ children }: { children: ReactNode }) {
     ));
 
     await syncExpenseTransaction({ id, concept: updated.concept, amount: updated.amount, paymentDate: updated.paymentDate }, 'fixed');
-  }, [session?.user, fixedExpenses, syncExpenseTransaction]);
+    await refreshTransactions();
+  }, [session?.user, fixedExpenses, syncExpenseTransaction, refreshTransactions]);
 
   const deleteFixedExpense = useCallback(async (id: string) => {
     if (!session?.user) return;
@@ -284,7 +286,8 @@ export function IndirectCostsProvider({ children }: { children: ReactNode }) {
 
     setFixedExpenses(prev => prev.filter(exp => exp.id !== id));
     await deleteTransactionBySource(session.user.id, id, 'indirect_cost');
-  }, [session?.user]);
+    await refreshTransactions();
+  }, [session?.user, refreshTransactions]);
 
   // Variable Expenses
   const addVariableExpense = useCallback(async (expense: Omit<Expense, 'id' | 'lastUpdated'>) => {
@@ -316,7 +319,8 @@ export function IndirectCostsProvider({ children }: { children: ReactNode }) {
     }]);
 
     await syncExpenseTransaction({ id: data.id, concept: data.concept, amount: Number(data.amount), paymentDate: data.payment_date || null }, 'variable');
-  }, [session?.user, syncExpenseTransaction]);
+    await refreshTransactions();
+  }, [session?.user, syncExpenseTransaction, refreshTransactions]);
 
   const updateVariableExpense = useCallback(async (id: string, updates: Partial<Omit<Expense, 'id' | 'lastUpdated'>>) => {
     if (!session?.user) return;
@@ -345,7 +349,8 @@ export function IndirectCostsProvider({ children }: { children: ReactNode }) {
     ));
 
     await syncExpenseTransaction({ id, concept: updated.concept, amount: updated.amount, paymentDate: updated.paymentDate }, 'variable');
-  }, [session?.user, variableExpenses, syncExpenseTransaction]);
+    await refreshTransactions();
+  }, [session?.user, variableExpenses, syncExpenseTransaction, refreshTransactions]);
 
   const deleteVariableExpense = useCallback(async (id: string) => {
     if (!session?.user) return;
@@ -363,7 +368,8 @@ export function IndirectCostsProvider({ children }: { children: ReactNode }) {
 
     setVariableExpenses(prev => prev.filter(exp => exp.id !== id));
     await deleteTransactionBySource(session.user.id, id, 'indirect_cost');
-  }, [session?.user]);
+    await refreshTransactions();
+  }, [session?.user, refreshTransactions]);
 
   // Equipment
   const addEquipment = useCallback(async (equip: Omit<Equipment, 'id' | 'lastUpdated'>) => {

@@ -122,6 +122,7 @@ interface AppContextType {
   getTotalExpenses: () => number;
   getNetProfit: () => number;
   refreshData: () => Promise<void>;
+  refreshTransactions: () => Promise<void>;
 }
 
 const AppContext = createContext<AppContextType | undefined>(undefined);
@@ -362,6 +363,29 @@ export function AppProvider({ children }: { children: ReactNode }) {
   const refreshData = async () => {
     if (session?.user) {
       await loadUserData(session.user.id);
+    }
+  };
+
+  // Lightweight refresh that only reloads transactions from DB
+  const refreshTransactions = async () => {
+    if (!session?.user) return;
+    const { data: transactionsData } = await supabase
+      .from('transactions')
+      .select('*')
+      .eq('user_id', session.user.id)
+      .order('date', { ascending: false });
+
+    if (transactionsData) {
+      setTransactions(transactionsData.map(t => ({
+        id: t.id,
+        type: t.type as Transaction['type'],
+        description: t.description,
+        amount: Number(t.amount),
+        category: t.category,
+        date: t.date,
+        sourceId: t.source_id,
+        sourceType: t.source_type,
+      })));
     }
   };
 
@@ -637,6 +661,9 @@ export function AppProvider({ children }: { children: ReactNode }) {
         });
       }
     }
+
+    // Refresh transactions state after all sync operations
+    await refreshTransactions();
   };
 
   const deleteOrder = async (id: string) => {
@@ -662,6 +689,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
     }
 
     setOrders(prev => prev.filter(order => order.id !== id));
+    await refreshTransactions();
   };
 
   // Transaction functions
@@ -805,6 +833,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
         getTotalExpenses,
         getNetProfit,
         refreshData,
+        refreshTransactions,
       }}
     >
       {children}

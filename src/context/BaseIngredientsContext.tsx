@@ -145,7 +145,7 @@ const recalculateCostPerBaseUnit = (ingredient: Omit<BaseIngredient, 'costPerBas
 export function BaseIngredientsProvider({ children }: { children: ReactNode }) {
   const [ingredients, setIngredients] = useState<BaseIngredient[]>([]);
   const [isLoading, setIsLoading] = useState(true);
-  const { session } = useApp();
+  const { session, refreshTransactions } = useApp();
 
   const loadIngredients = useCallback(async () => {
     if (!session?.user) {
@@ -275,6 +275,7 @@ export function BaseIngredientsProvider({ children }: { children: ReactNode }) {
       category: 'ingredientes',
       date: ingredient.purchaseDate || new Date().toISOString(),
     });
+    await refreshTransactions();
 
     return newIngredient;
   }, [session?.user]);
@@ -328,7 +329,8 @@ export function BaseIngredientsProvider({ children }: { children: ReactNode }) {
       category: 'ingredientes',
       date: updatedIng.purchaseDate || new Date().toISOString(),
     });
-  }, [session?.user, ingredients]);
+    await refreshTransactions();
+  }, [session?.user, ingredients, refreshTransactions]);
 
   const deleteIngredient = useCallback(async (id: string) => {
     if (!session?.user) return;
@@ -348,7 +350,8 @@ export function BaseIngredientsProvider({ children }: { children: ReactNode }) {
 
     // Delete linked transaction
     await deleteTransactionBySource(session.user.id, id, 'ingredient');
-  }, [session?.user]);
+    await refreshTransactions();
+  }, [session?.user, refreshTransactions]);
 
   const getIngredientsByCategory = useCallback((category: string) => {
     return ingredients.filter(ing => ing.category === category);
