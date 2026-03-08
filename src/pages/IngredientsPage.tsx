@@ -521,6 +521,7 @@ export default function IngredientsPage() {
             currencySymbol={settings.currencySymbol}
             onSave={handleSaveAdd}
             onCancel={() => setShowAddModal(false)}
+            existingIngredients={ingredients}
           />
         </DialogContent>
       </Dialog>
