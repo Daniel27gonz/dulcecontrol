@@ -94,15 +94,32 @@ export function OrderCard({ order }: OrderCardProps) {
       toast({ title: 'Error', description: 'La fecha de pago es obligatoria', variant: 'destructive' });
       return;
     }
+    if (paymentAmount <= 0) {
+      toast({ title: 'Error', description: 'El monto a pagar debe ser mayor a 0', variant: 'destructive' });
+      return;
+    }
 
     updateOrder(order.id, {
       status: 'paid',
       paymentDate: new Date(paymentDate).toISOString(),
+      totalPrice: totalAdvances + paymentAmount, // Adjust total so remaining balance = paymentAmount
     });
     setShowPaymentDialog(false);
     toast({
       title: '✅ Pedido marcado como Pagado',
-      description: `Ingreso registrado en Finanzas`,
+      description: `${settings.currencySymbol}${paymentAmount.toFixed(2)} registrado en Finanzas`,
+    });
+  };
+
+  const handleDeletePayment = () => {
+    updateOrder(order.id, {
+      status: 'completed',
+      paymentDate: null,
+    });
+    setShowDeletePaymentDialog(false);
+    toast({
+      title: 'Pago eliminado',
+      description: 'El pedido volvió a estado Completado y el ingreso fue eliminado de Finanzas',
     });
   };
 
