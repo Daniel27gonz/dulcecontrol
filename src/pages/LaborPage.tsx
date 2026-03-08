@@ -233,7 +233,9 @@ export default function LaborPage() {
                         <Clock className="w-3 h-3 inline mr-1" />{worker.monthlyHours}h mensuales
                       </p>
                     </div>
-                    <div className="flex gap-1">
+                    <p className="text-sm font-bold text-primary">{formatCurrency(worker.monthlySalary)}</p>
+                  </div>
+                  <div className="flex justify-end gap-1 mt-1">
                       <Button variant="ghost" size="icon" onClick={() => handleOpenEdit(worker)}>
                         <Edit2 className="w-4 h-4" />
                       </Button>
