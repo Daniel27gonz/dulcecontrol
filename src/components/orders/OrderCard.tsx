@@ -102,7 +102,6 @@ export function OrderCard({ order }: OrderCardProps) {
     updateOrder(order.id, {
       status: 'paid',
       paymentDate: new Date(paymentDate).toISOString(),
-      totalPrice: totalAdvances + paymentAmount, // Adjust total so remaining balance = paymentAmount
     });
     setShowPaymentDialog(false);
     toast({
