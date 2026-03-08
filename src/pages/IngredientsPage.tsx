@@ -1,6 +1,6 @@
 import { useState, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Search, Plus, Filter, Pencil, Trash2, Package, X, ShoppingCart, ListChecks } from 'lucide-react';
+import { Search, Plus, Filter, Pencil, Trash2, Package, X, ShoppingCart, ListChecks, CalendarDays, ChevronLeft, ChevronRight } from 'lucide-react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
@@ -60,6 +60,33 @@ export default function IngredientsPage() {
   const [selectedCategory, setSelectedCategory] = useState<string>('all');
   const [showCategoryFilter, setShowCategoryFilter] = useState(false);
   
+  // Month filter state
+  const now = new Date();
+  const [filterMonth, setFilterMonth] = useState(now.getMonth()); // 0-11
+  const [filterYear, setFilterYear] = useState(now.getFullYear());
+
+  const MONTH_NAMES = ['Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio', 'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre'];
+
+  const handlePrevMonth = () => {
+    if (filterMonth === 0) { setFilterMonth(11); setFilterYear(y => y - 1); }
+    else setFilterMonth(m => m - 1);
+  };
+  const handleNextMonth = () => {
+    if (filterMonth === 11) { setFilterMonth(0); setFilterYear(y => y + 1); }
+    else setFilterMonth(m => m + 1);
+  };
+
+  const filteredIngredients = useMemo(() => {
+    return ingredients.filter(ing => {
+      const matchesSearch = ing.name.toLowerCase().includes(searchTerm.toLowerCase());
+      const matchesCategory = selectedCategory === 'all' || ing.category === selectedCategory;
+      // Filter by purchaseDate month/year
+      const pDate = ing.purchaseDate ? new Date(ing.purchaseDate) : new Date(ing.lastUpdated);
+      const matchesMonth = pDate.getMonth() === filterMonth && pDate.getFullYear() === filterYear;
+      return matchesSearch && matchesCategory && matchesMonth;
+    });
+  }, [ingredients, searchTerm, selectedCategory, filterMonth, filterYear]);
+
   const [showAddModal, setShowAddModal] = useState(false);
   const [showEditModal, setShowEditModal] = useState(false);
   const [editingIngredient, setEditingIngredient] = useState<BaseIngredient | null>(null);
@@ -67,14 +94,6 @@ export default function IngredientsPage() {
   
   const [formData, setFormData] = useState<IngredientFormData>(initialFormData);
   const [formError, setFormError] = useState<string | null>(null);
-
-  const filteredIngredients = useMemo(() => {
-    return ingredients.filter(ing => {
-      const matchesSearch = ing.name.toLowerCase().includes(searchTerm.toLowerCase());
-      const matchesCategory = selectedCategory === 'all' || ing.category === selectedCategory;
-      return matchesSearch && matchesCategory;
-    });
-  }, [ingredients, searchTerm, selectedCategory]);
 
   const groupedIngredients = useMemo(() => {
     return filteredIngredients.reduce((acc, ing) => {
@@ -256,6 +275,20 @@ export default function IngredientsPage() {
           </TabsList>
 
           <TabsContent value="lista" className="mt-4 space-y-4">
+        {/* Month Selector */}
+        <div className="flex items-center justify-between bg-muted/50 rounded-xl p-2">
+          <Button variant="ghost" size="icon" onClick={handlePrevMonth} className="h-8 w-8">
+            <ChevronLeft className="w-4 h-4" />
+          </Button>
+          <div className="flex items-center gap-2 text-sm font-semibold">
+            <CalendarDays className="w-4 h-4 text-primary" />
+            {MONTH_NAMES[filterMonth]} {filterYear}
+          </div>
+          <Button variant="ghost" size="icon" onClick={handleNextMonth} className="h-8 w-8">
+            <ChevronRight className="w-4 h-4" />
+          </Button>
+        </div>
+
         {/* Search and Filter Bar */}
         <div className="flex gap-2">
           <div className="relative flex-1">
