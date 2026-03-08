@@ -275,6 +275,20 @@ export default function IngredientsPage() {
           </TabsList>
 
           <TabsContent value="lista" className="mt-4 space-y-4">
+        {/* Month Selector */}
+        <div className="flex items-center justify-between bg-muted/50 rounded-xl p-2">
+          <Button variant="ghost" size="icon" onClick={handlePrevMonth} className="h-8 w-8">
+            <ChevronLeft className="w-4 h-4" />
+          </Button>
+          <div className="flex items-center gap-2 text-sm font-semibold">
+            <CalendarDays className="w-4 h-4 text-primary" />
+            {MONTH_NAMES[filterMonth]} {filterYear}
+          </div>
+          <Button variant="ghost" size="icon" onClick={handleNextMonth} className="h-8 w-8">
+            <ChevronRight className="w-4 h-4" />
+          </Button>
+        </div>
+
         {/* Search and Filter Bar */}
         <div className="flex gap-2">
           <div className="relative flex-1">
