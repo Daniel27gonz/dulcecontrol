@@ -232,7 +232,7 @@ export default function LaborPage() {
           </motion.div>
         ) : (
           <motion.div variants={itemVariants} className="space-y-3">
-            {workers.map((worker) => (
+            {filteredWorkers.map((worker) => (
               <Card key={worker.id} className="overflow-hidden">
                 <CardContent className="p-4">
                   <div className="flex items-start justify-between mb-3">
