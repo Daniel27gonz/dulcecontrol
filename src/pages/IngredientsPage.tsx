@@ -80,8 +80,8 @@ export default function IngredientsPage() {
     return ingredients.filter(ing => {
       const matchesSearch = ing.name.toLowerCase().includes(searchTerm.toLowerCase());
       const matchesCategory = selectedCategory === 'all' || ing.category === selectedCategory;
-      // Filter by purchase_date month/year
-      const purchaseDate = ing.purchase_date ? new Date(ing.purchase_date) : new Date(ing.created_at);
+      // Filter by purchaseDate month/year
+      const pDate = ing.purchaseDate ? new Date(ing.purchaseDate) : new Date(ing.lastUpdated);
       const matchesMonth = purchaseDate.getMonth() === filterMonth && purchaseDate.getFullYear() === filterYear;
       return matchesSearch && matchesCategory && matchesMonth;
     });
