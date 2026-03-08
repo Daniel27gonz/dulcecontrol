@@ -60,21 +60,32 @@ export default function IngredientsPage() {
   const [selectedCategory, setSelectedCategory] = useState<string>('all');
   const [showCategoryFilter, setShowCategoryFilter] = useState(false);
   
-  const [showAddModal, setShowAddModal] = useState(false);
-  const [showEditModal, setShowEditModal] = useState(false);
-  const [editingIngredient, setEditingIngredient] = useState<BaseIngredient | null>(null);
-  const [deleteConfirmId, setDeleteConfirmId] = useState<string | null>(null);
-  
-  const [formData, setFormData] = useState<IngredientFormData>(initialFormData);
-  const [formError, setFormError] = useState<string | null>(null);
+  // Month filter state
+  const now = new Date();
+  const [filterMonth, setFilterMonth] = useState(now.getMonth()); // 0-11
+  const [filterYear, setFilterYear] = useState(now.getFullYear());
+
+  const MONTH_NAMES = ['Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio', 'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre'];
+
+  const handlePrevMonth = () => {
+    if (filterMonth === 0) { setFilterMonth(11); setFilterYear(y => y - 1); }
+    else setFilterMonth(m => m - 1);
+  };
+  const handleNextMonth = () => {
+    if (filterMonth === 11) { setFilterMonth(0); setFilterYear(y => y + 1); }
+    else setFilterMonth(m => m + 1);
+  };
 
   const filteredIngredients = useMemo(() => {
     return ingredients.filter(ing => {
       const matchesSearch = ing.name.toLowerCase().includes(searchTerm.toLowerCase());
       const matchesCategory = selectedCategory === 'all' || ing.category === selectedCategory;
-      return matchesSearch && matchesCategory;
+      // Filter by purchase_date month/year
+      const purchaseDate = ing.purchase_date ? new Date(ing.purchase_date) : new Date(ing.created_at);
+      const matchesMonth = purchaseDate.getMonth() === filterMonth && purchaseDate.getFullYear() === filterYear;
+      return matchesSearch && matchesCategory && matchesMonth;
     });
-  }, [ingredients, searchTerm, selectedCategory]);
+  }, [ingredients, searchTerm, selectedCategory, filterMonth, filterYear]);
 
   const groupedIngredients = useMemo(() => {
     return filteredIngredients.reduce((acc, ing) => {
