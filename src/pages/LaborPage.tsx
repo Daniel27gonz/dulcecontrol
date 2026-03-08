@@ -261,7 +261,6 @@ export default function LaborPage() {
                         </AlertDialogContent>
                       </AlertDialog>
                     </div>
-                  </div>
                 </CardContent>
               </Card>
             ))}
