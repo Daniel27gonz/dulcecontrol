@@ -686,6 +686,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
     }
 
     setOrders(prev => prev.filter(order => order.id !== id));
+    await reloadTransactions();
   };
 
   // Transaction functions
