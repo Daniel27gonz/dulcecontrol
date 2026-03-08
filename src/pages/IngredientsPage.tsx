@@ -50,6 +50,11 @@ const initialFormData: IngredientFormData = {
   purchaseDate: new Date().toISOString().split('T')[0],
 };
 
+const MONTH_NAMES = [
+  'Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio',
+  'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre',
+];
+
 export default function IngredientsPage() {
   const { ingredients, addIngredient, updateIngredient, deleteIngredient, findDuplicate } = useBaseIngredients();
   const { settings } = useApp();
@@ -57,6 +62,8 @@ export default function IngredientsPage() {
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedCategory, setSelectedCategory] = useState<string>('all');
   const [showCategoryFilter, setShowCategoryFilter] = useState(false);
+  const [selectedMonth, setSelectedMonth] = useState<number>(new Date().getMonth());
+  const [selectedYear, setSelectedYear] = useState<number>(new Date().getFullYear());
   
   const [showAddModal, setShowAddModal] = useState(false);
   const [showEditModal, setShowEditModal] = useState(false);
@@ -66,13 +73,31 @@ export default function IngredientsPage() {
   const [formData, setFormData] = useState<IngredientFormData>(initialFormData);
   const [formError, setFormError] = useState<string | null>(null);
 
-  const filteredIngredients = useMemo(() => {
+  // Filter by month first
+  const monthFilteredIngredients = useMemo(() => {
     return ingredients.filter(ing => {
+      const dateStr = ing.purchaseDate || ing.lastUpdated;
+      if (!dateStr) return false;
+      const date = new Date(dateStr);
+      return date.getMonth() === selectedMonth && date.getFullYear() === selectedYear;
+    });
+  }, [ingredients, selectedMonth, selectedYear]);
+
+  // Then apply search and category filters
+  const filteredIngredients = useMemo(() => {
+    return monthFilteredIngredients.filter(ing => {
       const matchesSearch = ing.name.toLowerCase().includes(searchTerm.toLowerCase());
       const matchesCategory = selectedCategory === 'all' || ing.category === selectedCategory;
       return matchesSearch && matchesCategory;
     });
-  }, [ingredients, searchTerm, selectedCategory]);
+  }, [monthFilteredIngredients, searchTerm, selectedCategory]);
+
+  // Total paid for the selected month
+  const monthlyTotal = useMemo(() => {
+    return monthFilteredIngredients.reduce((sum, ing) => {
+      return sum + (ing.presentationPrice * ing.presentationQuantity);
+    }, 0);
+  }, [monthFilteredIngredients]);
 
   const groupedIngredients = useMemo(() => {
     return filteredIngredients.reduce((acc, ing) => {
