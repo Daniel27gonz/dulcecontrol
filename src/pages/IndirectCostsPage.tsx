@@ -395,45 +395,12 @@ export default function IndirectCostsPage() {
           </motion.div>
 
 
+          {/* Costo Indirecto por Hora - compact */}
           <motion.div variants={itemVariants}>
-            <Card className="bg-warm/10 border-warm/30">
-              <CardContent className="p-4">
-                <div className="flex items-center justify-between">
-                  <div className="min-w-0 flex-1">
-                    <p className="text-sm text-muted-foreground">Total Gastos del Mes</p>
-                    <p className="text-xl sm:text-2xl font-bold text-warm">{formatCurrency(totalIndirectCosts)}</p>
-                  </div>
-                  <Receipt className="w-8 h-8 sm:w-10 sm:h-10 text-warm/50 shrink-0" />
-                </div>
-                <p className="text-xs text-muted-foreground mt-2">{lastMonthLabel ? `Mes: ${lastMonthLabel}` : 'Mensuales'}</p>
-              </CardContent>
-            </Card>
-          </motion.div>
-
-          {/* Costo Indirecto por Hora */}
-          <motion.div variants={itemVariants}>
-            <Card className="bg-primary/10 border-primary/30">
-              <CardContent className="p-4">
-                <div className="flex items-center justify-between">
-                  <div className="flex-1 min-w-0">
-                    <div className="flex items-center gap-2 mb-1">
-                      <Clock className="w-5 h-5 text-primary shrink-0" />
-                      <p className="text-sm font-medium text-foreground">Costo Indirecto por Hora</p>
-                    </div>
-                    {totalMonthlyHours > 0 ? (
-                      <>
-                        <p className="text-xl sm:text-2xl font-bold text-primary">{formatCurrency(indirectCostPerHour)}</p>
-                      </>
-                    ) : (
-                      <div className="flex items-start gap-2 mt-2 text-amber-600">
-                        <AlertCircle className="w-4 h-4 shrink-0 mt-0.5" />
-                        <p className="text-sm">Agrega horas de trabajo para calcular</p>
-                      </div>
-                    )}
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
+            <div className="flex items-center justify-center gap-2 text-xs text-muted-foreground">
+              <Clock className="w-3.5 h-3.5" />
+              <span>Costo/hora: {totalMonthlyHours > 0 ? `${formatCurrency(totalIndirectCosts)} ÷ ${totalMonthlyHours}h = ${formatCurrency(indirectCostPerHour)}/h` : 'Agrega horas de trabajo'}</span>
+            </div>
           </motion.div>
 
           {/* Depreciation Section */}
