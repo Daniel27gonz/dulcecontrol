@@ -273,25 +273,27 @@ export function OrderForm({ order, trigger, onClose }: OrderFormProps) {
             )}
           </div>
 
-          {/* Status */}
-          <div className="space-y-2">
-            <Label>Estado del Pedido</Label>
-            <Select value={status} onValueChange={(v) => setStatus(v as typeof status)}>
-              <SelectTrigger>
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent className="bg-background border">
-                {ORDER_STATUSES.map((s) => (
-                  <SelectItem key={s.value} value={s.value}>
-                    <span className="flex items-center gap-2">
-                      <span className={cn('w-2 h-2 rounded-full', s.color)} />
-                      {s.label}
-                    </span>
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
+          {/* Status - only show when editing */}
+          {isEditing && (
+            <div className="space-y-2">
+              <Label>Estado del Pedido</Label>
+              <Select value={status} onValueChange={(v) => setStatus(v as typeof status)}>
+                <SelectTrigger>
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent className="bg-background border">
+                  {ORDER_STATUSES.map((s) => (
+                    <SelectItem key={s.value} value={s.value}>
+                      <span className="flex items-center gap-2">
+                        <span className={cn('w-2 h-2 rounded-full', s.color)} />
+                        {s.label}
+                      </span>
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+          )}
 
           {/* Delivery Date */}
           <div className="space-y-2">
