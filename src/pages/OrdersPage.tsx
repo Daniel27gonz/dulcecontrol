@@ -20,6 +20,8 @@ export default function OrdersPage() {
   const pendingCount = orders.filter(o => o.status === 'pending').length;
   const inProgressCount = orders.filter(o => o.status === 'in_progress').length;
   const completedCount = orders.filter(o => o.status === 'completed').length;
+  const paidCount = orders.filter(o => o.status === 'paid').length;
+  const cancelledCount = orders.filter(o => o.status === 'cancelled').length;
 
   return (
     <div className="min-h-screen bg-background pb-24">
@@ -31,23 +33,35 @@ export default function OrdersPage() {
 
         {/* Stats */}
         {orders.length > 0 && (
-          <div className="grid grid-cols-3 gap-2">
+          <div className="grid grid-cols-5 gap-2">
             <Card className="bg-yellow-50 border-yellow-200">
-              <CardContent className="p-3 text-center">
-                <p className="text-2xl font-bold text-yellow-700">{pendingCount}</p>
-                <p className="text-xs text-yellow-600">Pendientes</p>
+              <CardContent className="p-2 text-center">
+                <p className="text-xl font-bold text-yellow-700">{pendingCount}</p>
+                <p className="text-[10px] text-yellow-600">Pendientes</p>
               </CardContent>
             </Card>
             <Card className="bg-blue-50 border-blue-200">
-              <CardContent className="p-3 text-center">
-                <p className="text-2xl font-bold text-blue-700">{inProgressCount}</p>
-                <p className="text-xs text-blue-600">En Proceso</p>
+              <CardContent className="p-2 text-center">
+                <p className="text-xl font-bold text-blue-700">{inProgressCount}</p>
+                <p className="text-[10px] text-blue-600">En Proceso</p>
               </CardContent>
             </Card>
             <Card className="bg-green-50 border-green-200">
-              <CardContent className="p-3 text-center">
-                <p className="text-2xl font-bold text-green-700">{completedCount}</p>
-                <p className="text-xs text-green-600">Completados</p>
+              <CardContent className="p-2 text-center">
+                <p className="text-xl font-bold text-green-700">{completedCount}</p>
+                <p className="text-[10px] text-green-600">Completados</p>
+              </CardContent>
+            </Card>
+            <Card className="bg-emerald-50 border-emerald-200">
+              <CardContent className="p-2 text-center">
+                <p className="text-xl font-bold text-emerald-700">{paidCount}</p>
+                <p className="text-[10px] text-emerald-600">Pagados</p>
+              </CardContent>
+            </Card>
+            <Card className="bg-red-50 border-red-200">
+              <CardContent className="p-2 text-center">
+                <p className="text-xl font-bold text-red-700">{cancelledCount}</p>
+                <p className="text-[10px] text-red-600">Cancelados</p>
               </CardContent>
             </Card>
           </div>
@@ -55,11 +69,13 @@ export default function OrdersPage() {
 
         {/* Tabs Filter */}
         <Tabs value={activeTab} onValueChange={setActiveTab}>
-          <TabsList className="w-full grid grid-cols-4">
-            <TabsTrigger value="all" className="text-xs">Todos</TabsTrigger>
-            <TabsTrigger value="pending" className="text-xs">Pendiente</TabsTrigger>
-            <TabsTrigger value="in_progress" className="text-xs">Proceso</TabsTrigger>
-            <TabsTrigger value="completed" className="text-xs">Listo</TabsTrigger>
+          <TabsList className="w-full grid grid-cols-6">
+            <TabsTrigger value="all" className="text-[10px] px-1">Todos</TabsTrigger>
+            <TabsTrigger value="pending" className="text-[10px] px-1">Pendiente</TabsTrigger>
+            <TabsTrigger value="in_progress" className="text-[10px] px-1">Proceso</TabsTrigger>
+            <TabsTrigger value="completed" className="text-[10px] px-1">Completado</TabsTrigger>
+            <TabsTrigger value="paid" className="text-[10px] px-1">Pagado</TabsTrigger>
+            <TabsTrigger value="cancelled" className="text-[10px] px-1">Cancelado</TabsTrigger>
           </TabsList>
 
           <TabsContent value={activeTab} className="mt-4">
