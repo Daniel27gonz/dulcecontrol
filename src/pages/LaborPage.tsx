@@ -167,26 +167,14 @@ export default function LaborPage() {
 
         {/* Monthly Total Banner */}
         <motion.div variants={itemVariants}>
-          <div className="rounded-xl bg-primary/10 border border-primary/20 p-4 text-center">
-            <p className="text-sm text-muted-foreground font-medium">
+          <div className="rounded-xl bg-primary/10 border border-primary/20 p-3 text-center">
+            <p className="text-xs text-muted-foreground font-medium">
               Total pagado — {MONTH_NAMES[filterMonth]} {filterYear}
             </p>
-            <p className="text-2xl font-bold text-primary mt-1">
+            <p className="text-lg font-bold text-primary mt-0.5">
               {formatCurrency(monthlyTotal)}
             </p>
           </div>
-        </motion.div>
-
-        {/* Info Card */}
-        <motion.div variants={itemVariants}>
-          <Card className="bg-primary/5 border-primary/20">
-            <CardContent className="p-4 flex gap-3">
-              <HelpCircle className="w-5 h-5 text-primary shrink-0 mt-0.5" />
-              <p className="text-sm text-muted-foreground">
-                Este cálculo te permite saber cuánto cuesta realmente cada hora de trabajo en tu negocio.
-              </p>
-            </CardContent>
-          </Card>
         </motion.div>
 
         {/* Summary */}
