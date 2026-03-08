@@ -149,6 +149,34 @@ export default function LaborPage() {
         animate="visible"
         className="p-4 space-y-4"
       >
+        {/* Month Selector */}
+        <motion.div variants={itemVariants}>
+          <div className="flex items-center justify-between bg-muted/50 rounded-xl p-2">
+            <Button variant="ghost" size="icon" onClick={handlePrevMonth} className="h-8 w-8">
+              <ChevronLeft className="w-4 h-4" />
+            </Button>
+            <div className="flex items-center gap-2 text-sm font-semibold">
+              <CalendarDays className="w-4 h-4 text-primary" />
+              {MONTH_NAMES[filterMonth]} {filterYear}
+            </div>
+            <Button variant="ghost" size="icon" onClick={handleNextMonth} className="h-8 w-8">
+              <ChevronRight className="w-4 h-4" />
+            </Button>
+          </div>
+        </motion.div>
+
+        {/* Monthly Total Banner */}
+        <motion.div variants={itemVariants}>
+          <div className="rounded-xl bg-primary/10 border border-primary/20 p-4 text-center">
+            <p className="text-sm text-muted-foreground font-medium">
+              Total pagado — {MONTH_NAMES[filterMonth]} {filterYear}
+            </p>
+            <p className="text-2xl font-bold text-primary mt-1">
+              {formatCurrency(monthlyTotal)}
+            </p>
+          </div>
+        </motion.div>
+
         {/* Info Card */}
         <motion.div variants={itemVariants}>
           <Card className="bg-primary/5 border-primary/20">
