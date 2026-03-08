@@ -3,8 +3,11 @@ import { motion } from 'framer-motion';
 import { 
   TrendingUp, TrendingDown, Wallet, CalendarDays, 
   FileText, ShoppingCart, Package, Users, Wrench, 
-  ChevronLeft, ChevronRight, Plus, Receipt
+  ChevronLeft, ChevronRight, Plus, Receipt,
+  ChevronDown, Calendar, Filter
 } from 'lucide-react';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { useApp } from '@/context/AppContext';
