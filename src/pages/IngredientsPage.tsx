@@ -1,16 +1,12 @@
 import { useState, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Search, Plus, Filter, Pencil, Trash2, Package, X, CalendarDays, DollarSign } from 'lucide-react';
-import { format } from 'date-fns';
-import { es } from 'date-fns/locale';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
-import { Calendar } from '@/components/ui/calendar';
 import { BottomNav } from '@/components/BottomNav';
 import { AppHeader } from '@/components/AppHeader';
 import { useBaseIngredients, BaseIngredient, INGREDIENT_CATEGORIES, PURCHASE_UNITS, getBaseUnit, calculateCostPerBaseUnit } from '@/context/BaseIngredientsContext';
@@ -270,48 +266,31 @@ export default function IngredientsPage() {
       <AppHeader title="Ingredientes" />
 
       <div className="p-4 space-y-4">
-        {/* Month Selector - Month Grid Popover */}
-        <Popover>
-          <PopoverTrigger asChild>
-            <Button variant="outline" className="w-full justify-start text-left font-normal gap-2">
-              <CalendarDays className="w-4 h-4 text-muted-foreground" />
-              <span className="capitalize">
-                {format(new Date(selectedYear, selectedMonth, 1), 'MMMM yyyy', { locale: es })}
-              </span>
-            </Button>
-          </PopoverTrigger>
-          <PopoverContent className="w-[280px] p-3 pointer-events-auto" align="start">
-            <div className="space-y-3">
-              {/* Year navigation */}
-              <div className="flex items-center justify-between">
-                <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => setSelectedYear(y => y - 1)}>
-                  <span className="text-sm">←</span>
-                </Button>
-                <span className="text-sm font-medium">{selectedYear}</span>
-                <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => setSelectedYear(y => y + 1)}>
-                  <span className="text-sm">→</span>
-                </Button>
-              </div>
-              {/* Month grid */}
-              <div className="grid grid-cols-3 gap-2">
-                {MONTH_NAMES.map((name, idx) => (
-                  <Button
-                    key={idx}
-                    variant={idx === selectedMonth ? 'default' : 'ghost'}
-                    size="sm"
-                    className={cn(
-                      "text-xs h-9",
-                      idx === selectedMonth && "bg-primary text-primary-foreground"
-                    )}
-                    onClick={() => setSelectedMonth(idx)}
-                  >
-                    {name.slice(0, 3)}
-                  </Button>
-                ))}
-              </div>
-            </div>
-          </PopoverContent>
-        </Popover>
+        {/* Month Selector */}
+        <div className="flex items-center gap-2">
+          <CalendarDays className="w-4 h-4 text-muted-foreground shrink-0" />
+          <Select
+            value={`${selectedYear}-${selectedMonth}`}
+            onValueChange={(value) => {
+              const [y, m] = value.split('-').map(Number);
+              setSelectedYear(y);
+              setSelectedMonth(m);
+            }}
+          >
+            <SelectTrigger className="flex-1">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              {[selectedYear - 1, selectedYear, selectedYear + 1].map(year =>
+                MONTH_NAMES.map((name, idx) => (
+                  <SelectItem key={`${year}-${idx}`} value={`${year}-${idx}`}>
+                    {name} {year}
+                  </SelectItem>
+                ))
+              )}
+            </SelectContent>
+          </Select>
+        </div>
 
         {/* Monthly Total Card */}
         <Card className="bg-primary/5 border-primary/20">
