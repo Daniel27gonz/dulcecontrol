@@ -233,7 +233,63 @@ export function AppProvider({ children }: { children: ReactNode }) {
       .order('date', { ascending: false });
 
     if (transactionsData) {
-      setTransactions(transactionsData.map(t => ({
+      // Build sets of valid source IDs for each source type
+      const validSourceIds = new Set<string>();
+
+      // Ingredients
+      const { data: ingredientsData } = await supabase
+        .from('base_ingredients')
+        .select('id')
+        .eq('user_id', userId);
+      ingredientsData?.forEach(i => validSourceIds.add(`ingredient:${i.id}`));
+
+      // Workers
+      const { data: workersData } = await supabase
+        .from('workers')
+        .select('id')
+        .eq('user_id', userId);
+      workersData?.forEach(w => validSourceIds.add(`worker:${w.id}`));
+
+      // Indirect costs (includes equipment)
+      const { data: costsData } = await supabase
+        .from('indirect_costs')
+        .select('id')
+        .eq('user_id', userId);
+      costsData?.forEach(c => validSourceIds.add(`indirect_cost:${c.id}`));
+
+      // Orders
+      const { data: ordersSourceData } = await supabase
+        .from('orders')
+        .select('id, advances')
+        .eq('user_id', userId);
+      ordersSourceData?.forEach(o => {
+        validSourceIds.add(`order:${o.id}`);
+        // Advances
+        const advances = (o.advances as any[]) || [];
+        advances.forEach((a: any) => {
+          if (a.id) validSourceIds.add(`order_advance:${a.id}`);
+        });
+      });
+
+      // Filter: keep transactions that are manual (no source) or have a valid source
+      const orphanIds: string[] = [];
+      const validTransactions = transactionsData.filter(t => {
+        if (!t.source_id || !t.source_type) return true; // manual transaction, keep
+        const key = `${t.source_type}:${t.source_id}`;
+        if (validSourceIds.has(key)) return true;
+        orphanIds.push(t.id);
+        return false;
+      });
+
+      // Delete orphans from DB in background
+      if (orphanIds.length > 0) {
+        console.log(`Cleaning up ${orphanIds.length} orphan transaction(s)`);
+        for (const oid of orphanIds) {
+          supabase.from('transactions').delete().eq('id', oid).eq('user_id', userId).then();
+        }
+      }
+
+      setTransactions(validTransactions.map(t => ({
         id: t.id,
         type: t.type as Transaction['type'],
         description: t.description,
