@@ -536,12 +536,13 @@ function HistorialTransacciones({
                     <th className="text-left p-3 text-muted-foreground font-medium">Categoría</th>
                     <th className="text-left p-3 text-muted-foreground font-medium">Descripción</th>
                     <th className="text-right p-3 text-muted-foreground font-medium">Monto</th>
+                    <th className="w-10 p-3"></th>
                   </tr>
                 </thead>
                 <tbody>
                   {filteredTransactions.length === 0 ? (
                     <tr>
-                      <td colSpan={5} className="p-8 text-center text-muted-foreground">
+                      <td colSpan={6} className="p-8 text-center text-muted-foreground">
                         No hay transacciones en este mes
                       </td>
                     </tr>
@@ -572,6 +573,18 @@ function HistorialTransacciones({
                           t.type === 'income' ? 'text-success' : 'text-destructive'
                         )}>
                           {t.type === 'income' ? '+' : '-'}{cs}{t.amount.toFixed(2)}
+                        </td>
+                        <td className="p-3 text-center">
+                          {!t.sourceId && (
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              className="h-7 w-7 text-muted-foreground hover:text-destructive"
+                              onClick={() => deleteTransaction(t.id)}
+                            >
+                              <Trash2 className="w-3.5 h-3.5" />
+                            </Button>
+                          )}
                         </td>
                       </tr>
                     ))
