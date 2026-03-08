@@ -332,7 +332,11 @@ export function AppProvider({ children }: { children: ReactNode }) {
   };
 
   const logout = async () => {
-    await supabase.auth.signOut();
+    try {
+      await supabase.auth.signOut({ scope: 'local' });
+    } catch (error) {
+      console.warn('Logout error (clearing locally):', error);
+    }
   };
 
   // Recipe functions
