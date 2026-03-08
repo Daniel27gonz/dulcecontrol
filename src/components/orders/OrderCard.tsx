@@ -56,11 +56,15 @@ export function OrderCard({ order }: OrderCardProps) {
   // Payment date dialog state
   const [showPaymentDialog, setShowPaymentDialog] = useState(false);
   const [paymentDate, setPaymentDate] = useState(new Date().toISOString().split('T')[0]);
+  const [paymentAmount, setPaymentAmount] = useState<number>(0);
 
   // Advance dialog state
   const [showAdvanceDialog, setShowAdvanceDialog] = useState(false);
   const [advanceAmount, setAdvanceAmount] = useState<number>(0);
   const [advanceDate, setAdvanceDate] = useState(new Date().toISOString().split('T')[0]);
+
+  // Delete payment dialog state
+  const [showDeletePaymentDialog, setShowDeletePaymentDialog] = useState(false);
 
   const statusInfo = ORDER_STATUSES.find(s => s.value === order.status) || ORDER_STATUSES[0];
   const deliveryDate = new Date(order.deliveryDate);
