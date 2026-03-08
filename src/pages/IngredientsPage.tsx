@@ -56,6 +56,7 @@ export default function IngredientsPage() {
   const { settings } = useApp();
   
   const [searchTerm, setSearchTerm] = useState('');
+  const [listSearchTerm, setListSearchTerm] = useState('');
   const [selectedCategory, setSelectedCategory] = useState<string>('all');
   const [showCategoryFilter, setShowCategoryFilter] = useState(false);
   
