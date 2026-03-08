@@ -87,6 +87,14 @@ export default function IngredientsPage() {
     });
   }, [ingredients, searchTerm, selectedCategory, filterMonth, filterYear]);
 
+  const [showAddModal, setShowAddModal] = useState(false);
+  const [showEditModal, setShowEditModal] = useState(false);
+  const [editingIngredient, setEditingIngredient] = useState<BaseIngredient | null>(null);
+  const [deleteConfirmId, setDeleteConfirmId] = useState<string | null>(null);
+  
+  const [formData, setFormData] = useState<IngredientFormData>(initialFormData);
+  const [formError, setFormError] = useState<string | null>(null);
+
   const groupedIngredients = useMemo(() => {
     return filteredIngredients.reduce((acc, ing) => {
       if (!acc[ing.category]) {
