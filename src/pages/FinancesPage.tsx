@@ -581,9 +581,17 @@ function HistorialTransacciones({
             </div>
           </ScrollArea>
 
-          {/* Record count */}
-          <div className="text-center text-xs text-muted-foreground pt-1">
-            Total ({filteredTransactions.length} registros)
+          {/* Record count + filtered total */}
+          <div className="flex items-center justify-between border-t border-border pt-3 px-1">
+            <span className="text-xs text-muted-foreground">
+              Total ({filteredTransactions.length} registros)
+            </span>
+            <span className={cn(
+              'text-sm font-bold',
+              (histIncome - histExpenses) >= 0 ? 'text-success' : 'text-destructive'
+            )}>
+              {(histIncome - histExpenses) >= 0 ? '+' : '-'}{cs}{Math.abs(histIncome - histExpenses).toFixed(2)}
+            </span>
           </div>
         </CardContent>
       </Card>
