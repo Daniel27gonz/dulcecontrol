@@ -1,6 +1,8 @@
 import { useState, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Search, Plus, Filter, Pencil, Trash2, Package, X, CalendarDays, DollarSign } from 'lucide-react';
+import { format, setMonth, setYear } from 'date-fns';
+import { es } from 'date-fns/locale';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
