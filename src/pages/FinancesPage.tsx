@@ -4,7 +4,7 @@ import {
   TrendingUp, TrendingDown, Wallet, CalendarDays, 
   FileText, ShoppingCart, Package, Users, Wrench, 
   ChevronLeft, ChevronRight, Plus, Receipt,
-  ChevronDown, Calendar, Filter
+  ChevronDown, Calendar, Filter, Trash2
 } from 'lucide-react';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
@@ -377,11 +377,13 @@ export default function FinancesPage() {
 function HistorialTransacciones({ 
   transactions, 
   cs, 
-  itemVariants 
+  itemVariants,
+  deleteTransaction,
 }: { 
   transactions: any[];
   cs: string;
   itemVariants: any;
+  deleteTransaction: (id: string) => void;
 }) {
   const [histMonth, setHistMonth] = useState(new Date());
   const [typeFilter, setTypeFilter] = useState<'all' | 'income' | 'expense'>('all');
