@@ -1,6 +1,7 @@
 import { useState, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Search, Plus, Filter, Pencil, Trash2, Package, X } from 'lucide-react';
+import { Search, Plus, Filter, Pencil, Trash2, Package, X, ShoppingCart, ListChecks } from 'lucide-react';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
@@ -238,9 +239,22 @@ export default function IngredientsPage() {
 
   return (
     <div className="min-h-screen bg-background pb-24">
-      <AppHeader title="Lista de Ingredientes" />
+      <AppHeader title="Ingredientes" />
 
       <div className="p-4 space-y-4">
+        <Tabs defaultValue="lista" className="w-full">
+          <TabsList className="w-full grid grid-cols-2">
+            <TabsTrigger value="lista" className="flex items-center gap-2">
+              <ListChecks className="w-4 h-4" />
+              Lista de Ingredientes
+            </TabsTrigger>
+            <TabsTrigger value="compras" className="flex items-center gap-2">
+              <ShoppingCart className="w-4 h-4" />
+              Compras
+            </TabsTrigger>
+          </TabsList>
+
+          <TabsContent value="lista" className="mt-4 space-y-4">
         {/* Search and Filter Bar */}
         <div className="flex gap-2">
           <div className="relative flex-1">
@@ -391,6 +405,18 @@ export default function IngredientsPage() {
             })}
           </div>
         )}
+          </TabsContent>
+
+          <TabsContent value="compras" className="mt-4 space-y-4">
+            <Card className="p-8 text-center">
+              <ShoppingCart className="w-12 h-12 mx-auto text-muted-foreground mb-3" />
+              <h3 className="font-semibold mb-1">Historial de Compras</h3>
+              <p className="text-sm text-muted-foreground">
+                Próximamente podrás ver el historial de todas tus compras de ingredientes aquí.
+              </p>
+            </Card>
+          </TabsContent>
+        </Tabs>
       </div>
 
       {/* Fixed Add Button */}
