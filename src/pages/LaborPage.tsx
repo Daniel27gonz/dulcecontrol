@@ -223,11 +223,14 @@ export default function LaborPage() {
             {filteredWorkers.map((worker) => (
               <Card key={worker.id} className="overflow-hidden">
                 <CardContent className="p-4">
-                  <div className="flex items-start justify-between mb-3">
+                  <div className="flex items-start justify-between">
                     <div>
                       <h3 className="font-semibold text-foreground">{worker.name}</h3>
                       <p className="text-xs text-muted-foreground">
                         Fecha de pago: {worker.paymentDate ? new Date(worker.paymentDate).toLocaleDateString('es-MX') : 'Sin fecha'}
+                      </p>
+                      <p className="text-xs text-muted-foreground mt-1">
+                        <Clock className="w-3 h-3 inline mr-1" />{worker.monthlyHours}h mensuales
                       </p>
                     </div>
                     <div className="flex gap-1">
@@ -255,30 +258,6 @@ export default function LaborPage() {
                           </AlertDialogFooter>
                         </AlertDialogContent>
                       </AlertDialog>
-                    </div>
-                  </div>
-
-                  {/* Worker details grid */}
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 sm:gap-3 text-sm">
-                    <div className="flex items-center gap-2 text-muted-foreground">
-                      <Clock className="w-4 h-4 shrink-0" />
-                      <span className="truncate">{worker.hoursPerDay}h/día × {worker.daysPerMonth} días</span>
-                    </div>
-                    <div className="flex items-center gap-2 text-muted-foreground">
-                      <Calendar className="w-4 h-4 shrink-0" />
-                      <span className="truncate">{worker.monthlyHours}h mensuales</span>
-                    </div>
-                  </div>
-
-                  {/* Salary breakdown */}
-                  <div className="mt-3 pt-3 border-t grid grid-cols-2 gap-2 text-center">
-                    <div>
-                      <p className="text-xs text-muted-foreground">Diario</p>
-                      <p className="text-sm font-semibold text-foreground">{formatCurrency(worker.dailySalary)}</p>
-                    </div>
-                    <div className="bg-primary/10 rounded-lg p-1">
-                      <p className="text-xs text-primary">Por hora</p>
-                      <p className="text-sm font-bold text-primary">{formatCurrency(worker.hourlyRate)}</p>
                     </div>
                   </div>
                 </CardContent>
