@@ -3,6 +3,7 @@ import {
   Home, Package, Calculator, FileText, Sparkles, ClipboardList, Wallet,
   HelpCircle, Settings
 } from 'lucide-react';
+import dulceControlLogo from '@/assets/dulcecontrol-logo.png';
 import { NavLink } from '@/components/NavLink';
 import {
   Sidebar,
@@ -40,8 +41,8 @@ export function AppSidebar() {
     <Sidebar collapsible="none" className="border-r border-border/50">
       <SidebarContent className="bg-card">
         {/* Logo / Brand */}
-        <div className="px-4 py-5 border-b border-border/50">
-          <span className="text-xl font-extrabold text-primary tracking-tight">DulceControl</span>
+        <div className="px-3 py-4 border-b border-border/50 flex items-center justify-center">
+          <img src={dulceControlLogo} alt="DulceControl" className="h-10 w-auto object-contain" />
         </div>
 
         {/* Main nav */}
