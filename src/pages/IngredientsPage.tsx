@@ -238,7 +238,7 @@ export default function IngredientsPage() {
 
   return (
     <div className="min-h-screen bg-background pb-24">
-      <AppHeader title="Ingredientes" />
+      <AppHeader title="Lista de Ingredientes" />
 
       <div className="p-4 space-y-4">
         {/* Search and Filter Bar */}
