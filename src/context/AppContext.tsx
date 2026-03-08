@@ -319,6 +319,27 @@ export function AppProvider({ children }: { children: ReactNode }) {
     }
   };
 
+  // Reload transactions from DB to keep local state in sync
+  const reloadTransactions = async () => {
+    if (!session?.user) return;
+    const { data } = await supabase
+      .from('transactions')
+      .select('*')
+      .eq('user_id', session.user.id);
+    if (data) {
+      setTransactions(data.map(t => ({
+        id: t.id,
+        type: t.type as Transaction['type'],
+        description: t.description,
+        amount: Number(t.amount),
+        category: t.category,
+        date: t.date,
+        sourceId: t.source_id,
+        sourceType: t.source_type,
+      })));
+    }
+  };
+
   // Initialize auth state
   useEffect(() => {
     // Set up auth state listener FIRST
@@ -637,6 +658,9 @@ export function AppProvider({ children }: { children: ReactNode }) {
         });
       }
     }
+
+    // Reload transactions from DB to keep local state in sync
+    await reloadTransactions();
   };
 
   const deleteOrder = async (id: string) => {
@@ -662,6 +686,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
     }
 
     setOrders(prev => prev.filter(order => order.id !== id));
+    await reloadTransactions();
   };
 
   // Transaction functions
