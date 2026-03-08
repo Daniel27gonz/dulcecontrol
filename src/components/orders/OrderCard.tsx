@@ -457,6 +457,24 @@ export function OrderCard({ order }: OrderCardProps) {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      {/* Delete Payment Confirmation Dialog */}
+      <AlertDialog open={showDeletePaymentDialog} onOpenChange={setShowDeletePaymentDialog}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>¿Eliminar pago?</AlertDialogTitle>
+            <AlertDialogDescription>
+              Se eliminará el registro de pago y el ingreso en Finanzas. El pedido volverá a estado "Completado".
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancelar</AlertDialogCancel>
+            <AlertDialogAction onClick={handleDeletePayment}>
+              Eliminar pago
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </>
   );
 }
