@@ -382,15 +382,6 @@ export default function FinancesPage() {
         {/* ===== HISTORIAL DE TRANSACCIONES ===== */}
         <HistorialTransacciones 
           transactions={transactions}
-          depreciationEntries={Object.entries(monthlyData.depreciationByEquipment).map(([name, amount], i) => ({
-            id: `dep-${i}`,
-            type: 'expense' as const,
-            description: name,
-            amount,
-            category: 'depreciación',
-            date: new Date().toISOString(),
-            sourceType: 'depreciation',
-          }))}
           cs={cs}
           itemVariants={itemVariants}
           deleteTransaction={deleteTransaction}
@@ -405,13 +396,11 @@ export default function FinancesPage() {
 /* ============ Historial de Transacciones Component ============ */
 function HistorialTransacciones({ 
   transactions, 
-  depreciationEntries = [],
   cs, 
   itemVariants,
   deleteTransaction,
 }: { 
   transactions: any[];
-  depreciationEntries?: any[];
   cs: string;
   itemVariants: any;
   deleteTransaction: (id: string) => void;
@@ -425,9 +414,7 @@ function HistorialTransacciones({
   const histMonthEnd = endOfMonth(histMonth);
 
   const filteredTransactions = useMemo(() => {
-    // Filter real transactions (exclude depreciation from DB since we compute it)
-    const realFiltered = transactions.filter(t => {
-      if (t.category === 'depreciación') return false; // Skip DB depreciation entries
+    return transactions.filter(t => {
       try {
         const d = new Date(t.date);
         if (!isWithinInterval(d, { start: histMonthStart, end: histMonthEnd })) return false;
@@ -435,17 +422,8 @@ function HistorialTransacciones({
       if (typeFilter !== 'all' && t.type !== typeFilter) return false;
       if (categoryFilter !== 'all' && t.category !== categoryFilter) return false;
       return true;
-    });
-
-    // Add virtual depreciation entries (always show every month)
-    const depFiltered = depreciationEntries.filter(d => {
-      if (typeFilter !== 'all' && d.type !== typeFilter) return false;
-      if (categoryFilter !== 'all' && d.category !== categoryFilter) return false;
-      return true;
-    });
-
-    return [...realFiltered, ...depFiltered].sort((a: any, b: any) => new Date(b.date).getTime() - new Date(a.date).getTime());
-  }, [transactions, depreciationEntries, histMonth, typeFilter, categoryFilter]);
+    }).sort((a: any, b: any) => new Date(b.date).getTime() - new Date(a.date).getTime());
+  }, [transactions, histMonth, typeFilter, categoryFilter]);
 
   const histIncome = filteredTransactions.filter((t: any) => t.type === 'income').reduce((s: number, t: any) => s + t.amount, 0);
   const histExpenses = filteredTransactions.filter((t: any) => t.type === 'expense').reduce((s: number, t: any) => s + t.amount, 0);
@@ -619,7 +597,7 @@ function HistorialTransacciones({
                           {t.type === 'income' ? '+' : '-'}{cs}{t.amount.toFixed(2)}
                         </td>
                         <td className="p-3 text-center">
-                          {!t.sourceId && !t.sourceType && (
+                          {!t.sourceId && (
                             <Button
                               variant="ghost"
                               size="icon"
