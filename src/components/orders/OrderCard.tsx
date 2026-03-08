@@ -76,8 +76,8 @@ export function OrderCard({ order }: OrderCardProps) {
 
   const handleStatusChange = (newStatus: string) => {
     if (newStatus === 'paid') {
-      // Show payment date dialog instead of directly changing
       setPaymentDate(new Date().toISOString().split('T')[0]);
+      setPaymentAmount(remainingBalance);
       setShowPaymentDialog(true);
       return;
     }
