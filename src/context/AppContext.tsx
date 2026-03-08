@@ -829,6 +829,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
         getTotalExpenses,
         getNetProfit,
         refreshData,
+        refreshTransactions,
       }}
     >
       {children}
