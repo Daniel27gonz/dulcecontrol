@@ -380,13 +380,24 @@ export function OrderCard({ order }: OrderCardProps) {
                 onChange={(e) => setPaymentDate(e.target.value)}
               />
             </div>
+            <div>
+              <Label htmlFor="paymentAmount">Monto a pagar ({settings.currencySymbol}) *</Label>
+              <Input
+                id="paymentAmount"
+                type="number"
+                min="0"
+                step="0.01"
+                value={paymentAmount || ''}
+                onChange={(e) => setPaymentAmount(Number(e.target.value))}
+              />
+            </div>
             <div className="p-3 bg-muted/50 rounded-lg text-sm space-y-1">
               <p className="text-muted-foreground">Cliente: <span className="font-medium text-foreground">{order.clientName}</span></p>
               <p className="text-muted-foreground">Total del pedido: <span className="font-medium text-foreground">{settings.currencySymbol}{order.totalPrice.toFixed(2)}</span></p>
               {totalAdvances > 0 && (
                 <p className="text-muted-foreground">Anticipos: <span className="font-medium text-emerald-600">-{settings.currencySymbol}{totalAdvances.toFixed(2)}</span></p>
               )}
-              <p className="text-muted-foreground font-semibold border-t pt-1 mt-1">Saldo a pagar: <span className="font-bold text-primary">{settings.currencySymbol}{remainingBalance.toFixed(2)}</span></p>
+              <p className="text-muted-foreground font-semibold border-t pt-1 mt-1">Saldo sugerido: <span className="font-bold text-primary">{settings.currencySymbol}{remainingBalance.toFixed(2)}</span></p>
             </div>
           </div>
           <DialogFooter className="flex-col gap-2 sm:flex-row">
