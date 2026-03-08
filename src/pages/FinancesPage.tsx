@@ -4,7 +4,7 @@ import {
   TrendingUp, TrendingDown, Wallet, CalendarDays, 
   FileText, ShoppingCart, Package, Users, Wrench, 
   ChevronLeft, ChevronRight, Plus, Receipt,
-  ChevronDown, Calendar, Filter
+  ChevronDown, Calendar, Filter, Trash2
 } from 'lucide-react';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
@@ -365,6 +365,7 @@ export default function FinancesPage() {
           transactions={transactions}
           cs={cs}
           itemVariants={itemVariants}
+          deleteTransaction={deleteTransaction}
         />
       </motion.div>
 
@@ -377,11 +378,13 @@ export default function FinancesPage() {
 function HistorialTransacciones({ 
   transactions, 
   cs, 
-  itemVariants 
+  itemVariants,
+  deleteTransaction,
 }: { 
   transactions: any[];
   cs: string;
   itemVariants: any;
+  deleteTransaction: (id: string) => void;
 }) {
   const [histMonth, setHistMonth] = useState(new Date());
   const [typeFilter, setTypeFilter] = useState<'all' | 'income' | 'expense'>('all');
@@ -536,12 +539,13 @@ function HistorialTransacciones({
                     <th className="text-left p-3 text-muted-foreground font-medium">Categoría</th>
                     <th className="text-left p-3 text-muted-foreground font-medium">Descripción</th>
                     <th className="text-right p-3 text-muted-foreground font-medium">Monto</th>
+                    <th className="w-10 p-3"></th>
                   </tr>
                 </thead>
                 <tbody>
                   {filteredTransactions.length === 0 ? (
                     <tr>
-                      <td colSpan={5} className="p-8 text-center text-muted-foreground">
+                      <td colSpan={6} className="p-8 text-center text-muted-foreground">
                         No hay transacciones en este mes
                       </td>
                     </tr>
@@ -572,6 +576,18 @@ function HistorialTransacciones({
                           t.type === 'income' ? 'text-success' : 'text-destructive'
                         )}>
                           {t.type === 'income' ? '+' : '-'}{cs}{t.amount.toFixed(2)}
+                        </td>
+                        <td className="p-3 text-center">
+                          {!t.sourceId && (
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              className="h-7 w-7 text-muted-foreground hover:text-destructive"
+                              onClick={() => deleteTransaction(t.id)}
+                            >
+                              <Trash2 className="w-3.5 h-3.5" />
+                            </Button>
+                          )}
                         </td>
                       </tr>
                     ))
