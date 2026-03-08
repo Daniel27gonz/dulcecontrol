@@ -77,6 +77,7 @@ export default function IndirectCostsPage() {
   const indirectCostPerHour = totalMonthlyHours > 0 ? Math.round((totalIndirectCosts / totalMonthlyHours) * 100) / 100 : 0;
   const lastMonthLabel = getLastMonthLabel();
 
+  const [selectedMonth, setSelectedMonth] = useState(() => new Date());
   const [showModal, setShowModal] = useState(false);
   const [modalMode, setModalMode] = useState<ModalMode>('expense');
   const [modalType, setModalType] = useState<ExpenseType>('fixed');
@@ -84,6 +85,23 @@ export default function IndirectCostsPage() {
   const [editingEquipment, setEditingEquipment] = useState<Equipment | null>(null);
   const [expenseFormData, setExpenseFormData] = useState<ExpenseFormData>(initialExpenseFormData);
   const [equipmentFormData, setEquipmentFormData] = useState<EquipmentFormData>(initialEquipmentFormData);
+
+  const totalPaidSelectedMonth = useMemo(() => {
+    const monthStart = startOfMonth(selectedMonth);
+    const monthEnd = endOfMonth(selectedMonth);
+    
+    const filterByMonth = (expenses: Expense[]) => 
+      expenses.filter(e => {
+        if (!e.paymentDate) return false;
+        const d = new Date(e.paymentDate);
+        return d >= monthStart && d <= monthEnd;
+      }).reduce((sum, e) => sum + (e.amount || 0), 0);
+
+    const fixedTotal = filterByMonth(fixedExpenses);
+    const variableTotal = filterByMonth(variableExpenses);
+    
+    return fixedTotal + variableTotal + getTotalDepreciation();
+  }, [selectedMonth, fixedExpenses, variableExpenses, getTotalDepreciation]);
 
   const formatCurrency = (amount: number) => {
     const safeAmount = isNaN(amount) || amount < 0 ? 0 : amount;
