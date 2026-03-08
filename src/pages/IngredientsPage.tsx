@@ -521,6 +521,7 @@ export default function IngredientsPage() {
             currencySymbol={settings.currencySymbol}
             onSave={handleSaveAdd}
             onCancel={() => setShowAddModal(false)}
+            existingIngredients={ingredients}
           />
         </DialogContent>
       </Dialog>
@@ -584,6 +585,7 @@ interface IngredientFormProps {
   onSave: () => void;
   onCancel: () => void;
   isEdit?: boolean;
+  existingIngredients?: BaseIngredient[];
 }
 
 function IngredientForm({
@@ -597,8 +599,23 @@ function IngredientForm({
   onSave,
   onCancel,
   isEdit = false,
+  existingIngredients = [],
 }: IngredientFormProps) {
   const baseUnit = getBaseUnit(formData.purchaseUnit);
+  const [showSuggestions, setShowSuggestions] = useState(false);
+
+  const suggestions = useMemo(() => {
+    if (!formData.name || formData.name.length < 2 || isEdit) return [];
+    const term = formData.name.toLowerCase();
+    const uniqueNames = [...new Map(existingIngredients.map(i => [i.name.toLowerCase().trim(), i])).values()];
+    return uniqueNames.filter(i => i.name.toLowerCase().includes(term)).slice(0, 6);
+  }, [formData.name, existingIngredients, isEdit]);
+
+  const handleSelectSuggestion = (ingredient: BaseIngredient) => {
+    setFormData(prev => ({ ...prev, name: ingredient.name }));
+    setShowSuggestions(false);
+    setFormError(null);
+  };
 
   return (
     <div className="space-y-4">
@@ -608,16 +625,39 @@ function IngredientForm({
         </div>
       )}
 
-      <div>
+      <div className="relative">
         <label className="block text-sm font-medium mb-1.5">Nombre del ingrediente</label>
         <Input
           value={formData.name}
           onChange={(e) => {
             setFormData(prev => ({ ...prev, name: e.target.value }));
             setFormError(null);
+            setShowSuggestions(true);
           }}
+          onFocus={() => setShowSuggestions(true)}
+          onBlur={() => setTimeout(() => setShowSuggestions(false), 200)}
           placeholder="Ej: Harina de trigo"
+          autoComplete="off"
         />
+        {showSuggestions && suggestions.length > 0 && !isEdit && (
+          <div className="absolute z-50 top-full left-0 right-0 mt-1 bg-popover border border-border rounded-lg shadow-lg overflow-hidden">
+            {suggestions.map((ing) => (
+              <button
+                key={ing.id}
+                type="button"
+                onMouseDown={(e) => e.preventDefault()}
+                onClick={() => handleSelectSuggestion(ing)}
+                className="w-full text-left px-3 py-2 text-sm hover:bg-accent transition-colors flex items-center gap-2"
+              >
+                <span>{CATEGORY_EMOJI[ing.category] || '📦'}</span>
+                <span>{ing.name}</span>
+                <span className="ml-auto text-xs text-muted-foreground capitalize">
+                  {INGREDIENT_CATEGORIES.find(c => c.id === ing.category)?.name || ing.category}
+                </span>
+              </button>
+            ))}
+          </div>
+        )}
       </div>
 
       <div>
