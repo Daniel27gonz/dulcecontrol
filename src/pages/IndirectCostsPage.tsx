@@ -350,8 +350,33 @@ export default function IndirectCostsPage() {
           className="p-4 space-y-4"
         >
 
+          {/* Month Selector */}
+          <motion.div variants={itemVariants} className="flex items-center justify-center gap-4">
+            <Button variant="ghost" size="icon" className="h-9 w-9" onClick={() => setSelectedMonth(prev => subMonths(prev, 1))}>
+              <ChevronLeft className="w-5 h-5" />
+            </Button>
+            <div className="flex items-center gap-2 text-foreground font-semibold text-base">
+              <CalendarDays className="w-5 h-5 text-primary" />
+              <span className="capitalize">{format(selectedMonth, 'MMMM yyyy', { locale: es })}</span>
+            </div>
+            <Button variant="ghost" size="icon" className="h-9 w-9" onClick={() => setSelectedMonth(prev => addMonths(prev, 1))}>
+              <ChevronRight className="w-5 h-5" />
+            </Button>
+          </motion.div>
 
-          {/* Total */}
+          {/* Total Pagado del Mes */}
+          <motion.div variants={itemVariants}>
+            <Card className="bg-primary/10 border-primary/30">
+              <CardContent className="p-4 text-center">
+                <p className="text-sm text-muted-foreground">
+                  Total pagado — <span className="capitalize">{format(selectedMonth, 'MMMM yyyy', { locale: es })}</span>
+                </p>
+                <p className="text-2xl sm:text-3xl font-bold text-primary mt-1">{formatCurrency(totalPaidSelectedMonth)}</p>
+              </CardContent>
+            </Card>
+          </motion.div>
+
+
           <motion.div variants={itemVariants}>
             <Card className="bg-warm/10 border-warm/30">
               <CardContent className="p-4">
