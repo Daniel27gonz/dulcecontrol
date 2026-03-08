@@ -213,7 +213,7 @@ export default function LaborPage() {
         <motion.div variants={itemVariants}>
           <Button onClick={handleOpenAdd} variant="warm" className="w-full" size="lg">
             <Plus className="w-5 h-5" />
-            Agregar trabajador
+            Agregar pago
           </Button>
         </motion.div>
 
@@ -309,7 +309,7 @@ export default function LaborPage() {
         <DialogContent className="max-w-[90vw] sm:max-w-md">
           <DialogHeader>
             <DialogTitle>
-              {editingWorker ? 'Editar trabajador' : 'Agregar trabajador'}
+              {editingWorker ? 'Editar trabajador' : 'Agregar pago'}
             </DialogTitle>
           </DialogHeader>
 
