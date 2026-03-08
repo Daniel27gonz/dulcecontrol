@@ -1,7 +1,7 @@
 import { useLocation } from 'react-router-dom';
 import {
   Home, Package, Calculator, FileText, Sparkles, ClipboardList, Wallet,
-  HelpCircle, Settings
+  HelpCircle, Settings, ChefHat, Users, Receipt
 } from 'lucide-react';
 import dulceControlLogo from '@/assets/dulcecontrol-logo.png';
 import { NavLink } from '@/components/NavLink';
