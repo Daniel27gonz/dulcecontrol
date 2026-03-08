@@ -270,31 +270,36 @@ export default function IngredientsPage() {
       <AppHeader title="Ingredientes" />
 
       <div className="p-4 space-y-4">
-        {/* Month Selector */}
-        <div className="flex items-center gap-2">
-          <CalendarDays className="w-4 h-4 text-muted-foreground shrink-0" />
-          <Select
-            value={`${selectedYear}-${selectedMonth}`}
-            onValueChange={(value) => {
-              const [y, m] = value.split('-').map(Number);
-              setSelectedYear(y);
-              setSelectedMonth(m);
-            }}
-          >
-            <SelectTrigger className="flex-1">
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              {[selectedYear - 1, selectedYear, selectedYear + 1].map(year =>
-                MONTH_NAMES.map((name, idx) => (
-                  <SelectItem key={`${year}-${idx}`} value={`${year}-${idx}`}>
-                    {name} {year}
-                  </SelectItem>
-                ))
-              )}
-            </SelectContent>
-          </Select>
-        </div>
+        {/* Month Selector with Calendar */}
+        <Popover>
+          <PopoverTrigger asChild>
+            <Button variant="outline" className="w-full justify-start text-left font-normal gap-2">
+              <CalendarDays className="w-4 h-4 text-muted-foreground" />
+              <span className="capitalize">
+                {format(new Date(selectedYear, selectedMonth, 1), 'MMMM yyyy', { locale: es })}
+              </span>
+            </Button>
+          </PopoverTrigger>
+          <PopoverContent className="w-auto p-0" align="start">
+            <Calendar
+              mode="single"
+              month={new Date(selectedYear, selectedMonth, 1)}
+              selected={new Date(selectedYear, selectedMonth, 1)}
+              onMonthChange={(date) => {
+                setSelectedMonth(date.getMonth());
+                setSelectedYear(date.getFullYear());
+              }}
+              onSelect={(date) => {
+                if (date) {
+                  setSelectedMonth(date.getMonth());
+                  setSelectedYear(date.getFullYear());
+                }
+              }}
+              className="p-3 pointer-events-auto"
+              initialFocus
+            />
+          </PopoverContent>
+        </Popover>
 
         {/* Monthly Total Card */}
         <Card className="bg-primary/5 border-primary/20">
