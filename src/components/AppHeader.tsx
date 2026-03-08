@@ -16,8 +16,8 @@ export function AppHeader({ title, showGreeting = false, showBack = false }: App
   const { logout, user, settings } = useApp();
   const { isInstallable, isInstalled, promptInstall, hasNativePrompt, isIOS } = usePWAInstall();
 
-  const handleLogout = () => {
-    logout();
+  const handleLogout = async () => {
+    await logout();
     toast.success('Sesión cerrada correctamente');
     navigate('/');
   };
