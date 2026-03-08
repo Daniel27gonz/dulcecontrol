@@ -405,11 +405,13 @@ export default function FinancesPage() {
 /* ============ Historial de Transacciones Component ============ */
 function HistorialTransacciones({ 
   transactions, 
+  depreciationEntries = [],
   cs, 
   itemVariants,
   deleteTransaction,
 }: { 
   transactions: any[];
+  depreciationEntries?: any[];
   cs: string;
   itemVariants: any;
   deleteTransaction: (id: string) => void;
