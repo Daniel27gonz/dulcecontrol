@@ -578,10 +578,16 @@ export function AppProvider({ children }: { children: ReactNode }) {
       }
     }
 
-    // If status changed away from paid, remove the payment transaction
-    if (updates.status && updates.status !== 'paid' && existingOrder?.status === 'paid') {
+    // If status changed away from paid OR to cancelled, remove the payment transaction and advance transactions
+    if (updates.status && (updates.status !== 'paid' && existingOrder?.status === 'paid') || updates.status === 'cancelled') {
       const { deleteTransactionBySource } = await import('@/lib/transactionSync');
       await deleteTransactionBySource(session.user.id, id, 'order');
+      // If cancelled, also remove advance transactions
+      if (updates.status === 'cancelled') {
+        for (const advance of (updatedOrder.advances || [])) {
+          await deleteTransactionBySource(session.user.id, advance.id, 'order_advance');
+        }
+      }
     }
 
     // If order is paid and amount changed, update the payment transaction
