@@ -453,16 +453,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
       
       setOrders(prev => [newOrder, ...prev]);
 
-      // If order is created with 'completed' status, register as income
-      if (order.status === 'completed') {
-        await addTransaction({
-          type: 'income',
-          description: `Pedido pagado: ${order.recipeName} x${order.quantity} - ${order.clientName}`,
-          amount: order.totalPrice,
-          category: 'ingreso por pedido',
-          date: new Date().toISOString(),
-        });
-      }
+      // Orders always start as 'pending' - income is registered when status changes to 'paid'
     }
   };
 

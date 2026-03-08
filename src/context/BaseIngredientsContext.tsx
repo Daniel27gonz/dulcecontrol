@@ -263,8 +263,8 @@ export function BaseIngredientsProvider({ children }: { children: ReactNode }) {
 
     setIngredients(prev => [...prev, newIngredient].sort((a, b) => a.name.localeCompare(b.name)));
 
-    // Sync with transactions - total = presentationPrice * presentationQuantity
-    const totalAmount = ingredient.presentationPrice * ingredient.presentationQuantity;
+    // Sync with transactions - total = presentationPrice * quantityPurchased
+    const totalAmount = ingredient.presentationPrice * (ingredient.quantityPurchased || 1);
     await syncTransaction({
       userId: session.user.id,
       sourceId: data.id,
@@ -316,8 +316,8 @@ export function BaseIngredientsProvider({ children }: { children: ReactNode }) {
       }).sort((a, b) => a.name.localeCompare(b.name))
     );
 
-    // Sync with transactions - total = presentationPrice * presentationQuantity
-    const totalAmount = updatedIng.presentationPrice * updatedIng.presentationQuantity;
+    // Sync with transactions - total = presentationPrice * quantityPurchased
+    const totalAmount = updatedIng.presentationPrice * (updatedIng.quantityPurchased || 1);
     await syncTransaction({
       userId: session.user.id,
       sourceId: id,
