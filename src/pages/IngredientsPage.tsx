@@ -307,7 +307,6 @@ export default function IngredientsPage() {
             </div>
           </PopoverContent>
         </Popover>
-        </Popover>
 
         {/* Monthly Total Card */}
         <Card className="bg-primary/5 border-primary/20">
