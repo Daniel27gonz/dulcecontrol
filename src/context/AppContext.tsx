@@ -637,6 +637,9 @@ export function AppProvider({ children }: { children: ReactNode }) {
         });
       }
     }
+
+    // Reload transactions from DB to keep local state in sync
+    await reloadTransactions();
   };
 
   const deleteOrder = async (id: string) => {
