@@ -1,6 +1,8 @@
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import { motion } from 'framer-motion';
-import { Plus, Edit2, Trash2, Building2, Zap, HelpCircle, Receipt, Clock, AlertCircle, Wrench } from 'lucide-react';
+import { Plus, Edit2, Trash2, Building2, Zap, HelpCircle, Receipt, Clock, AlertCircle, Wrench, ChevronLeft, ChevronRight, CalendarDays } from 'lucide-react';
+import { format, startOfMonth, endOfMonth, addMonths, subMonths } from 'date-fns';
+import { es } from 'date-fns/locale';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -75,6 +77,7 @@ export default function IndirectCostsPage() {
   const indirectCostPerHour = totalMonthlyHours > 0 ? Math.round((totalIndirectCosts / totalMonthlyHours) * 100) / 100 : 0;
   const lastMonthLabel = getLastMonthLabel();
 
+  const [selectedMonth, setSelectedMonth] = useState(() => new Date());
   const [showModal, setShowModal] = useState(false);
   const [modalMode, setModalMode] = useState<ModalMode>('expense');
   const [modalType, setModalType] = useState<ExpenseType>('fixed');
@@ -82,6 +85,23 @@ export default function IndirectCostsPage() {
   const [editingEquipment, setEditingEquipment] = useState<Equipment | null>(null);
   const [expenseFormData, setExpenseFormData] = useState<ExpenseFormData>(initialExpenseFormData);
   const [equipmentFormData, setEquipmentFormData] = useState<EquipmentFormData>(initialEquipmentFormData);
+
+  const totalPaidSelectedMonth = useMemo(() => {
+    const monthStart = startOfMonth(selectedMonth);
+    const monthEnd = endOfMonth(selectedMonth);
+    
+    const filterByMonth = (expenses: Expense[]) => 
+      expenses.filter(e => {
+        if (!e.paymentDate) return false;
+        const d = new Date(e.paymentDate);
+        return d >= monthStart && d <= monthEnd;
+      }).reduce((sum, e) => sum + (e.amount || 0), 0);
+
+    const fixedTotal = filterByMonth(fixedExpenses);
+    const variableTotal = filterByMonth(variableExpenses);
+    
+    return fixedTotal + variableTotal + getTotalDepreciation();
+  }, [selectedMonth, fixedExpenses, variableExpenses, getTotalDepreciation]);
 
   const formatCurrency = (amount: number) => {
     const safeAmount = isNaN(amount) || amount < 0 ? 0 : amount;
@@ -348,8 +368,33 @@ export default function IndirectCostsPage() {
           className="p-4 space-y-4"
         >
 
+          {/* Month Selector */}
+          <motion.div variants={itemVariants} className="flex items-center justify-center gap-4">
+            <Button variant="ghost" size="icon" className="h-9 w-9" onClick={() => setSelectedMonth(prev => subMonths(prev, 1))}>
+              <ChevronLeft className="w-5 h-5" />
+            </Button>
+            <div className="flex items-center gap-2 text-foreground font-semibold text-base">
+              <CalendarDays className="w-5 h-5 text-primary" />
+              <span className="capitalize">{format(selectedMonth, 'MMMM yyyy', { locale: es })}</span>
+            </div>
+            <Button variant="ghost" size="icon" className="h-9 w-9" onClick={() => setSelectedMonth(prev => addMonths(prev, 1))}>
+              <ChevronRight className="w-5 h-5" />
+            </Button>
+          </motion.div>
 
-          {/* Total */}
+          {/* Total Pagado del Mes */}
+          <motion.div variants={itemVariants}>
+            <Card className="bg-primary/10 border-primary/30">
+              <CardContent className="p-4 text-center">
+                <p className="text-sm text-muted-foreground">
+                  Total pagado — <span className="capitalize">{format(selectedMonth, 'MMMM yyyy', { locale: es })}</span>
+                </p>
+                <p className="text-2xl sm:text-3xl font-bold text-primary mt-1">{formatCurrency(totalPaidSelectedMonth)}</p>
+              </CardContent>
+            </Card>
+          </motion.div>
+
+
           <motion.div variants={itemVariants}>
             <Card className="bg-warm/10 border-warm/30">
               <CardContent className="p-4">
