@@ -108,10 +108,11 @@ export function AppHeader({ title, showGreeting = false, showBack = false }: App
           <Button
             onClick={handleLogout}
             variant="ghost"
-            size="icon"
-            className="text-muted-foreground hover:text-destructive"
+            size="sm"
+            className="text-muted-foreground hover:text-destructive gap-1"
           >
-            <LogOut className="w-5 h-5" />
+            <LogOut className="w-4 h-4" />
+            <span className="hidden sm:inline">Cerrar Sesión</span>
           </Button>
         </div>
       </div>
