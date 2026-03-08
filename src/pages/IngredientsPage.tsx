@@ -11,6 +11,8 @@ import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, 
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { BottomNav } from '@/components/BottomNav';
 import { AppHeader } from '@/components/AppHeader';
+import { Calendar } from '@/components/ui/calendar';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { useBaseIngredients, BaseIngredient, INGREDIENT_CATEGORIES, PURCHASE_UNITS, getBaseUnit, calculateCostPerBaseUnit } from '@/context/BaseIngredientsContext';
 import { useApp } from '@/context/AppContext';
 import { toast } from '@/hooks/use-toast';
