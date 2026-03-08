@@ -56,11 +56,15 @@ export function OrderCard({ order }: OrderCardProps) {
   // Payment date dialog state
   const [showPaymentDialog, setShowPaymentDialog] = useState(false);
   const [paymentDate, setPaymentDate] = useState(new Date().toISOString().split('T')[0]);
+  const [paymentAmount, setPaymentAmount] = useState<number>(0);
 
   // Advance dialog state
   const [showAdvanceDialog, setShowAdvanceDialog] = useState(false);
   const [advanceAmount, setAdvanceAmount] = useState<number>(0);
   const [advanceDate, setAdvanceDate] = useState(new Date().toISOString().split('T')[0]);
+
+  // Delete payment dialog state
+  const [showDeletePaymentDialog, setShowDeletePaymentDialog] = useState(false);
 
   const statusInfo = ORDER_STATUSES.find(s => s.value === order.status) || ORDER_STATUSES[0];
   const deliveryDate = new Date(order.deliveryDate);
@@ -72,8 +76,8 @@ export function OrderCard({ order }: OrderCardProps) {
 
   const handleStatusChange = (newStatus: string) => {
     if (newStatus === 'paid') {
-      // Show payment date dialog instead of directly changing
       setPaymentDate(new Date().toISOString().split('T')[0]);
+      setPaymentAmount(remainingBalance);
       setShowPaymentDialog(true);
       return;
     }
@@ -90,6 +94,10 @@ export function OrderCard({ order }: OrderCardProps) {
       toast({ title: 'Error', description: 'La fecha de pago es obligatoria', variant: 'destructive' });
       return;
     }
+    if (paymentAmount <= 0) {
+      toast({ title: 'Error', description: 'El monto a pagar debe ser mayor a 0', variant: 'destructive' });
+      return;
+    }
 
     updateOrder(order.id, {
       status: 'paid',
@@ -98,7 +106,19 @@ export function OrderCard({ order }: OrderCardProps) {
     setShowPaymentDialog(false);
     toast({
       title: '✅ Pedido marcado como Pagado',
-      description: `Ingreso registrado en Finanzas`,
+      description: `${settings.currencySymbol}${paymentAmount.toFixed(2)} registrado en Finanzas`,
+    });
+  };
+
+  const handleDeletePayment = () => {
+    updateOrder(order.id, {
+      status: 'completed',
+      paymentDate: null,
+    });
+    setShowDeletePaymentDialog(false);
+    toast({
+      title: 'Pago eliminado',
+      description: 'El pedido volvió a estado Completado y el ingreso fue eliminado de Finanzas',
     });
   };
 
@@ -184,9 +204,17 @@ export function OrderCard({ order }: OrderCardProps) {
               {order.status === 'paid' && order.paymentDate && (
                 <div className="flex items-center gap-2 mb-3">
                   <DollarSign className="w-4 h-4 text-emerald-600 flex-shrink-0" />
-                  <p className="text-sm text-emerald-600">
+                  <p className="text-sm text-emerald-600 flex-1">
                     Pagado: {format(new Date(order.paymentDate), "d 'de' MMMM, yyyy", { locale: es })}
                   </p>
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    className="h-6 w-6 text-destructive/70 hover:text-destructive"
+                    onClick={() => setShowDeletePaymentDialog(true)}
+                  >
+                    <Trash2 className="w-3 h-3" />
+                  </Button>
                 </div>
               )}
 
@@ -351,13 +379,24 @@ export function OrderCard({ order }: OrderCardProps) {
                 onChange={(e) => setPaymentDate(e.target.value)}
               />
             </div>
+            <div>
+              <Label htmlFor="paymentAmount">Monto a pagar ({settings.currencySymbol}) *</Label>
+              <Input
+                id="paymentAmount"
+                type="number"
+                min="0"
+                step="0.01"
+                value={paymentAmount || ''}
+                onChange={(e) => setPaymentAmount(Number(e.target.value))}
+              />
+            </div>
             <div className="p-3 bg-muted/50 rounded-lg text-sm space-y-1">
               <p className="text-muted-foreground">Cliente: <span className="font-medium text-foreground">{order.clientName}</span></p>
               <p className="text-muted-foreground">Total del pedido: <span className="font-medium text-foreground">{settings.currencySymbol}{order.totalPrice.toFixed(2)}</span></p>
               {totalAdvances > 0 && (
                 <p className="text-muted-foreground">Anticipos: <span className="font-medium text-emerald-600">-{settings.currencySymbol}{totalAdvances.toFixed(2)}</span></p>
               )}
-              <p className="text-muted-foreground font-semibold border-t pt-1 mt-1">Saldo a pagar: <span className="font-bold text-primary">{settings.currencySymbol}{remainingBalance.toFixed(2)}</span></p>
+              <p className="text-muted-foreground font-semibold border-t pt-1 mt-1">Saldo sugerido: <span className="font-bold text-primary">{settings.currencySymbol}{remainingBalance.toFixed(2)}</span></p>
             </div>
           </div>
           <DialogFooter className="flex-col gap-2 sm:flex-row">
@@ -417,6 +456,24 @@ export function OrderCard({ order }: OrderCardProps) {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      {/* Delete Payment Confirmation Dialog */}
+      <AlertDialog open={showDeletePaymentDialog} onOpenChange={setShowDeletePaymentDialog}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>¿Eliminar pago?</AlertDialogTitle>
+            <AlertDialogDescription>
+              Se eliminará el registro de pago y el ingreso en Finanzas. El pedido volverá a estado "Completado".
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancelar</AlertDialogCancel>
+            <AlertDialogAction onClick={handleDeletePayment}>
+              Eliminar pago
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </>
   );
 }
