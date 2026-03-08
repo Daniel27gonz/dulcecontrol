@@ -426,11 +426,8 @@ export default function IngredientsPage() {
                     .sort((a: BaseIngredient, b: BaseIngredient) => a.name.localeCompare(b.name))
                     .map((ingredient: BaseIngredient) => (
                       <Card key={ingredient.id} className="p-3 flex items-center gap-3">
-                        <span className="text-lg">{CATEGORY_EMOJI[ingredient.category] || '📦'}</span>
+                        <Package className="w-4 h-4 text-muted-foreground shrink-0" />
                         <span className="font-medium text-sm">{ingredient.name}</span>
-                        <span className="ml-auto text-xs text-muted-foreground capitalize">
-                          {INGREDIENT_CATEGORIES.find(c => c.id === ingredient.category)?.name || ingredient.category}
-                        </span>
                       </Card>
                     ))}
                 </div>
