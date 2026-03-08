@@ -1,6 +1,6 @@
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import { motion } from 'framer-motion';
-import { Plus, Users, Edit2, Trash2, Clock, DollarSign, Calendar, HelpCircle } from 'lucide-react';
+import { Plus, Users, Edit2, Trash2, Clock, DollarSign, Calendar, HelpCircle, CalendarDays, ChevronLeft, ChevronRight } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -37,6 +37,32 @@ export default function LaborPage() {
   const [showModal, setShowModal] = useState(false);
   const [editingWorker, setEditingWorker] = useState<Worker | null>(null);
   const [formData, setFormData] = useState<WorkerFormData>(initialFormData);
+
+  // Month filter
+  const now = new Date();
+  const [filterMonth, setFilterMonth] = useState(now.getMonth());
+  const [filterYear, setFilterYear] = useState(now.getFullYear());
+  const MONTH_NAMES = ['Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio', 'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre'];
+
+  const handlePrevMonth = () => {
+    if (filterMonth === 0) { setFilterMonth(11); setFilterYear(y => y - 1); }
+    else setFilterMonth(m => m - 1);
+  };
+  const handleNextMonth = () => {
+    if (filterMonth === 11) { setFilterMonth(0); setFilterYear(y => y + 1); }
+    else setFilterMonth(m => m + 1);
+  };
+
+  const filteredWorkers = useMemo(() => {
+    return workers.filter(w => {
+      const pDate = w.paymentDate ? new Date(w.paymentDate) : new Date(w.lastUpdated);
+      return pDate.getMonth() === filterMonth && pDate.getFullYear() === filterYear;
+    });
+  }, [workers, filterMonth, filterYear]);
+
+  const monthlyTotal = useMemo(() => {
+    return filteredWorkers.reduce((sum, w) => sum + w.monthlySalary, 0);
+  }, [filteredWorkers]);
 
   const previewMonthlyHours = formData.hoursPerDay * formData.daysPerMonth;
   const previewDailySalary = formData.daysPerMonth > 0 ? formData.monthlySalary / formData.daysPerMonth : 0;
@@ -123,6 +149,34 @@ export default function LaborPage() {
         animate="visible"
         className="p-4 space-y-4"
       >
+        {/* Month Selector */}
+        <motion.div variants={itemVariants}>
+          <div className="flex items-center justify-between bg-muted/50 rounded-xl p-2">
+            <Button variant="ghost" size="icon" onClick={handlePrevMonth} className="h-8 w-8">
+              <ChevronLeft className="w-4 h-4" />
+            </Button>
+            <div className="flex items-center gap-2 text-sm font-semibold">
+              <CalendarDays className="w-4 h-4 text-primary" />
+              {MONTH_NAMES[filterMonth]} {filterYear}
+            </div>
+            <Button variant="ghost" size="icon" onClick={handleNextMonth} className="h-8 w-8">
+              <ChevronRight className="w-4 h-4" />
+            </Button>
+          </div>
+        </motion.div>
+
+        {/* Monthly Total Banner */}
+        <motion.div variants={itemVariants}>
+          <div className="rounded-xl bg-primary/10 border border-primary/20 p-4 text-center">
+            <p className="text-sm text-muted-foreground font-medium">
+              Total pagado — {MONTH_NAMES[filterMonth]} {filterYear}
+            </p>
+            <p className="text-2xl font-bold text-primary mt-1">
+              {formatCurrency(monthlyTotal)}
+            </p>
+          </div>
+        </motion.div>
+
         {/* Info Card */}
         <motion.div variants={itemVariants}>
           <Card className="bg-primary/5 border-primary/20">
@@ -164,7 +218,7 @@ export default function LaborPage() {
         </motion.div>
 
         {/* Workers List */}
-        {workers.length === 0 ? (
+        {filteredWorkers.length === 0 ? (
           <motion.div variants={itemVariants}>
             <Card className="border-dashed">
               <CardContent className="p-8 text-center">
@@ -178,7 +232,7 @@ export default function LaborPage() {
           </motion.div>
         ) : (
           <motion.div variants={itemVariants} className="space-y-3">
-            {workers.map((worker) => (
+            {filteredWorkers.map((worker) => (
               <Card key={worker.id} className="overflow-hidden">
                 <CardContent className="p-4">
                   <div className="flex items-start justify-between mb-3">
