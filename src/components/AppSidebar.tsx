@@ -1,7 +1,7 @@
 import { useLocation } from 'react-router-dom';
 import {
   Home, Package, Calculator, FileText, Sparkles, ClipboardList, Wallet,
-  HelpCircle, Settings
+  HelpCircle, Settings, ChefHat, Users, Receipt
 } from 'lucide-react';
 import dulceControlLogo from '@/assets/dulcecontrol-logo.png';
 import { NavLink } from '@/components/NavLink';
@@ -20,6 +20,9 @@ import {
 const mainItems = [
   { title: 'Inicio', url: '/dashboard', icon: Home },
   { title: 'Ingredientes', url: '/ingredients', icon: Package },
+  { title: 'Mis Recetas', url: '/recipes', icon: ChefHat },
+  { title: 'Mano de Obra', url: '/labor', icon: Users },
+  { title: 'Gastos del Mes', url: '/indirect-costs', icon: Receipt },
   { title: 'Calcular', url: '/calculator', icon: Calculator },
   { title: 'Cotizar', url: '/quotations', icon: FileText },
   { title: 'Diseño', url: '/personalization', icon: Sparkles },
