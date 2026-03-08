@@ -387,13 +387,32 @@ export function IndirectCostsProvider({ children }: { children: ReactNode }) {
       return;
     }
 
-    setEquipment(prev => [...prev, {
+    const newEquip = {
       id: data.id,
       name: data.concept,
       purchaseCost: Number(data.purchase_cost || 0),
       usefulLifeMonths: Number(data.useful_life_months || 0),
       lastUpdated: data.last_updated,
-    }]);
+    };
+
+    setEquipment(prev => [...prev, newEquip]);
+
+    // Sync depreciation as expense transaction
+    const depreciation = newEquip.usefulLifeMonths > 0 && newEquip.purchaseCost > 0
+      ? Math.round((newEquip.purchaseCost / newEquip.usefulLifeMonths) * 100) / 100
+      : 0;
+    if (depreciation > 0) {
+      await syncTransaction({
+        userId: session.user.id,
+        sourceId: data.id,
+        sourceType: 'indirect_cost',
+        type: 'expense',
+        description: `Depreciación: ${newEquip.name}`,
+        amount: depreciation,
+        category: 'depreciación',
+        date: new Date().toISOString(),
+      });
+    }
   }, [session?.user]);
 
   const updateEquipment = useCallback(async (id: string, updates: Partial<Omit<Equipment, 'id' | 'lastUpdated'>>) => {
@@ -415,10 +434,32 @@ export function IndirectCostsProvider({ children }: { children: ReactNode }) {
       return;
     }
 
+    const existing = equipment.find(e => e.id === id);
+    const updated = { ...existing!, ...updates };
+
     setEquipment(prev => prev.map(eq =>
       eq.id === id ? { ...eq, ...updates, lastUpdated: new Date().toISOString() } : eq
     ));
-  }, [session?.user]);
+
+    // Sync updated depreciation
+    const depreciation = (updated.usefulLifeMonths || 0) > 0 && (updated.purchaseCost || 0) > 0
+      ? Math.round((updated.purchaseCost / updated.usefulLifeMonths) * 100) / 100
+      : 0;
+    if (depreciation > 0) {
+      await syncTransaction({
+        userId: session.user.id,
+        sourceId: id,
+        sourceType: 'indirect_cost',
+        type: 'expense',
+        description: `Depreciación: ${updated.name}`,
+        amount: depreciation,
+        category: 'depreciación',
+        date: new Date().toISOString(),
+      });
+    } else {
+      await deleteTransactionBySource(session.user.id, id, 'indirect_cost');
+    }
+  }, [session?.user, equipment]);
 
   const deleteEquipment = useCallback(async (id: string) => {
     if (!session?.user) return;
@@ -435,6 +476,7 @@ export function IndirectCostsProvider({ children }: { children: ReactNode }) {
     }
 
     setEquipment(prev => prev.filter(eq => eq.id !== id));
+    await deleteTransactionBySource(session.user.id, id, 'indirect_cost');
   }, [session?.user]);
 
   // Calculations
