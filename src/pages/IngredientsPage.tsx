@@ -295,7 +295,17 @@ export default function IngredientsPage() {
           </Button>
         </div>
 
-        {/* Search and Filter Bar */}
+        {/* Monthly Total Banner */}
+        <div className="rounded-xl bg-primary/10 border border-primary/20 p-4 text-center">
+          <p className="text-sm text-muted-foreground font-medium">
+            Total pagado — {MONTH_NAMES[filterMonth]} {filterYear}
+          </p>
+          <p className="text-2xl font-bold text-primary mt-1">
+            {settings.currencySymbol}{monthlyTotal.toFixed(2)}
+          </p>
+        </div>
+
+
         <div className="flex gap-2">
           <div className="relative flex-1">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
