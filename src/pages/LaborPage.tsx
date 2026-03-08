@@ -199,7 +199,7 @@ export default function LaborPage() {
                     <Users className="w-8 h-8 text-warm/50" />
                   </div>
                   <p className="text-[10px] text-muted-foreground mt-1">
-                    Sal. total ÷ Hrs. totales = Costo/h
+                    M.O. total ÷ Hrs. totales = Costo/h
                   </p>
                 </CardContent>
               </Card>
