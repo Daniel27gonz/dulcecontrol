@@ -619,7 +619,7 @@ function HistorialTransacciones({
                           {t.type === 'income' ? '+' : '-'}{cs}{t.amount.toFixed(2)}
                         </td>
                         <td className="p-3 text-center">
-                          {!t.sourceId && (
+                          {!t.sourceId && !t.sourceType && (
                             <Button
                               variant="ghost"
                               size="icon"
