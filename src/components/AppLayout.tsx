@@ -7,7 +7,7 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
     <SidebarProvider defaultOpen={true}>
       <div className="min-h-screen flex w-full">
         {/* Sidebar - always visible on desktop, hidden on mobile */}
-        <div className="hidden md:block">
+        <div className="hidden md:block sticky top-0 h-screen">
           <AppSidebar />
         </div>
 
