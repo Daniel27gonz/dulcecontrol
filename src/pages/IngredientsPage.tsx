@@ -1,10 +1,6 @@
 import { useState, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Search, Plus, Filter, Pencil, Trash2, Package, X, CalendarDays, DollarSign } from 'lucide-react';
-import { format } from 'date-fns';
-import { es } from 'date-fns/locale';
-import { Calendar } from '@/components/ui/calendar';
-import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
@@ -271,42 +267,31 @@ export default function IngredientsPage() {
 
       <div className="p-4 space-y-4">
         {/* Month Selector */}
-        <Popover>
-          <PopoverTrigger asChild>
-            <Button variant="outline" className="w-full justify-start text-left font-normal gap-2">
-              <CalendarDays className="w-4 h-4 text-muted-foreground" />
-              <span className="capitalize">
-                {format(new Date(selectedYear, selectedMonth, 1), 'MMMM yyyy', { locale: es })}
-              </span>
-            </Button>
-          </PopoverTrigger>
-          <PopoverContent className="w-72 p-3 pointer-events-auto" align="start">
-            <div className="flex items-center justify-between mb-3">
-              <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => setSelectedYear(y => y - 1)}>
-                <span className="text-sm">←</span>
-              </Button>
-              <span className="text-sm font-semibold">{selectedYear}</span>
-              <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => setSelectedYear(y => y + 1)}>
-                <span className="text-sm">→</span>
-              </Button>
-            </div>
-            <div className="grid grid-cols-3 gap-2">
+        <div className="flex gap-2">
+          <Select value={selectedMonth.toString()} onValueChange={(v) => setSelectedMonth(parseInt(v))}>
+            <SelectTrigger className="flex-1">
+              <div className="flex items-center gap-2">
+                <CalendarDays className="w-4 h-4 text-muted-foreground" />
+                <SelectValue />
+              </div>
+            </SelectTrigger>
+            <SelectContent>
               {MONTH_NAMES.map((name, idx) => (
-                <Button
-                  key={idx}
-                  variant={idx === selectedMonth ? 'default' : 'ghost'}
-                  size="sm"
-                  className="text-xs h-9"
-                  onClick={() => {
-                    setSelectedMonth(idx);
-                  }}
-                >
-                  {name.slice(0, 3)}
-                </Button>
+                <SelectItem key={idx} value={idx.toString()}>{name}</SelectItem>
               ))}
-            </div>
-          </PopoverContent>
-        </Popover>
+            </SelectContent>
+          </Select>
+          <Select value={selectedYear.toString()} onValueChange={(v) => setSelectedYear(parseInt(v))}>
+            <SelectTrigger className="w-24">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              {[2024, 2025, 2026, 2027].map(y => (
+                <SelectItem key={y} value={y.toString()}>{y}</SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
 
         {/* Monthly Total Card */}
         <Card className="bg-primary/5 border-primary/20">
