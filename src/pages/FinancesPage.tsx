@@ -28,7 +28,7 @@ import { ScrollArea } from '@/components/ui/scroll-area';
 export default function FinancesPage() {
   const { settings, transactions, orders, deleteTransaction } = useApp();
   const { ingredients: baseIngredients } = useBaseIngredients();
-  const { } = useIndirectCosts();
+  const { equipment, getEquipmentDepreciation, getTotalDepreciation } = useIndirectCosts();
   const { } = useLabor();
   const { quotations } = useQuotations();
 
@@ -82,18 +82,29 @@ export default function FinancesPage() {
     const laborTransactions = expenseTransactions.filter(t => t.sourceType === 'worker');
     const totalLaborCost = laborTransactions.reduce((sum, t) => sum + t.amount, 0);
 
-    // 3. Indirect costs grouped by description (concept)
-    const indirectTransactions = expenseTransactions.filter(t => t.sourceType === 'indirect_cost');
+    // 3. Indirect costs grouped by description (concept) - exclude depreciation transactions
+    const indirectTransactions = expenseTransactions.filter(t => t.sourceType === 'indirect_cost' && t.category !== 'depreciación');
     const indirectByCategory: Record<string, number> = {};
     indirectTransactions.forEach(t => {
       indirectByCategory[t.description] = (indirectByCategory[t.description] || 0) + t.amount;
     });
 
-    // 4. Other manual transactions (no source)
+    // 4. Equipment depreciation (recurring monthly, computed directly)
+    const totalDepreciation = getTotalDepreciation();
+    const depreciationByEquipment: Record<string, number> = {};
+    equipment.forEach(eq => {
+      const dep = getEquipmentDepreciation(eq);
+      if (dep > 0) depreciationByEquipment[`Depreciación: ${eq.name}`] = dep;
+    });
+
+    // 5. Other manual transactions (no source)
     const otherExpenses = expenseTransactions.filter(t => !t.sourceType);
 
-    // Combined expenses for the month (all from transactions)
-    const combinedExpenses = totalExpenses;
+    // Combined expenses = transaction-based expenses + recurring depreciation (not in transactions)
+    const depreciationAlreadyInTransactions = expenseTransactions
+      .filter(t => t.category === 'depreciación')
+      .reduce((sum, t) => sum + t.amount, 0);
+    const combinedExpenses = totalExpenses - depreciationAlreadyInTransactions + totalDepreciation;
 
     // Profit
     const profit = totalIncome - combinedExpenses;
@@ -104,7 +115,7 @@ export default function FinancesPage() {
 
     return {
       totalIncome,
-      totalExpenses,
+      totalExpenses: combinedExpenses,
       combinedExpenses,
       profit,
       monthOrders,
@@ -117,9 +128,11 @@ export default function FinancesPage() {
       totalAnticipos,
       ingredientsByCategory,
       indirectByCategory,
+      depreciationByEquipment,
+      totalDepreciation,
       otherExpenses,
     };
-  }, [transactions, orders, quotations, baseIngredients, selectedMonth]);
+  }, [transactions, orders, quotations, baseIngredients, selectedMonth, equipment, getEquipmentDepreciation, getTotalDepreciation]);
 
   const containerVariants = {
     hidden: { opacity: 0 },
@@ -309,7 +322,13 @@ export default function FinancesPage() {
                         <span className="text-destructive font-medium whitespace-nowrap">{cs}{t.amount.toFixed(2)}</span>
                       </div>
                     ))}
-                    {Object.keys(monthlyData.indirectByCategory).length === 0 && monthlyData.totalLaborCost === 0 && monthlyData.otherExpenses.length === 0 && (
+                    {Object.entries(monthlyData.depreciationByEquipment).map(([name, amount]) => (
+                      <div key={name} className="flex justify-between items-center py-1.5 px-2 rounded-lg bg-muted/30 text-sm">
+                        <span className="text-foreground truncate mr-2">{name}</span>
+                        <span className="text-destructive font-medium whitespace-nowrap">{cs}{amount.toFixed(2)}</span>
+                      </div>
+                    ))}
+                    {Object.keys(monthlyData.indirectByCategory).length === 0 && monthlyData.totalLaborCost === 0 && monthlyData.otherExpenses.length === 0 && monthlyData.totalDepreciation === 0 && (
                       <p className="text-xs text-muted-foreground italic">Sin gastos registrados</p>
                     )}
                   </div>
