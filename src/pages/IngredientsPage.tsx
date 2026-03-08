@@ -270,7 +270,7 @@ export default function IngredientsPage() {
       <AppHeader title="Ingredientes" />
 
       <div className="p-4 space-y-4">
-        {/* Month Selector with Calendar */}
+        {/* Month Selector */}
         <Popover>
           <PopoverTrigger asChild>
             <Button variant="outline" className="w-full justify-start text-left font-normal gap-2">
@@ -280,23 +280,31 @@ export default function IngredientsPage() {
               </span>
             </Button>
           </PopoverTrigger>
-          <PopoverContent className="w-auto p-0" align="start">
-            <Calendar
-              mode="single"
-              month={new Date(selectedYear, selectedMonth, 1)}
-              onMonthChange={(date) => {
-                setSelectedMonth(date.getMonth());
-                setSelectedYear(date.getFullYear());
-              }}
-              onSelect={(date) => {
-                if (date) {
-                  setSelectedMonth(date.getMonth());
-                  setSelectedYear(date.getFullYear());
-                }
-              }}
-              className={cn("p-3 pointer-events-auto")}
-              initialFocus
-            />
+          <PopoverContent className="w-72 p-3 pointer-events-auto" align="start">
+            <div className="flex items-center justify-between mb-3">
+              <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => setSelectedYear(y => y - 1)}>
+                <span className="text-sm">←</span>
+              </Button>
+              <span className="text-sm font-semibold">{selectedYear}</span>
+              <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => setSelectedYear(y => y + 1)}>
+                <span className="text-sm">→</span>
+              </Button>
+            </div>
+            <div className="grid grid-cols-3 gap-2">
+              {MONTH_NAMES.map((name, idx) => (
+                <Button
+                  key={idx}
+                  variant={idx === selectedMonth ? 'default' : 'ghost'}
+                  size="sm"
+                  className="text-xs h-9"
+                  onClick={() => {
+                    setSelectedMonth(idx);
+                  }}
+                >
+                  {name.slice(0, 3)}
+                </Button>
+              ))}
+            </div>
           </PopoverContent>
         </Popover>
 
