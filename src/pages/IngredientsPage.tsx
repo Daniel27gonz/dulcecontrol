@@ -245,12 +245,12 @@ export default function IngredientsPage() {
         <Tabs defaultValue="lista" className="w-full">
           <TabsList className="w-full grid grid-cols-2">
             <TabsTrigger value="lista" className="flex items-center gap-2">
-              <ListChecks className="w-4 h-4" />
-              Lista de Ingredientes
-            </TabsTrigger>
-            <TabsTrigger value="compras" className="flex items-center gap-2">
               <ShoppingCart className="w-4 h-4" />
               Compras
+            </TabsTrigger>
+            <TabsTrigger value="compras" className="flex items-center gap-2">
+              <ListChecks className="w-4 h-4" />
+              Lista de Ingredientes
             </TabsTrigger>
           </TabsList>
 
