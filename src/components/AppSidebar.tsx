@@ -19,7 +19,7 @@ import {
 
 const mainItems = [
   { title: 'Inicio', url: '/dashboard', icon: Home },
-  { title: 'Ingredientes', url: '/ingredients', icon: Package },
+  { title: 'Lista de Ingredientes', url: '/ingredients', icon: Package },
   { title: 'Calcular', url: '/calculator', icon: Calculator },
   { title: 'Cotizar', url: '/quotations', icon: FileText },
   { title: 'Diseño', url: '/personalization', icon: Sparkles },
