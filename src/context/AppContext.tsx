@@ -661,6 +661,9 @@ export function AppProvider({ children }: { children: ReactNode }) {
         });
       }
     }
+
+    // Refresh transactions state after all sync operations
+    await refreshTransactions();
   };
 
   const deleteOrder = async (id: string) => {
@@ -686,6 +689,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
     }
 
     setOrders(prev => prev.filter(order => order.id !== id));
+    await refreshTransactions();
   };
 
   // Transaction functions
