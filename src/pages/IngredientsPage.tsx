@@ -266,6 +266,50 @@ export default function IngredientsPage() {
       <AppHeader title="Ingredientes" />
 
       <div className="p-4 space-y-4">
+        {/* Month Selector */}
+        <div className="flex items-center gap-2">
+          <CalendarDays className="w-4 h-4 text-muted-foreground shrink-0" />
+          <Select
+            value={`${selectedYear}-${selectedMonth}`}
+            onValueChange={(value) => {
+              const [y, m] = value.split('-').map(Number);
+              setSelectedYear(y);
+              setSelectedMonth(m);
+            }}
+          >
+            <SelectTrigger className="flex-1">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              {[selectedYear - 1, selectedYear, selectedYear + 1].map(year =>
+                MONTH_NAMES.map((name, idx) => (
+                  <SelectItem key={`${year}-${idx}`} value={`${year}-${idx}`}>
+                    {name} {year}
+                  </SelectItem>
+                ))
+              )}
+            </SelectContent>
+          </Select>
+        </div>
+
+        {/* Monthly Total Card */}
+        <Card className="bg-primary/5 border-primary/20">
+          <CardContent className="p-4">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <DollarSign className="w-5 h-5 text-primary" />
+                <div>
+                  <p className="text-xs text-muted-foreground">Total pagado</p>
+                  <p className="text-sm font-medium text-muted-foreground">{MONTH_NAMES[selectedMonth]} {selectedYear}</p>
+                </div>
+              </div>
+              <p className="text-2xl font-bold text-primary">
+                {settings.currencySymbol}{monthlyTotal.toFixed(2)}
+              </p>
+            </div>
+          </CardContent>
+        </Card>
+
         {/* Search and Filter Bar */}
         <div className="flex gap-2">
           <div className="relative flex-1">
