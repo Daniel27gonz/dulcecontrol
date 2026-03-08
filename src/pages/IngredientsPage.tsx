@@ -405,6 +405,18 @@ export default function IngredientsPage() {
             })}
           </div>
         )}
+          </TabsContent>
+
+          <TabsContent value="compras" className="mt-4 space-y-4">
+            <Card className="p-8 text-center">
+              <ShoppingCart className="w-12 h-12 mx-auto text-muted-foreground mb-3" />
+              <h3 className="font-semibold mb-1">Historial de Compras</h3>
+              <p className="text-sm text-muted-foreground">
+                Próximamente podrás ver el historial de todas tus compras de ingredientes aquí.
+              </p>
+            </Card>
+          </TabsContent>
+        </Tabs>
       </div>
 
       {/* Fixed Add Button */}
