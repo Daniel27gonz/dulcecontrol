@@ -122,6 +122,7 @@ interface AppContextType {
   getTotalExpenses: () => number;
   getNetProfit: () => number;
   refreshData: () => Promise<void>;
+  refreshTransactions: () => Promise<void>;
 }
 
 const AppContext = createContext<AppContextType | undefined>(undefined);
