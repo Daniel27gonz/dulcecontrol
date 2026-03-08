@@ -1,6 +1,6 @@
 import { useState, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Search, Plus, Filter, Pencil, Trash2, Package, X } from 'lucide-react';
+import { Search, Plus, Filter, Pencil, Trash2, Package, X, CalendarDays, DollarSign } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
@@ -50,6 +50,11 @@ const initialFormData: IngredientFormData = {
   purchaseDate: new Date().toISOString().split('T')[0],
 };
 
+const MONTH_NAMES = [
+  'Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio',
+  'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre',
+];
+
 export default function IngredientsPage() {
   const { ingredients, addIngredient, updateIngredient, deleteIngredient, findDuplicate } = useBaseIngredients();
   const { settings } = useApp();
@@ -57,6 +62,8 @@ export default function IngredientsPage() {
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedCategory, setSelectedCategory] = useState<string>('all');
   const [showCategoryFilter, setShowCategoryFilter] = useState(false);
+  const [selectedMonth, setSelectedMonth] = useState<number>(new Date().getMonth());
+  const [selectedYear, setSelectedYear] = useState<number>(new Date().getFullYear());
   
   const [showAddModal, setShowAddModal] = useState(false);
   const [showEditModal, setShowEditModal] = useState(false);
@@ -66,13 +73,31 @@ export default function IngredientsPage() {
   const [formData, setFormData] = useState<IngredientFormData>(initialFormData);
   const [formError, setFormError] = useState<string | null>(null);
 
-  const filteredIngredients = useMemo(() => {
+  // Filter by month first
+  const monthFilteredIngredients = useMemo(() => {
     return ingredients.filter(ing => {
+      const dateStr = ing.purchaseDate || ing.lastUpdated;
+      if (!dateStr) return false;
+      const date = new Date(dateStr);
+      return date.getMonth() === selectedMonth && date.getFullYear() === selectedYear;
+    });
+  }, [ingredients, selectedMonth, selectedYear]);
+
+  // Then apply search and category filters
+  const filteredIngredients = useMemo(() => {
+    return monthFilteredIngredients.filter(ing => {
       const matchesSearch = ing.name.toLowerCase().includes(searchTerm.toLowerCase());
       const matchesCategory = selectedCategory === 'all' || ing.category === selectedCategory;
       return matchesSearch && matchesCategory;
     });
-  }, [ingredients, searchTerm, selectedCategory]);
+  }, [monthFilteredIngredients, searchTerm, selectedCategory]);
+
+  // Total paid for the selected month
+  const monthlyTotal = useMemo(() => {
+    return monthFilteredIngredients.reduce((sum, ing) => {
+      return sum + (ing.presentationPrice * ing.presentationQuantity);
+    }, 0);
+  }, [monthFilteredIngredients]);
 
   const groupedIngredients = useMemo(() => {
     return filteredIngredients.reduce((acc, ing) => {
@@ -241,6 +266,50 @@ export default function IngredientsPage() {
       <AppHeader title="Ingredientes" />
 
       <div className="p-4 space-y-4">
+        {/* Month Selector */}
+        <div className="flex items-center gap-2">
+          <CalendarDays className="w-4 h-4 text-muted-foreground shrink-0" />
+          <Select
+            value={`${selectedYear}-${selectedMonth}`}
+            onValueChange={(value) => {
+              const [y, m] = value.split('-').map(Number);
+              setSelectedYear(y);
+              setSelectedMonth(m);
+            }}
+          >
+            <SelectTrigger className="flex-1">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              {[selectedYear - 1, selectedYear, selectedYear + 1].map(year =>
+                MONTH_NAMES.map((name, idx) => (
+                  <SelectItem key={`${year}-${idx}`} value={`${year}-${idx}`}>
+                    {name} {year}
+                  </SelectItem>
+                ))
+              )}
+            </SelectContent>
+          </Select>
+        </div>
+
+        {/* Monthly Total Card */}
+        <Card className="bg-primary/5 border-primary/20">
+          <CardContent className="p-4">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <DollarSign className="w-5 h-5 text-primary" />
+                <div>
+                  <p className="text-xs text-muted-foreground">Total pagado</p>
+                  <p className="text-sm font-medium text-muted-foreground">{MONTH_NAMES[selectedMonth]} {selectedYear}</p>
+                </div>
+              </div>
+              <p className="text-2xl font-bold text-primary">
+                {settings.currencySymbol}{monthlyTotal.toFixed(2)}
+              </p>
+            </div>
+          </CardContent>
+        </Card>
+
         {/* Search and Filter Bar */}
         <div className="flex gap-2">
           <div className="relative flex-1">
