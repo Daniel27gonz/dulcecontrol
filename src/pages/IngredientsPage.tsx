@@ -584,6 +584,7 @@ interface IngredientFormProps {
   onSave: () => void;
   onCancel: () => void;
   isEdit?: boolean;
+  existingIngredients?: BaseIngredient[];
 }
 
 function IngredientForm({
