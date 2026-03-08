@@ -82,7 +82,7 @@ export default function IngredientsPage() {
       const matchesCategory = selectedCategory === 'all' || ing.category === selectedCategory;
       // Filter by purchaseDate month/year
       const pDate = ing.purchaseDate ? new Date(ing.purchaseDate) : new Date(ing.lastUpdated);
-      const matchesMonth = purchaseDate.getMonth() === filterMonth && purchaseDate.getFullYear() === filterYear;
+      const matchesMonth = pDate.getMonth() === filterMonth && pDate.getFullYear() === filterYear;
       return matchesSearch && matchesCategory && matchesMonth;
     });
   }, [ingredients, searchTerm, selectedCategory, filterMonth, filterYear]);
