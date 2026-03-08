@@ -408,7 +408,7 @@ export default function IngredientsPage() {
           </TabsContent>
 
           <TabsContent value="compras" className="mt-4 space-y-4">
-            {baseIngredients.length === 0 ? (
+            {ingredients.length === 0 ? (
               <Card className="p-8 text-center">
                 <ListChecks className="w-12 h-12 mx-auto text-muted-foreground mb-3" />
                 <h3 className="font-semibold mb-1">Sin ingredientes</h3>
@@ -419,12 +419,12 @@ export default function IngredientsPage() {
             ) : (
               <>
                 <p className="text-sm text-muted-foreground">
-                  {baseIngredients.length} ingrediente{baseIngredients.length !== 1 ? 's' : ''} registrado{baseIngredients.length !== 1 ? 's' : ''}
+                  {ingredients.length} ingrediente{ingredients.length !== 1 ? 's' : ''} registrado{ingredients.length !== 1 ? 's' : ''}
                 </p>
                 <div className="space-y-2">
-                  {[...new Map(baseIngredients.map(i => [i.name.toLowerCase().trim(), i])).values()]
-                    .sort((a, b) => a.name.localeCompare(b.name))
-                    .map((ingredient) => (
+                  {[...new Map(ingredients.map((i: BaseIngredient) => [i.name.toLowerCase().trim(), i])).values()]
+                    .sort((a: BaseIngredient, b: BaseIngredient) => a.name.localeCompare(b.name))
+                    .map((ingredient: BaseIngredient) => (
                       <Card key={ingredient.id} className="p-3 flex items-center gap-3">
                         <span className="text-lg">{CATEGORY_EMOJI[ingredient.category] || '📦'}</span>
                         <span className="font-medium text-sm">{ingredient.name}</span>
