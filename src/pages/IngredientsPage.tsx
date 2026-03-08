@@ -239,9 +239,22 @@ export default function IngredientsPage() {
 
   return (
     <div className="min-h-screen bg-background pb-24">
-      <AppHeader title="Lista de Ingredientes" />
+      <AppHeader title="Ingredientes" />
 
       <div className="p-4 space-y-4">
+        <Tabs defaultValue="lista" className="w-full">
+          <TabsList className="w-full grid grid-cols-2">
+            <TabsTrigger value="lista" className="flex items-center gap-2">
+              <ListChecks className="w-4 h-4" />
+              Lista de Ingredientes
+            </TabsTrigger>
+            <TabsTrigger value="compras" className="flex items-center gap-2">
+              <ShoppingCart className="w-4 h-4" />
+              Compras
+            </TabsTrigger>
+          </TabsList>
+
+          <TabsContent value="lista" className="mt-4 space-y-4">
         {/* Search and Filter Bar */}
         <div className="flex gap-2">
           <div className="relative flex-1">
