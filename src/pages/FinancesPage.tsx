@@ -322,7 +322,13 @@ export default function FinancesPage() {
                         <span className="text-destructive font-medium whitespace-nowrap">{cs}{t.amount.toFixed(2)}</span>
                       </div>
                     ))}
-                    {Object.keys(monthlyData.indirectByCategory).length === 0 && monthlyData.totalLaborCost === 0 && monthlyData.otherExpenses.length === 0 && (
+                    {Object.entries(monthlyData.depreciationByEquipment).map(([name, amount]) => (
+                      <div key={name} className="flex justify-between items-center py-1.5 px-2 rounded-lg bg-muted/30 text-sm">
+                        <span className="text-foreground truncate mr-2">{name}</span>
+                        <span className="text-destructive font-medium whitespace-nowrap">{cs}{amount.toFixed(2)}</span>
+                      </div>
+                    ))}
+                    {Object.keys(monthlyData.indirectByCategory).length === 0 && monthlyData.totalLaborCost === 0 && monthlyData.otherExpenses.length === 0 && monthlyData.totalDepreciation === 0 && (
                       <p className="text-xs text-muted-foreground italic">Sin gastos registrados</p>
                     )}
                   </div>
