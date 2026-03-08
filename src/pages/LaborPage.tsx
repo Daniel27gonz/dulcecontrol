@@ -218,7 +218,7 @@ export default function LaborPage() {
         </motion.div>
 
         {/* Workers List */}
-        {workers.length === 0 ? (
+        {filteredWorkers.length === 0 ? (
           <motion.div variants={itemVariants}>
             <Card className="border-dashed">
               <CardContent className="p-8 text-center">
