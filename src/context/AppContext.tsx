@@ -257,24 +257,41 @@ export function AppProvider({ children }: { children: ReactNode }) {
         .eq('user_id', userId);
       costsData?.forEach(c => validSourceIds.add(`indirect_cost:${c.id}`));
 
-      // Orders
+      // Orders - only paid orders should have income transactions
+      const validOrderIds = new Set<string>();
       const { data: ordersSourceData } = await supabase
         .from('orders')
-        .select('id, advances')
+        .select('id, advances, status')
         .eq('user_id', userId);
       ordersSourceData?.forEach(o => {
-        validSourceIds.add(`order:${o.id}`);
-        // Advances
-        const advances = (o.advances as any[]) || [];
-        advances.forEach((a: any) => {
-          if (a.id) validSourceIds.add(`order_advance:${a.id}`);
-        });
+        validOrderIds.add(o.id);
+        // Only paid orders should have payment transactions
+        if (o.status === 'paid') {
+          validSourceIds.add(`order:${o.id}`);
+        }
+        // Advances are valid regardless of status (unless order is cancelled)
+        if (o.status !== 'cancelled') {
+          const advances = (o.advances as any[]) || [];
+          advances.forEach((a: any) => {
+            if (a.id) validSourceIds.add(`order_advance:${a.id}`);
+          });
+        }
       });
 
-      // Filter: keep transactions that are manual (no source) or have a valid source
+      // Filter: keep only valid transactions
       const orphanIds: string[] = [];
       const validTransactions = transactionsData.filter(t => {
-        if (!t.source_id || !t.source_type) return true; // manual transaction, keep
+        // Transactions without source: these are either truly manual or legacy auto-generated
+        // Remove legacy auto-generated ones (pattern: "Pedido:" or old system entries without source tracking)
+        if (!t.source_id || !t.source_type) {
+          const desc = (t.description || '').toLowerCase();
+          // Remove legacy auto-generated entries that should have had source tracking
+          if (desc.startsWith('pedido') || desc.startsWith('anticipo')) {
+            orphanIds.push(t.id);
+            return false;
+          }
+          return true; // keep truly manual transactions
+        }
         const key = `${t.source_type}:${t.source_id}`;
         if (validSourceIds.has(key)) return true;
         orphanIds.push(t.id);
