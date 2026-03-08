@@ -205,9 +205,17 @@ export function OrderCard({ order }: OrderCardProps) {
               {order.status === 'paid' && order.paymentDate && (
                 <div className="flex items-center gap-2 mb-3">
                   <DollarSign className="w-4 h-4 text-emerald-600 flex-shrink-0" />
-                  <p className="text-sm text-emerald-600">
+                  <p className="text-sm text-emerald-600 flex-1">
                     Pagado: {format(new Date(order.paymentDate), "d 'de' MMMM, yyyy", { locale: es })}
                   </p>
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    className="h-6 w-6 text-destructive/70 hover:text-destructive"
+                    onClick={() => setShowDeletePaymentDialog(true)}
+                  >
+                    <Trash2 className="w-3 h-3" />
+                  </Button>
                 </div>
               )}
 
