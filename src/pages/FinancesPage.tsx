@@ -365,6 +365,7 @@ export default function FinancesPage() {
           transactions={transactions}
           cs={cs}
           itemVariants={itemVariants}
+          deleteTransaction={deleteTransaction}
         />
       </motion.div>
 
