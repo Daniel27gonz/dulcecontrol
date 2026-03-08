@@ -3,8 +3,11 @@ import { motion } from 'framer-motion';
 import { 
   TrendingUp, TrendingDown, Wallet, CalendarDays, 
   FileText, ShoppingCart, Package, Users, Wrench, 
-  ChevronLeft, ChevronRight, Plus, Receipt
+  ChevronLeft, ChevronRight, Plus, Receipt,
+  ChevronDown, Calendar, Filter
 } from 'lucide-react';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { useApp } from '@/context/AppContext';
@@ -357,74 +360,233 @@ export default function FinancesPage() {
         </motion.div>
 
         {/* Transaction History Table */}
-        <motion.div variants={itemVariants}>
-          <Card>
-            <CardHeader className="pb-2">
-              <CardTitle className="text-base font-semibold">Historial de Transacciones</CardTitle>
-            </CardHeader>
-            <CardContent className="p-0">
-              <ScrollArea className="w-full">
-                <div className="min-w-[500px]">
-                  <table className="w-full text-sm">
-                    <thead>
-                      <tr className="border-b border-border">
-                        <th className="text-left p-3 text-muted-foreground font-medium">Fecha</th>
-                        <th className="text-left p-3 text-muted-foreground font-medium">Tipo</th>
-                        <th className="text-left p-3 text-muted-foreground font-medium">Categoría</th>
-                        <th className="text-left p-3 text-muted-foreground font-medium">Descripción</th>
-                        <th className="text-right p-3 text-muted-foreground font-medium">Monto</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {monthlyData.monthTransactions.length === 0 ? (
-                        <tr>
-                          <td colSpan={5} className="p-8 text-center text-muted-foreground">
-                            No hay transacciones en este mes
-                          </td>
-                        </tr>
-                      ) : (
-                        [...monthlyData.monthTransactions]
-                          .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
-                          .map(t => (
-                            <tr key={t.id} className="border-b border-border/50 hover:bg-muted/30 transition-colors">
-                              <td className="p-3 text-foreground whitespace-nowrap">
-                                {format(new Date(t.date), 'dd MMM yyyy', { locale: es })}
-                              </td>
-                              <td className="p-3">
-                                <span className={cn(
-                                  'inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium',
-                                  t.type === 'income'
-                                    ? 'bg-success/10 text-success'
-                                    : 'bg-destructive/10 text-destructive'
-                                )}>
-                                  {t.type === 'income' ? (
-                                    <><TrendingUp className="w-3 h-3" /> Ingreso</>
-                                  ) : (
-                                    <><TrendingDown className="w-3 h-3" /> Gasto</>
-                                  )}
-                                </span>
-                              </td>
-                              <td className="p-3 text-muted-foreground capitalize">{t.category.replace('_', ' ')}</td>
-                              <td className="p-3 text-foreground">{t.description}</td>
-                              <td className={cn(
-                                'p-3 text-right font-semibold whitespace-nowrap',
-                                t.type === 'income' ? 'text-success' : 'text-destructive'
-                              )}>
-                                {t.type === 'income' ? '+' : '-'}{cs}{t.amount.toFixed(2)}
-                              </td>
-                            </tr>
-                          ))
-                      )}
-                    </tbody>
-                  </table>
-                </div>
-              </ScrollArea>
-            </CardContent>
-          </Card>
-        </motion.div>
+        {/* ===== HISTORIAL DE TRANSACCIONES ===== */}
+        <HistorialTransacciones 
+          transactions={transactions}
+          cs={cs}
+          itemVariants={itemVariants}
+        />
       </motion.div>
 
       <BottomNav />
     </div>
+  );
+}
+
+/* ============ Historial de Transacciones Component ============ */
+function HistorialTransacciones({ 
+  transactions, 
+  cs, 
+  itemVariants 
+}: { 
+  transactions: any[];
+  cs: string;
+  itemVariants: any;
+}) {
+  const [histMonth, setHistMonth] = useState(new Date());
+  const [typeFilter, setTypeFilter] = useState<'all' | 'income' | 'expense'>('all');
+  const [categoryFilter, setCategoryFilter] = useState<string>('all');
+  const [monthPickerOpen, setMonthPickerOpen] = useState(false);
+
+  const histMonthStart = startOfMonth(histMonth);
+  const histMonthEnd = endOfMonth(histMonth);
+
+  const filteredTransactions = useMemo(() => {
+    return transactions.filter(t => {
+      try {
+        const d = new Date(t.date);
+        if (!isWithinInterval(d, { start: histMonthStart, end: histMonthEnd })) return false;
+      } catch { return false; }
+      if (typeFilter !== 'all' && t.type !== typeFilter) return false;
+      if (categoryFilter !== 'all' && t.category !== categoryFilter) return false;
+      return true;
+    }).sort((a: any, b: any) => new Date(b.date).getTime() - new Date(a.date).getTime());
+  }, [transactions, histMonth, typeFilter, categoryFilter]);
+
+  const histIncome = filteredTransactions.filter((t: any) => t.type === 'income').reduce((s: number, t: any) => s + t.amount, 0);
+  const histExpenses = filteredTransactions.filter((t: any) => t.type === 'expense').reduce((s: number, t: any) => s + t.amount, 0);
+  const histBalance = histIncome - histExpenses;
+
+  // Available months from all transactions
+  const availableMonths = useMemo(() => {
+    const months = new Set<string>();
+    transactions.forEach(t => {
+      try {
+        const d = new Date(t.date);
+        months.add(`${d.getFullYear()}-${d.getMonth()}`);
+      } catch {}
+    });
+    // Always include current month
+    const now = new Date();
+    months.add(`${now.getFullYear()}-${now.getMonth()}`);
+    months.add(`${histMonth.getFullYear()}-${histMonth.getMonth()}`);
+    
+    return Array.from(months)
+      .map(m => {
+        const [y, mo] = m.split('-').map(Number);
+        return new Date(y, mo, 1);
+      })
+      .sort((a, b) => b.getTime() - a.getTime());
+  }, [transactions, histMonth]);
+
+  // Available categories
+  const categories = useMemo(() => {
+    const cats = new Set<string>();
+    transactions.forEach(t => cats.add(t.category));
+    return Array.from(cats).sort();
+  }, [transactions]);
+
+  return (
+    <motion.div variants={itemVariants} className="space-y-4">
+      <Card>
+        <CardHeader className="pb-3">
+          <div className="flex items-center justify-between">
+            <CardTitle className="text-base font-semibold">Historial de Transacciones</CardTitle>
+            
+            {/* Month Selector Dropdown */}
+            <Popover open={monthPickerOpen} onOpenChange={setMonthPickerOpen}>
+              <PopoverTrigger asChild>
+                <Button variant="outline" className="h-9 gap-2 text-sm font-medium">
+                  <Calendar className="w-4 h-4" />
+                  <span className="capitalize">{format(histMonth, 'MMMM yyyy', { locale: es })}</span>
+                  <ChevronDown className="w-3.5 h-3.5 opacity-50" />
+                </Button>
+              </PopoverTrigger>
+              <PopoverContent className="w-52 p-1" align="end">
+                <ScrollArea className="max-h-60">
+                  <div className="space-y-0.5">
+                    {availableMonths.map((m) => {
+                      const isSelected = m.getFullYear() === histMonth.getFullYear() && m.getMonth() === histMonth.getMonth();
+                      return (
+                        <button
+                          key={m.toISOString()}
+                          onClick={() => { setHistMonth(m); setMonthPickerOpen(false); }}
+                          className={cn(
+                            'w-full text-left px-3 py-2 text-sm rounded-lg transition-colors capitalize',
+                            isSelected 
+                              ? 'bg-primary text-primary-foreground font-medium' 
+                              : 'hover:bg-muted text-foreground'
+                          )}
+                        >
+                          <span>{format(m, 'MMMM yyyy', { locale: es })}</span>
+                          {isSelected && <span className="float-right">✓</span>}
+                        </button>
+                      );
+                    })}
+                  </div>
+                </ScrollArea>
+              </PopoverContent>
+            </Popover>
+          </div>
+        </CardHeader>
+
+        <CardContent className="space-y-4">
+          {/* 3 Summary Mini Cards */}
+          <div className="grid grid-cols-3 gap-2">
+            <div className="rounded-xl bg-success/10 p-3 text-center">
+              <p className="text-[11px] text-muted-foreground font-medium">Ingresos</p>
+              <p className="text-lg font-bold text-success">{cs}{histIncome.toFixed(2)}</p>
+            </div>
+            <div className="rounded-xl bg-destructive/10 p-3 text-center">
+              <p className="text-[11px] text-muted-foreground font-medium">Gastos</p>
+              <p className="text-lg font-bold text-destructive">{cs}{histExpenses.toFixed(2)}</p>
+            </div>
+            <div className={cn('rounded-xl p-3 text-center', histBalance >= 0 ? 'bg-success/5' : 'bg-destructive/5')}>
+              <p className="text-[11px] text-muted-foreground font-medium">Balance</p>
+              <p className={cn('text-lg font-bold', histBalance >= 0 ? 'text-success' : 'text-destructive')}>
+                {cs}{Math.abs(histBalance).toFixed(2)}
+              </p>
+            </div>
+          </div>
+
+          {/* Filters */}
+          <div className="flex gap-2">
+            <Select value={typeFilter} onValueChange={(v) => setTypeFilter(v as any)}>
+              <SelectTrigger className="h-8 text-xs w-[120px]">
+                <SelectValue placeholder="Tipo" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">Todos</SelectItem>
+                <SelectItem value="income">Ingreso</SelectItem>
+                <SelectItem value="expense">Gasto</SelectItem>
+              </SelectContent>
+            </Select>
+
+            <Select value={categoryFilter} onValueChange={setCategoryFilter}>
+              <SelectTrigger className="h-8 text-xs flex-1">
+                <SelectValue placeholder="Categoría" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">Todas las categorías</SelectItem>
+                {categories.map(cat => (
+                  <SelectItem key={cat} value={cat} className="capitalize">{cat.replace('_', ' ')}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+
+          {/* Table */}
+          <ScrollArea className="w-full">
+            <div className="min-w-[500px]">
+              <table className="w-full text-sm">
+                <thead>
+                  <tr className="border-b border-border">
+                    <th className="text-left p-3 text-muted-foreground font-medium">Fecha</th>
+                    <th className="text-left p-3 text-muted-foreground font-medium">Tipo</th>
+                    <th className="text-left p-3 text-muted-foreground font-medium">Categoría</th>
+                    <th className="text-left p-3 text-muted-foreground font-medium">Descripción</th>
+                    <th className="text-right p-3 text-muted-foreground font-medium">Monto</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {filteredTransactions.length === 0 ? (
+                    <tr>
+                      <td colSpan={5} className="p-8 text-center text-muted-foreground">
+                        No hay transacciones en este mes
+                      </td>
+                    </tr>
+                  ) : (
+                    filteredTransactions.map((t: any) => (
+                      <tr key={t.id} className="border-b border-border/50 hover:bg-muted/30 transition-colors">
+                        <td className="p-3 text-foreground whitespace-nowrap">
+                          {format(new Date(t.date), 'dd MMM yyyy', { locale: es })}
+                        </td>
+                        <td className="p-3">
+                          <span className={cn(
+                            'inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium',
+                            t.type === 'income'
+                              ? 'bg-success/10 text-success'
+                              : 'bg-orange-500/10 text-orange-500'
+                          )}>
+                            {t.type === 'income' ? (
+                              <><TrendingUp className="w-3 h-3" /> Ingreso</>
+                            ) : (
+                              <><TrendingDown className="w-3 h-3" /> Gasto</>
+                            )}
+                          </span>
+                        </td>
+                        <td className="p-3 text-muted-foreground capitalize">{t.category.replace('_', ' ')}</td>
+                        <td className="p-3 text-foreground">{t.description}</td>
+                        <td className={cn(
+                          'p-3 text-right font-semibold whitespace-nowrap',
+                          t.type === 'income' ? 'text-success' : 'text-destructive'
+                        )}>
+                          {t.type === 'income' ? '+' : '-'}{cs}{t.amount.toFixed(2)}
+                        </td>
+                      </tr>
+                    ))
+                  )}
+                </tbody>
+              </table>
+            </div>
+          </ScrollArea>
+
+          {/* Record count */}
+          <div className="text-center text-xs text-muted-foreground pt-1">
+            Total ({filteredTransactions.length} registros)
+          </div>
+        </CardContent>
+      </Card>
+    </motion.div>
   );
 }
