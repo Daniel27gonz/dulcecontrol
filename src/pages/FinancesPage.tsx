@@ -129,6 +129,23 @@ export default function FinancesPage() {
 
   const cs = settings.currencySymbol;
 
+  const [filterType, setFilterType] = useState<'all' | 'income' | 'expense'>('all');
+  const [filterCategory, setFilterCategory] = useState<string>('all');
+
+  // Get unique categories from month transactions
+  const monthCategories = useMemo(() => {
+    const cats = new Set(monthlyData.monthTransactions.map(t => t.category));
+    return Array.from(cats).sort();
+  }, [monthlyData.monthTransactions]);
+
+  // Filtered transactions
+  const filteredTransactions = useMemo(() => {
+    let filtered = [...monthlyData.monthTransactions];
+    if (filterType !== 'all') filtered = filtered.filter(t => t.type === filterType);
+    if (filterCategory !== 'all') filtered = filtered.filter(t => t.category === filterCategory);
+    return filtered.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
+  }, [monthlyData.monthTransactions, filterType, filterCategory]);
+
   return (
     <div className="min-h-screen bg-background pb-24">
       <AppHeader title="Finanzas" />
@@ -137,230 +154,74 @@ export default function FinancesPage() {
         variants={containerVariants}
         initial="hidden"
         animate="visible"
-        className="p-4 space-y-5"
+        className="p-4 space-y-4"
       >
-        {/* Header with Month Selector */}
-        <motion.div variants={itemVariants} className="text-center space-y-2">
-          <h1 className="text-2xl font-bold text-foreground">Finanzas del Negocio</h1>
-          <p className="text-sm text-muted-foreground">Resumen financiero del mes seleccionado</p>
-          
-          <div className="flex items-center justify-center gap-3 pt-2">
-            <Button variant="ghost" size="icon" onClick={prevMonth} className="h-9 w-9 rounded-full">
-              <ChevronLeft className="w-5 h-5" />
-            </Button>
-            <div className="bg-card border border-border/50 rounded-xl px-5 py-2 min-w-[180px]">
-              <p className="text-base font-semibold text-foreground capitalize">
-                {format(selectedMonth, 'MMMM yyyy', { locale: es })}
-              </p>
-            </div>
-            <Button variant="ghost" size="icon" onClick={nextMonth} className="h-9 w-9 rounded-full">
-              <ChevronRight className="w-5 h-5" />
-            </Button>
+        {/* Month Selector */}
+        <motion.div variants={itemVariants} className="flex items-center justify-center gap-3">
+          <Button variant="ghost" size="icon" onClick={prevMonth} className="h-9 w-9">
+            <ChevronLeft className="w-5 h-5" />
+          </Button>
+          <div className="flex items-center gap-2 text-foreground font-semibold text-base">
+            <CalendarDays className="w-5 h-5 text-primary" />
+            <span className="capitalize">{format(selectedMonth, 'MMMM yyyy', { locale: es })}</span>
           </div>
+          <Button variant="ghost" size="icon" onClick={nextMonth} className="h-9 w-9">
+            <ChevronRight className="w-5 h-5" />
+          </Button>
         </motion.div>
 
         {/* 3 Summary Cards */}
-        <motion.div variants={itemVariants} className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-          {/* Income Card */}
+        <motion.div variants={itemVariants} className="grid grid-cols-3 gap-3">
           <Card className="bg-success/5 border-success/20">
-            <CardContent className="p-5">
-              <div className="flex items-center gap-3 mb-3">
-                <div className="w-11 h-11 rounded-xl bg-success/15 flex items-center justify-center">
-                  <TrendingUp className="w-5 h-5 text-success" />
-                </div>
-                <p className="text-sm font-medium text-muted-foreground">Ingresos del mes</p>
-              </div>
-              <p className="text-2xl font-bold text-success">
-                {cs}{monthlyData.totalIncome.toFixed(2)}
-              </p>
+            <CardContent className="p-3 text-center">
+              <p className="text-xs text-muted-foreground mb-1">Ingresos</p>
+              <p className="text-lg font-bold text-success">{cs}{monthlyData.totalIncome.toFixed(2)}</p>
             </CardContent>
           </Card>
-
-          {/* Expenses Card */}
           <Card className="bg-destructive/5 border-destructive/20">
-            <CardContent className="p-5">
-              <div className="flex items-center gap-3 mb-3">
-                <div className="w-11 h-11 rounded-xl bg-destructive/15 flex items-center justify-center">
-                  <TrendingDown className="w-5 h-5 text-destructive" />
-                </div>
-                <p className="text-sm font-medium text-muted-foreground">Gastos y compras del mes</p>
-              </div>
-              <p className="text-2xl font-bold text-destructive">
-                {cs}{monthlyData.combinedExpenses.toFixed(2)}
-              </p>
+            <CardContent className="p-3 text-center">
+              <p className="text-xs text-muted-foreground mb-1">Gastos</p>
+              <p className="text-lg font-bold text-destructive">{cs}{monthlyData.combinedExpenses.toFixed(2)}</p>
             </CardContent>
           </Card>
-
-          {/* Profit Card */}
           <Card className={cn(
-            'border-0',
-            monthlyData.profit >= 0
-              ? 'bg-gradient-to-br from-success/10 to-success/5'
-              : 'bg-gradient-to-br from-destructive/10 to-destructive/5'
+            monthlyData.profit >= 0 ? 'bg-success/5 border-success/20' : 'bg-destructive/5 border-destructive/20'
           )}>
-            <CardContent className="p-5">
-              <div className="flex items-center gap-3 mb-3">
-                <div className={cn(
-                  'w-11 h-11 rounded-xl flex items-center justify-center',
-                  monthlyData.profit >= 0 ? 'bg-success/15' : 'bg-destructive/15'
-                )}>
-                  <Wallet className={cn('w-5 h-5', monthlyData.profit >= 0 ? 'text-success' : 'text-destructive')} />
-                </div>
-                <p className="text-sm font-medium text-muted-foreground">
-                  {monthlyData.profit >= 0 ? 'Ganancia del mes' : 'Pérdida del mes'}
-                </p>
-              </div>
-              <p className={cn(
-                'text-2xl font-bold',
-                monthlyData.profit >= 0 ? 'text-success' : 'text-destructive'
-              )}>
+            <CardContent className="p-3 text-center">
+              <p className="text-xs text-muted-foreground mb-1">Balance</p>
+              <p className={cn('text-lg font-bold', monthlyData.profit >= 0 ? 'text-success' : 'text-destructive')}>
                 {cs}{Math.abs(monthlyData.profit).toFixed(2)}
               </p>
             </CardContent>
           </Card>
         </motion.div>
 
-        {/* Activity Cards */}
-        <motion.div variants={itemVariants} className="grid grid-cols-2 gap-3">
-          <Card className="bg-card">
-            <CardContent className="p-4">
-              <div className="flex items-center gap-3">
-                <div className="w-10 h-10 rounded-xl bg-accent/50 flex items-center justify-center">
-                  <FileText className="w-5 h-5 text-accent-foreground" />
-                </div>
-                <div>
-                  <p className="text-2xl font-bold text-foreground">{monthlyData.monthQuotations.length}</p>
-                  <p className="text-xs text-muted-foreground">Cotizaciones este mes</p>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-
-          <Card className="bg-card">
-            <CardContent className="p-4">
-              <div className="flex items-center gap-3">
-                <div className="w-10 h-10 rounded-xl bg-secondary flex items-center justify-center">
-                  <ShoppingCart className="w-5 h-5 text-secondary-foreground" />
-                </div>
-                <div>
-                  <p className="text-2xl font-bold text-foreground">{monthlyData.monthOrders.length}</p>
-                  <p className="text-xs text-muted-foreground">Pedidos este mes</p>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-        </motion.div>
-
-        {/* 3-Column Financial Summary */}
+        {/* Filters + Table */}
         <motion.div variants={itemVariants}>
           <Card>
             <CardHeader className="pb-3">
-              <CardTitle className="text-base font-semibold flex items-center gap-2">
-                <Receipt className="w-5 h-5 text-muted-foreground" />
-                Resumen Financiero del Mes
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                {/* Column 1: Materials grouped by category */}
-                <div className="space-y-3">
-                  <h3 className="text-sm font-semibold text-foreground flex items-center gap-2">
-                    <Package className="w-4 h-4 text-muted-foreground" />
-                    Compras de ingredientes
-                  </h3>
-                  <div className="space-y-2 max-h-48 overflow-y-auto">
-                    {Object.entries(monthlyData.ingredientsByCategory).map(([category, total]) => (
-                      <div key={category} className="flex justify-between items-center py-1.5 px-2 rounded-lg bg-muted/30 text-sm">
-                        <span className="text-foreground truncate mr-2">{category}</span>
-                        <span className="text-destructive font-medium whitespace-nowrap">{cs}{total.toFixed(2)}</span>
-                      </div>
-                    ))}
-                    {Object.keys(monthlyData.ingredientsByCategory).length === 0 && (
-                      <p className="text-xs text-muted-foreground italic">Sin compras registradas</p>
-                    )}
-                  </div>
-                </div>
-
-                {/* Column 2: Expenses grouped */}
-                <div className="space-y-3">
-                  <h3 className="text-sm font-semibold text-foreground flex items-center gap-2">
-                    <Wrench className="w-4 h-4 text-muted-foreground" />
-                    Gastos del mes
-                  </h3>
-                  <div className="space-y-2">
-                    {Object.entries(monthlyData.indirectByCategory).map(([concept, total]) => (
-                      <div key={concept} className="flex justify-between items-center py-1.5 px-2 rounded-lg bg-muted/30 text-sm">
-                        <span className="text-foreground truncate mr-2">{concept}</span>
-                        <span className="text-destructive font-medium whitespace-nowrap">{cs}{total.toFixed(2)}</span>
-                      </div>
-                    ))}
-                    {monthlyData.totalLaborCost > 0 && (
-                      <div className="flex justify-between items-center py-1.5 px-2 rounded-lg bg-muted/30 text-sm">
-                        <span className="text-foreground">Mano de obra</span>
-                        <span className="text-destructive font-medium">{cs}{monthlyData.totalLaborCost.toFixed(2)}</span>
-                      </div>
-                    )}
-                    {monthlyData.otherExpenses.map(t => (
-                      <div key={t.id} className="flex justify-between items-center py-1.5 px-2 rounded-lg bg-muted/30 text-sm">
-                        <span className="text-foreground truncate mr-2">{t.description}</span>
-                        <span className="text-destructive font-medium whitespace-nowrap">{cs}{t.amount.toFixed(2)}</span>
-                      </div>
-                    ))}
-                    {Object.keys(monthlyData.indirectByCategory).length === 0 && monthlyData.totalLaborCost === 0 && monthlyData.otherExpenses.length === 0 && (
-                      <p className="text-xs text-muted-foreground italic">Sin gastos registrados</p>
-                    )}
-                  </div>
-                </div>
-
-                {/* Column 3: Income */}
-                <div className="space-y-3">
-                  <h3 className="text-sm font-semibold text-foreground flex items-center gap-2">
-                    <Users className="w-4 h-4 text-muted-foreground" />
-                    Ingresos del mes
-                  </h3>
-                  <div className="space-y-2 max-h-48 overflow-y-auto">
-                    {monthlyData.incomeTransactions.map(t => (
-                      <div key={t.id} className="flex justify-between items-center py-1.5 px-2 rounded-lg bg-success/5 text-sm">
-                        <div className="truncate mr-2">
-                          <span className="text-foreground">{t.description}</span>
-                          {t.description.toLowerCase().includes('anticipo') && (
-                            <span className="ml-1 text-[10px] bg-accent/50 text-accent-foreground px-1.5 py-0.5 rounded-full">Anticipo</span>
-                          )}
-                        </div>
-                        <span className="text-success font-medium whitespace-nowrap">{cs}{t.amount.toFixed(2)}</span>
-                      </div>
-                    ))}
-                    {monthlyData.incomeTransactions.length === 0 && (
-                      <p className="text-xs text-muted-foreground italic">Sin ingresos registrados</p>
-                    )}
-                  </div>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-        </motion.div>
-
-        {/* Totals */}
-        <motion.div variants={itemVariants} className="grid grid-cols-2 gap-3">
-          <Card className="bg-accent/10 border-accent/20">
-            <CardContent className="p-4 text-center">
-              <p className="text-xs text-muted-foreground mb-1">Total Anticipos</p>
-              <p className="text-xl font-bold text-foreground">{cs}{monthlyData.totalAnticipos.toFixed(2)}</p>
-            </CardContent>
-          </Card>
-          <Card className="bg-success/10 border-success/20">
-            <CardContent className="p-4 text-center">
-              <p className="text-xs text-muted-foreground mb-1">Total Ingresos</p>
-              <p className="text-xl font-bold text-success">{cs}{monthlyData.totalIncome.toFixed(2)}</p>
-            </CardContent>
-          </Card>
-        </motion.div>
-
-        {/* Transaction History Table */}
-        <motion.div variants={itemVariants}>
-          <Card>
-            <CardHeader className="pb-2">
               <CardTitle className="text-base font-semibold">Historial de Transacciones</CardTitle>
+              <div className="flex flex-wrap gap-2 mt-3">
+                <select
+                  value={filterType}
+                  onChange={e => setFilterType(e.target.value as 'all' | 'income' | 'expense')}
+                  className="text-sm rounded-lg border border-border bg-background px-3 py-1.5 text-foreground"
+                >
+                  <option value="all">Todos</option>
+                  <option value="income">Ingreso</option>
+                  <option value="expense">Gasto</option>
+                </select>
+                <select
+                  value={filterCategory}
+                  onChange={e => setFilterCategory(e.target.value)}
+                  className="text-sm rounded-lg border border-border bg-background px-3 py-1.5 text-foreground"
+                >
+                  <option value="all">Todas las categorías</option>
+                  {monthCategories.map(cat => (
+                    <option key={cat} value={cat}>{cat.replace('_', ' ')}</option>
+                  ))}
+                </select>
+              </div>
             </CardHeader>
             <CardContent className="p-0">
               <ScrollArea className="w-full">
@@ -376,49 +237,50 @@ export default function FinancesPage() {
                       </tr>
                     </thead>
                     <tbody>
-                      {monthlyData.monthTransactions.length === 0 ? (
+                      {filteredTransactions.length === 0 ? (
                         <tr>
                           <td colSpan={5} className="p-8 text-center text-muted-foreground">
-                            No hay transacciones en este mes
+                            No hay transacciones
                           </td>
                         </tr>
                       ) : (
-                        [...monthlyData.monthTransactions]
-                          .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
-                          .map(t => (
-                            <tr key={t.id} className="border-b border-border/50 hover:bg-muted/30 transition-colors">
-                              <td className="p-3 text-foreground whitespace-nowrap">
-                                {format(new Date(t.date), 'dd MMM yyyy', { locale: es })}
-                              </td>
-                              <td className="p-3">
-                                <span className={cn(
-                                  'inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium',
-                                  t.type === 'income'
-                                    ? 'bg-success/10 text-success'
-                                    : 'bg-destructive/10 text-destructive'
-                                )}>
-                                  {t.type === 'income' ? (
-                                    <><TrendingUp className="w-3 h-3" /> Ingreso</>
-                                  ) : (
-                                    <><TrendingDown className="w-3 h-3" /> Gasto</>
-                                  )}
-                                </span>
-                              </td>
-                              <td className="p-3 text-muted-foreground capitalize">{t.category.replace('_', ' ')}</td>
-                              <td className="p-3 text-foreground">{t.description}</td>
-                              <td className={cn(
-                                'p-3 text-right font-semibold whitespace-nowrap',
-                                t.type === 'income' ? 'text-success' : 'text-destructive'
+                        filteredTransactions.map(t => (
+                          <tr key={t.id} className="border-b border-border/50 hover:bg-muted/30 transition-colors">
+                            <td className="p-3 text-foreground whitespace-nowrap">
+                              {format(new Date(t.date), 'dd MMM yyyy', { locale: es })}
+                            </td>
+                            <td className="p-3">
+                              <span className={cn(
+                                'inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium',
+                                t.type === 'income'
+                                  ? 'bg-success/10 text-success'
+                                  : 'bg-orange-500/10 text-orange-600'
                               )}>
-                                {t.type === 'income' ? '+' : '-'}{cs}{t.amount.toFixed(2)}
-                              </td>
-                            </tr>
-                          ))
+                                {t.type === 'income' ? (
+                                  <><TrendingUp className="w-3 h-3" /> Ingreso</>
+                                ) : (
+                                  <><TrendingDown className="w-3 h-3" /> Gasto</>
+                                )}
+                              </span>
+                            </td>
+                            <td className="p-3 text-muted-foreground capitalize">{t.category.replace('_', ' ')}</td>
+                            <td className="p-3 text-foreground">{t.description}</td>
+                            <td className={cn(
+                              'p-3 text-right font-semibold whitespace-nowrap',
+                              t.type === 'income' ? 'text-success' : 'text-orange-600'
+                            )}>
+                              {t.type === 'income' ? '+' : '-'}{cs}{t.amount.toFixed(2)}
+                            </td>
+                          </tr>
+                        ))
                       )}
                     </tbody>
                   </table>
                 </div>
               </ScrollArea>
+              <div className="px-4 py-3 border-t border-border text-xs text-muted-foreground">
+                {filteredTransactions.length} registro{filteredTransactions.length !== 1 ? 's' : ''}
+              </div>
             </CardContent>
           </Card>
         </motion.div>
