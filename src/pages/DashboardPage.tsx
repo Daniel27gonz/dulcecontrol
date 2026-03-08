@@ -1,9 +1,10 @@
 import { motion } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
-import { Plus, ChefHat, FileText, Users, Receipt, ClipboardList, RefreshCw } from 'lucide-react';
+import { Plus, ChefHat, FileText, Users, Receipt, ClipboardList, RefreshCw, BookOpen, Clock, TrendingUp, DollarSign } from 'lucide-react';
 import { useApp } from '@/context/AppContext';
 import { AppLayout } from '@/components/AppLayout';
 import dashboardBg from '@/assets/dashboard-bg.jpg';
+import { useMemo } from 'react';
 
 const quickActions = [
   { icon: Plus, label: 'Nueva Receta', path: '/calculator', description: 'Crea y costea' },
@@ -16,7 +17,42 @@ const quickActions = [
 
 export default function DashboardPage() {
   const navigate = useNavigate();
-  const { user } = useApp();
+  const { user, recipes, orders, transactions, settings } = useApp();
+
+  const stats = useMemo(() => {
+    const now = new Date();
+    const currentMonth = now.getMonth();
+    const currentYear = now.getFullYear();
+
+    const totalRecipes = recipes.length;
+
+    const pendingOrders = orders.filter(o => o.status === 'pending' || o.status === 'in_progress').length;
+
+    const monthlyIncome = transactions
+      .filter(t => {
+        const d = new Date(t.date);
+        return t.type === 'income' && d.getMonth() === currentMonth && d.getFullYear() === currentYear;
+      })
+      .reduce((sum, t) => sum + t.amount, 0);
+
+    const monthlyExpenses = transactions
+      .filter(t => {
+        const d = new Date(t.date);
+        return t.type === 'expense' && d.getMonth() === currentMonth && d.getFullYear() === currentYear;
+      })
+      .reduce((sum, t) => sum + t.amount, 0);
+
+    return { totalRecipes, pendingOrders, monthlyIncome, monthlyExpenses };
+  }, [recipes, orders, transactions]);
+
+  const symbol = settings.currencySymbol || '$';
+
+  const statCards = [
+    { icon: BookOpen, label: 'Recetas', value: stats.totalRecipes.toString(), color: 'bg-primary text-primary-foreground' },
+    { icon: Clock, label: 'Pedidos Pendientes', value: stats.pendingOrders.toString(), color: 'bg-[hsl(var(--caramel))] text-[hsl(var(--caramel-foreground))]' },
+    { icon: TrendingUp, label: 'Ingresos del Mes', value: `${symbol}${stats.monthlyIncome.toLocaleString('es', { minimumFractionDigits: 0, maximumFractionDigits: 0 })}`, color: 'bg-success text-success-foreground' },
+    { icon: DollarSign, label: 'Gastos del Mes', value: `${symbol}${stats.monthlyExpenses.toLocaleString('es', { minimumFractionDigits: 0, maximumFractionDigits: 0 })}`, color: 'bg-accent text-accent-foreground' },
+  ];
 
   const containerVariants = {
     hidden: { opacity: 0 },
@@ -68,6 +104,27 @@ export default function DashboardPage() {
             <p className="text-muted-foreground mt-3 text-sm sm:text-base max-w-md mx-auto">
               Gestiona tu negocio de repostería con precisión y estilo ✨
             </p>
+          </motion.div>
+
+          {/* Stats Cards */}
+          <motion.div variants={itemVariants}>
+            <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
+              {statCards.map(({ icon: Icon, label, value, color }) => (
+                <motion.div
+                  key={label}
+                  variants={itemVariants}
+                  className="flex items-center gap-3 p-4 sm:p-5 rounded-2xl bg-card/80 backdrop-blur-sm border border-border/40 shadow-[var(--shadow-soft)]"
+                >
+                  <div className={`w-11 h-11 rounded-xl flex items-center justify-center shrink-0 ${color}`}>
+                    <Icon className="w-5 h-5" />
+                  </div>
+                  <div className="min-w-0">
+                    <p className="text-lg sm:text-xl font-extrabold text-foreground truncate">{value}</p>
+                    <p className="text-[11px] text-muted-foreground leading-tight">{label}</p>
+                  </div>
+                </motion.div>
+              ))}
+            </div>
           </motion.div>
 
           {/* Quick Actions Grid */}
