@@ -416,23 +416,45 @@ export default function IngredientsPage() {
                   Los ingredientes que registres en Compras aparecerán aquí automáticamente.
                 </p>
               </Card>
-            ) : (
-              <>
-                <p className="text-sm text-muted-foreground">
-                  {ingredients.length} ingrediente{ingredients.length !== 1 ? 's' : ''} registrado{ingredients.length !== 1 ? 's' : ''}
-                </p>
-                <div className="space-y-2">
-                  {[...new Map(ingredients.map((i: BaseIngredient) => [i.name.toLowerCase().trim(), i])).values()]
-                    .sort((a: BaseIngredient, b: BaseIngredient) => a.name.localeCompare(b.name))
-                    .map((ingredient: BaseIngredient) => (
+            ) : (() => {
+              const uniqueIngredients = [...new Map(ingredients.map((i: BaseIngredient) => [i.name.toLowerCase().trim(), i])).values()]
+                .sort((a: BaseIngredient, b: BaseIngredient) => a.name.localeCompare(b.name));
+              const filteredList = listSearchTerm
+                ? uniqueIngredients.filter((i: BaseIngredient) => i.name.toLowerCase().includes(listSearchTerm.toLowerCase()))
+                : uniqueIngredients;
+              return (
+                <>
+                  <div className="relative">
+                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                    <Input
+                      value={listSearchTerm}
+                      onChange={(e) => setListSearchTerm(e.target.value)}
+                      placeholder="Buscar en lista..."
+                      className="pl-10"
+                    />
+                  </div>
+                  <p className="text-sm text-muted-foreground">
+                    {filteredList.length} de {uniqueIngredients.length} ingrediente{uniqueIngredients.length !== 1 ? 's' : ''}
+                  </p>
+                  <div className="space-y-2">
+                    {filteredList.map((ingredient: BaseIngredient) => (
                       <Card key={ingredient.id} className="p-3 flex items-center gap-3">
-                        <Package className="w-4 h-4 text-muted-foreground shrink-0" />
-                        <span className="font-medium text-sm">{ingredient.name}</span>
+                        <span className="text-lg">{CATEGORY_EMOJI[ingredient.category] || '📦'}</span>
+                        <div className="flex flex-col">
+                          <span className="font-medium text-sm">{ingredient.name}</span>
+                          <span className="text-xs text-muted-foreground capitalize">
+                            {INGREDIENT_CATEGORIES.find(c => c.id === ingredient.category)?.name || ingredient.category}
+                          </span>
+                        </div>
                       </Card>
                     ))}
-                </div>
-              </>
-            )}
+                    {filteredList.length === 0 && (
+                      <p className="text-center text-sm text-muted-foreground py-4">No se encontraron ingredientes</p>
+                    )}
+                  </div>
+                </>
+              );
+            })()}
           </TabsContent>
         </Tabs>
       </div>
