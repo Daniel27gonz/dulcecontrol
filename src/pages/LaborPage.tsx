@@ -181,15 +181,15 @@ export default function LaborPage() {
         {workers.length > 0 && (
           <motion.div variants={itemVariants}>
             <Card className="bg-warm/10 border-warm/30">
-              <CardContent className="p-4">
+              <CardContent className="p-3">
                 <div className="flex items-center justify-between">
                   <div>
-                    <p className="text-sm text-muted-foreground">Costo promedio por hora</p>
-                    <p className="text-2xl font-bold text-warm">{formatCurrency(getLastMonthLaborCostPerHour())}</p>
+                    <p className="text-xs text-muted-foreground">Costo promedio por hora</p>
+                    <p className="text-lg font-bold text-warm">{formatCurrency(getLastMonthLaborCostPerHour())}</p>
                   </div>
-                  <Users className="w-10 h-10 text-warm/50" />
+                  <Users className="w-8 h-8 text-warm/50" />
                 </div>
-                <p className="text-xs text-muted-foreground mt-2">
+                <p className="text-xs text-muted-foreground mt-1">
                   {getLastMonthLabel() ? `Mes: ${getLastMonthLabel()}` : 'Mensuales'}
                 </p>
               </CardContent>
@@ -271,18 +271,14 @@ export default function LaborPage() {
                   </div>
 
                   {/* Salary breakdown */}
-                  <div className="mt-3 pt-3 border-t grid grid-cols-3 gap-2 text-center">
-                    <div>
-                      <p className="text-xs text-muted-foreground">Mensual</p>
-                      <p className="font-semibold text-foreground">{formatCurrency(worker.monthlySalary)}</p>
-                    </div>
+                  <div className="mt-3 pt-3 border-t grid grid-cols-2 gap-2 text-center">
                     <div>
                       <p className="text-xs text-muted-foreground">Diario</p>
-                      <p className="font-semibold text-foreground">{formatCurrency(worker.dailySalary)}</p>
+                      <p className="text-sm font-semibold text-foreground">{formatCurrency(worker.dailySalary)}</p>
                     </div>
                     <div className="bg-primary/10 rounded-lg p-1">
                       <p className="text-xs text-primary">Por hora</p>
-                      <p className="font-bold text-primary">{formatCurrency(worker.hourlyRate)}</p>
+                      <p className="text-sm font-bold text-primary">{formatCurrency(worker.hourlyRate)}</p>
                     </div>
                   </div>
                 </CardContent>
@@ -359,26 +355,28 @@ export default function LaborPage() {
               />
             </div>
 
-            {/* Preview calculations */}
-            <Card className="bg-muted/50">
-              <CardContent className="p-3">
-                <p className="text-xs font-medium text-muted-foreground mb-2">Cálculos automáticos:</p>
-                <div className="grid grid-cols-3 gap-2 text-center text-sm">
-                  <div>
-                    <p className="text-xs text-muted-foreground">Horas/mes</p>
-                    <p className="font-semibold">{previewMonthlyHours}</p>
+            {/* Preview calculations - only show when key fields are filled */}
+            {formData.name.trim() && formData.paymentDate && previewMonthlyHours > 0 && (
+              <Card className="bg-muted/50">
+                <CardContent className="p-3">
+                  <p className="text-xs font-medium text-muted-foreground mb-2">Cálculos automáticos:</p>
+                  <div className="grid grid-cols-3 gap-2 text-center text-sm">
+                    <div>
+                      <p className="text-xs text-muted-foreground">Horas/mes</p>
+                      <p className="font-semibold">{previewMonthlyHours}</p>
+                    </div>
+                    <div>
+                      <p className="text-xs text-muted-foreground">Por día</p>
+                      <p className="font-semibold">{formatCurrency(previewDailySalary)}</p>
+                    </div>
+                    <div className="bg-primary/10 rounded p-1">
+                      <p className="text-xs text-primary">Por hora</p>
+                      <p className="font-bold text-primary">{formatCurrency(previewHourlyRate)}</p>
+                    </div>
                   </div>
-                  <div>
-                    <p className="text-xs text-muted-foreground">Por día</p>
-                    <p className="font-semibold">{formatCurrency(previewDailySalary)}</p>
-                  </div>
-                  <div className="bg-primary/10 rounded p-1">
-                    <p className="text-xs text-primary">Por hora</p>
-                    <p className="font-bold text-primary">{formatCurrency(previewHourlyRate)}</p>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
+                </CardContent>
+              </Card>
+            )}
           </div>
 
           <DialogFooter className="flex-col gap-2 sm:flex-row mt-4">
