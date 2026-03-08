@@ -38,6 +38,32 @@ export default function LaborPage() {
   const [editingWorker, setEditingWorker] = useState<Worker | null>(null);
   const [formData, setFormData] = useState<WorkerFormData>(initialFormData);
 
+  // Month filter
+  const now = new Date();
+  const [filterMonth, setFilterMonth] = useState(now.getMonth());
+  const [filterYear, setFilterYear] = useState(now.getFullYear());
+  const MONTH_NAMES = ['Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio', 'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre'];
+
+  const handlePrevMonth = () => {
+    if (filterMonth === 0) { setFilterMonth(11); setFilterYear(y => y - 1); }
+    else setFilterMonth(m => m - 1);
+  };
+  const handleNextMonth = () => {
+    if (filterMonth === 11) { setFilterMonth(0); setFilterYear(y => y + 1); }
+    else setFilterMonth(m => m + 1);
+  };
+
+  const filteredWorkers = useMemo(() => {
+    return workers.filter(w => {
+      const pDate = w.paymentDate ? new Date(w.paymentDate) : new Date(w.lastUpdated);
+      return pDate.getMonth() === filterMonth && pDate.getFullYear() === filterYear;
+    });
+  }, [workers, filterMonth, filterYear]);
+
+  const monthlyTotal = useMemo(() => {
+    return filteredWorkers.reduce((sum, w) => sum + w.monthlySalary, 0);
+  }, [filteredWorkers]);
+
   const previewMonthlyHours = formData.hoursPerDay * formData.daysPerMonth;
   const previewDailySalary = formData.daysPerMonth > 0 ? formData.monthlySalary / formData.daysPerMonth : 0;
   const previewHourlyRate = previewMonthlyHours > 0 ? formData.monthlySalary / previewMonthlyHours : 0;
