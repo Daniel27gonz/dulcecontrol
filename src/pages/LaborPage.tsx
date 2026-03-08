@@ -178,24 +178,34 @@ export default function LaborPage() {
         </motion.div>
 
         {/* Summary */}
-        {workers.length > 0 && (
-          <motion.div variants={itemVariants}>
-            <Card className="bg-warm/10 border-warm/30">
-              <CardContent className="p-3">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <p className="text-xs text-muted-foreground">Costo promedio por hora</p>
-                    <p className="text-lg font-bold text-warm">{formatCurrency(getLastMonthLaborCostPerHour())}</p>
+        {filteredWorkers.length > 0 && (() => {
+          const totalSalary = filteredWorkers.reduce((s, w) => s + w.monthlySalary, 0);
+          const totalHours = filteredWorkers.reduce((s, w) => s + w.monthlyHours, 0);
+          const costPerHour = totalHours > 0 ? totalSalary / totalHours : 0;
+          return (
+            <motion.div variants={itemVariants}>
+              <Card className="bg-warm/10 border-warm/30">
+                <CardContent className="p-3">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <p className="text-xs text-muted-foreground">Costo promedio por hora</p>
+                      <div className="flex items-baseline gap-2">
+                        <p className="text-lg font-bold text-warm">{formatCurrency(costPerHour)}</p>
+                        <p className="text-[10px] text-muted-foreground">
+                          ({formatCurrency(totalSalary)} ÷ {totalHours}h)
+                        </p>
+                      </div>
+                    </div>
+                    <Users className="w-8 h-8 text-warm/50" />
                   </div>
-                  <Users className="w-8 h-8 text-warm/50" />
-                </div>
-                <p className="text-xs text-muted-foreground mt-1">
-                  {getLastMonthLabel() ? `Mes: ${getLastMonthLabel()}` : 'Mensuales'}
-                </p>
-              </CardContent>
-            </Card>
-          </motion.div>
-        )}
+                  <p className="text-[10px] text-muted-foreground mt-1">
+                    Sal. total ÷ Hrs. totales = Costo/h
+                  </p>
+                </CardContent>
+              </Card>
+            </motion.div>
+          );
+        })()}
 
         {/* Add Button */}
         <motion.div variants={itemVariants}>
