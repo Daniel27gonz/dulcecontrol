@@ -382,6 +382,15 @@ export default function FinancesPage() {
         {/* ===== HISTORIAL DE TRANSACCIONES ===== */}
         <HistorialTransacciones 
           transactions={transactions}
+          depreciationEntries={Object.entries(monthlyData.depreciationByEquipment).map(([name, amount], i) => ({
+            id: `dep-${i}`,
+            type: 'expense' as const,
+            description: name,
+            amount,
+            category: 'depreciación',
+            date: new Date().toISOString(),
+            sourceType: 'depreciation',
+          }))}
           cs={cs}
           itemVariants={itemVariants}
           deleteTransaction={deleteTransaction}
