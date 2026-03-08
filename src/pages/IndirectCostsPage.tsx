@@ -347,17 +347,6 @@ export default function IndirectCostsPage() {
           animate="visible"
           className="p-4 space-y-4"
         >
-          {/* Info Card */}
-          <motion.div variants={itemVariants}>
-            <Card className="bg-primary/5 border-primary/20">
-              <CardContent className="p-4 flex gap-3">
-                <HelpCircle className="w-5 h-5 text-primary shrink-0 mt-0.5" />
-                <p className="text-sm text-muted-foreground">
-                  Aquí calculas lo que cuesta tu negocio aunque no estés horneando.
-                </p>
-              </CardContent>
-            </Card>
-          </motion.div>
 
 
           {/* Total */}
@@ -389,9 +378,6 @@ export default function IndirectCostsPage() {
                     {totalMonthlyHours > 0 ? (
                       <>
                         <p className="text-xl sm:text-2xl font-bold text-primary">{formatCurrency(indirectCostPerHour)}</p>
-                        <p className="text-xs text-muted-foreground mt-1">
-                          Basado en {totalMonthlyHours.toLocaleString('es-MX')} horas mensuales
-                        </p>
                       </>
                     ) : (
                       <div className="flex items-start gap-2 mt-2 text-amber-600">
@@ -401,11 +387,6 @@ export default function IndirectCostsPage() {
                     )}
                   </div>
                 </div>
-                {totalMonthlyHours > 0 && (
-                  <p className="text-xs text-muted-foreground mt-3 pt-3 border-t border-primary/20">
-                    Este valor indica cuánto cuesta tu negocio por cada hora de trabajo.
-                  </p>
-                )}
               </CardContent>
             </Card>
           </motion.div>
