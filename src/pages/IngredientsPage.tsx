@@ -87,6 +87,12 @@ export default function IngredientsPage() {
     });
   }, [ingredients, searchTerm, selectedCategory, filterMonth, filterYear]);
 
+  const monthlyTotal = useMemo(() => {
+    return filteredIngredients.reduce((sum, ing) => {
+      return sum + (ing.presentationPrice * (ing.quantityPurchased || 1));
+    }, 0);
+  }, [filteredIngredients]);
+
   const [showAddModal, setShowAddModal] = useState(false);
   const [showEditModal, setShowEditModal] = useState(false);
   const [editingIngredient, setEditingIngredient] = useState<BaseIngredient | null>(null);
