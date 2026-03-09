@@ -79,22 +79,20 @@ export default function DashboardPage() {
   return (
     <AppLayout>
       <div className="min-h-screen bg-background relative overflow-hidden">
-        {/* Mobile sticky top bar */}
-        <div className="sticky top-0 z-40 flex items-center justify-between p-3 md:hidden">
-          <Button
-            onClick={() => window.location.reload()}
-            variant="ghost"
-            size="sm"
-            className="text-muted-foreground hover:text-primary gap-1"
-          >
-            <RefreshCw className="w-4 h-4" />
-            Actualizar
-          </Button>
+        {/* Mobile sticky top bar - matching reference design */}
+        <div className="sticky top-0 z-40 flex items-center justify-between px-4 py-3 md:hidden bg-white shadow-sm border-b border-border/40">
+          <div className="flex items-center gap-2.5">
+            <img src={dulceControlLogo} alt="DulceControl" className="h-10 w-10 rounded-2xl object-contain" />
+            <span className="font-serif italic font-bold text-2xl tracking-tight">
+              <span className="text-primary">Dulce</span>
+              <span className="text-[hsl(var(--caramel))]">Control</span>
+            </span>
+          </div>
           <div className="flex items-center gap-1">
             <Button
               asChild
               variant="ghost"
-              size="icon"
+              size="icon-sm"
               className="text-muted-foreground hover:text-primary"
             >
               <a href="/settings">
@@ -105,7 +103,7 @@ export default function DashboardPage() {
               onClick={handleLogout}
               variant="ghost"
               size="sm"
-              className="text-muted-foreground hover:text-destructive gap-1"
+              className="text-muted-foreground hover:text-foreground gap-1.5"
             >
               <LogOut className="w-4 h-4" />
               Salir
