@@ -6,7 +6,7 @@ import { AppLayout } from '@/components/AppLayout';
 import { Button } from '@/components/ui/button';
 import { toast } from 'sonner';
 import dashboardBg from '@/assets/dashboard-bg.jpg';
-import dulceControlLogo from '@/assets/dulcecontrol-logo.png';
+import dulceControlHeaderLogo from '@/assets/dulcecontrol-header-logo.png';
 import { useMemo } from 'react';
 
 const quickActions = [
@@ -81,12 +81,8 @@ export default function DashboardPage() {
       <div className="min-h-screen bg-background relative overflow-hidden">
         {/* Mobile sticky top bar - matching reference design */}
         <div className="sticky top-0 z-40 flex items-center justify-between px-4 py-3 md:hidden bg-white shadow-sm border-b border-border/40">
-          <div className="flex items-center gap-2.5">
-            
-            <span className="font-serif italic font-bold text-2xl tracking-tight">
-              <span className="text-primary">Dulce</span>
-              <span className="text-[hsl(var(--caramel))]">Control</span>
-            </span>
+          <div className="flex items-center">
+            <img src={dulceControlHeaderLogo} alt="DulceControl" className="h-10 object-contain" />
           </div>
           <div className="flex items-center gap-1">
             <Button
