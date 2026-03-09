@@ -21,16 +21,7 @@ const quickActions = [
 
 export default function DashboardPage() {
   const navigate = useNavigate();
-  const { user, recipes, orders, settings, logout } = useApp();
-
-  // Use the same unified financial hook as Finances page
-  const currentMonthFinancials = useMonthlyFinancials(new Date());
-
-  const handleLogout = async () => {
-    await logout();
-    toast.success('Sesión cerrada correctamente');
-    navigate('/');
-  };
+  const { user, recipes, orders, settings } = useApp();
 
   const stats = useMemo(() => {
     const totalRecipes = recipes.length;
