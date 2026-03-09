@@ -6,6 +6,7 @@ import { AppLayout } from '@/components/AppLayout';
 import { Button } from '@/components/ui/button';
 import { toast } from 'sonner';
 import dashboardBg from '@/assets/dashboard-bg.jpg';
+import dulceControlLogo from '@/assets/dulcecontrol-logo.png';
 import { useMemo } from 'react';
 
 const quickActions = [
