@@ -19,7 +19,13 @@ const quickActions = [
 
 export default function DashboardPage() {
   const navigate = useNavigate();
-  const { user, recipes, orders, transactions, settings } = useApp();
+  const { user, recipes, orders, transactions, settings, logout } = useApp();
+
+  const handleLogout = async () => {
+    await logout();
+    toast.success('Sesión cerrada correctamente');
+    navigate('/');
+  };
 
   const stats = useMemo(() => {
     const now = new Date();
