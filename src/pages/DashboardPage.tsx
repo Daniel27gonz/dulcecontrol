@@ -60,29 +60,6 @@ export default function DashboardPage() {
   return (
     <AppLayout>
       <div className="min-h-screen bg-background relative">
-        {/* Mobile top action bar */}
-        <div className="flex items-center justify-end px-4 py-2 md:hidden">
-          <div className="flex items-center gap-1">
-            <Button
-              asChild
-              variant="ghost"
-              size="icon-sm"
-              className="text-muted-foreground hover:text-primary">
-              <a href="/settings">
-                <Settings className="w-5 h-5" />
-              </a>
-            </Button>
-            <Button
-              onClick={handleLogout}
-              variant="ghost"
-              size="sm"
-              className="text-muted-foreground hover:text-foreground gap-1.5">
-              <LogOut className="w-4 h-4" />
-              Salir
-            </Button>
-          </div>
-        </div>
-
         {/* Background image with overlay */}
         <div className="absolute inset-0 z-0">
           <img
