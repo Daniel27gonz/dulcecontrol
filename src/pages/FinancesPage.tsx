@@ -11,128 +11,28 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { useApp } from '@/context/AppContext';
-import { useBaseIngredients, INGREDIENT_CATEGORIES } from '@/context/BaseIngredientsContext';
-import { useIndirectCosts } from '@/context/IndirectCostsContext';
-import { useLabor } from '@/context/LaborContext';
-import { useQuotations } from '@/context/QuotationsContext';
 import { BottomNav } from '@/components/BottomNav';
 import { AppHeader } from '@/components/AppHeader';
 import { TransactionForm } from '@/components/finances/TransactionForm';
 import { FinanceChart } from '@/components/finances/FinanceChart';
 import { TransactionList } from '@/components/finances/TransactionList';
+import { useMonthlyFinancials } from '@/hooks/useMonthlyFinancials';
 import { format, startOfMonth, endOfMonth, isWithinInterval } from 'date-fns';
 import { es } from 'date-fns/locale';
 import { cn } from '@/lib/utils';
 import { ScrollArea } from '@/components/ui/scroll-area';
 
 export default function FinancesPage() {
-  const { settings, transactions, orders, deleteTransaction } = useApp();
-  const { ingredients: baseIngredients } = useBaseIngredients();
-  const { equipment, getEquipmentDepreciation, getTotalDepreciation } = useIndirectCosts();
-  const { } = useLabor();
-  const { quotations } = useQuotations();
+  const { settings, transactions, deleteTransaction } = useApp();
 
   const [selectedMonth, setSelectedMonth] = useState(new Date());
 
-  const monthStart = startOfMonth(selectedMonth);
-  const monthEnd = endOfMonth(selectedMonth);
-
-  const isInMonth = (dateStr: string) => {
-    try {
-      const d = new Date(dateStr);
-      return isWithinInterval(d, { start: monthStart, end: monthEnd });
-    } catch { return false; }
-  };
+  // Use the unified financial hook - single source of truth
+  const monthlyData = useMonthlyFinancials(selectedMonth);
 
   // Navigate months
   const prevMonth = () => setSelectedMonth(prev => new Date(prev.getFullYear(), prev.getMonth() - 1, 1));
   const nextMonth = () => setSelectedMonth(prev => new Date(prev.getFullYear(), prev.getMonth() + 1, 1));
-
-  // === DATA COMPUTATIONS ===
-  const monthlyData = useMemo(() => {
-    // Transactions this month
-    const monthTransactions = transactions.filter(t => isInMonth(t.date));
-    const incomeTransactions = monthTransactions.filter(t => t.type === 'income');
-    const expenseTransactions = monthTransactions.filter(t => t.type === 'expense');
-
-    const totalIncome = incomeTransactions.reduce((sum, t) => sum + t.amount, 0);
-    const totalExpenses = expenseTransactions.reduce((sum, t) => sum + t.amount, 0);
-
-    // Orders this month
-    const monthOrders = orders.filter(o => isInMonth(o.createdAt));
-    const completedOrders = monthOrders.filter(o => o.status === 'completed');
-
-    // Quotations this month
-    const monthQuotations = quotations.filter(q => isInMonth(q.createdAt));
-
-    // === GROUPED DATA FOR RESUMEN ===
-
-    // 1. Ingredients grouped by category
-    const ingredientTransactions = expenseTransactions.filter(t => t.sourceType === 'ingredient');
-    const ingredientsByCategory: Record<string, number> = {};
-    ingredientTransactions.forEach(t => {
-      // Find the ingredient to get its category
-      const ingredient = baseIngredients.find(ing => ing.id === t.sourceId);
-      const catId = ingredient?.category || 'otros';
-      const catLabel = INGREDIENT_CATEGORIES.find(c => c.id === catId)?.name || catId;
-      ingredientsByCategory[catLabel] = (ingredientsByCategory[catLabel] || 0) + t.amount;
-    });
-
-    // 2. Labor total from transactions
-    const laborTransactions = expenseTransactions.filter(t => t.sourceType === 'worker');
-    const totalLaborCost = laborTransactions.reduce((sum, t) => sum + t.amount, 0);
-
-    // 3. Indirect costs grouped by description (concept) - exclude depreciation transactions
-    const indirectTransactions = expenseTransactions.filter(t => t.sourceType === 'indirect_cost' && t.category !== 'depreciación');
-    const indirectByCategory: Record<string, number> = {};
-    indirectTransactions.forEach(t => {
-      indirectByCategory[t.description] = (indirectByCategory[t.description] || 0) + t.amount;
-    });
-
-    // 4. Equipment depreciation (recurring monthly, computed directly)
-    const totalDepreciation = getTotalDepreciation();
-    const depreciationByEquipment: Record<string, number> = {};
-    equipment.forEach(eq => {
-      const dep = getEquipmentDepreciation(eq);
-      if (dep > 0) depreciationByEquipment[`Depreciación: ${eq.name}`] = dep;
-    });
-
-    // 5. Other manual transactions (no source)
-    const otherExpenses = expenseTransactions.filter(t => !t.sourceType);
-
-    // Combined expenses = transaction-based expenses + recurring depreciation (not in transactions)
-    const depreciationAlreadyInTransactions = expenseTransactions
-      .filter(t => t.category === 'depreciación')
-      .reduce((sum, t) => sum + t.amount, 0);
-    const combinedExpenses = totalExpenses - depreciationAlreadyInTransactions + totalDepreciation;
-
-    // Profit
-    const profit = totalIncome - combinedExpenses;
-
-    // Anticipos (advance payments) vs final payments
-    const anticipos = incomeTransactions.filter(t => t.description.toLowerCase().includes('anticipo'));
-    const totalAnticipos = anticipos.reduce((sum, t) => sum + t.amount, 0);
-
-    return {
-      totalIncome,
-      totalExpenses: combinedExpenses,
-      combinedExpenses,
-      profit,
-      monthOrders,
-      completedOrders,
-      monthQuotations,
-      incomeTransactions,
-      expenseTransactions,
-      monthTransactions,
-      totalLaborCost,
-      totalAnticipos,
-      ingredientsByCategory,
-      indirectByCategory,
-      depreciationByEquipment,
-      totalDepreciation,
-      otherExpenses,
-    };
-  }, [transactions, orders, quotations, baseIngredients, selectedMonth, equipment, getEquipmentDepreciation, getTotalDepreciation]);
 
   const containerVariants = {
     hidden: { opacity: 0 },
@@ -202,7 +102,7 @@ export default function FinancesPage() {
                 <p className="text-sm font-medium text-muted-foreground">Gastos y compras del mes</p>
               </div>
               <p className="text-2xl font-bold text-destructive">
-                {cs}{monthlyData.combinedExpenses.toFixed(2)}
+                {cs}{monthlyData.totalExpenses.toFixed(2)}
               </p>
             </CardContent>
           </Card>
@@ -410,6 +310,9 @@ function HistorialTransacciones({
   const [categoryFilter, setCategoryFilter] = useState<string>('all');
   const [monthPickerOpen, setMonthPickerOpen] = useState(false);
 
+  // Use the unified financial hook for summary cards
+  const histFinancials = useMonthlyFinancials(histMonth);
+
   const histMonthStart = startOfMonth(histMonth);
   const histMonthEnd = endOfMonth(histMonth);
 
@@ -425,9 +328,10 @@ function HistorialTransacciones({
     }).sort((a: any, b: any) => new Date(b.date).getTime() - new Date(a.date).getTime());
   }, [transactions, histMonth, typeFilter, categoryFilter]);
 
-  const histIncome = filteredTransactions.filter((t: any) => t.type === 'income').reduce((s: number, t: any) => s + t.amount, 0);
-  const histExpenses = filteredTransactions.filter((t: any) => t.type === 'expense').reduce((s: number, t: any) => s + t.amount, 0);
-  const histBalance = histIncome - histExpenses;
+  // Use unified hook values for summary cards
+  const histIncome = histFinancials.totalIncome;
+  const histExpenses = histFinancials.totalExpenses;
+  const histBalance = histFinancials.profit;
 
   // Available months from all transactions
   const availableMonths = useMemo(() => {

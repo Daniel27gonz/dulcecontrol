@@ -8,6 +8,7 @@ import { toast } from 'sonner';
 import dashboardBg from '@/assets/dashboard-bg.jpg';
 import dulceControlHeaderLogo from '@/assets/dulcecontrol-header-logo.png';
 import { useMemo } from 'react';
+import { useMonthlyFinancials } from '@/hooks/useMonthlyFinancials';
 
 const quickActions = [
 { icon: Plus, label: 'Nueva Receta', path: '/calculator', description: 'Crea y costea' },
@@ -20,7 +21,10 @@ const quickActions = [
 
 export default function DashboardPage() {
   const navigate = useNavigate();
-  const { user, recipes, orders, transactions, settings, logout } = useApp();
+  const { user, recipes, orders, settings, logout } = useApp();
+
+  // Use the same unified financial hook as Finances page
+  const currentMonthFinancials = useMonthlyFinancials(new Date());
 
   const handleLogout = async () => {
     await logout();
@@ -29,30 +33,16 @@ export default function DashboardPage() {
   };
 
   const stats = useMemo(() => {
-    const now = new Date();
-    const currentMonth = now.getMonth();
-    const currentYear = now.getFullYear();
-
     const totalRecipes = recipes.length;
-
     const pendingOrders = orders.filter((o) => o.status === 'pending' || o.status === 'in_progress').length;
 
-    const monthlyIncome = transactions.
-    filter((t) => {
-      const d = new Date(t.date);
-      return t.type === 'income' && d.getMonth() === currentMonth && d.getFullYear() === currentYear;
-    }).
-    reduce((sum, t) => sum + t.amount, 0);
-
-    const monthlyExpenses = transactions.
-    filter((t) => {
-      const d = new Date(t.date);
-      return t.type === 'expense' && d.getMonth() === currentMonth && d.getFullYear() === currentYear;
-    }).
-    reduce((sum, t) => sum + t.amount, 0);
-
-    return { totalRecipes, pendingOrders, monthlyIncome, monthlyExpenses };
-  }, [recipes, orders, transactions]);
+    return {
+      totalRecipes,
+      pendingOrders,
+      monthlyIncome: currentMonthFinancials.totalIncome,
+      monthlyExpenses: currentMonthFinancials.totalExpenses,
+    };
+  }, [recipes, orders, currentMonthFinancials]);
 
   const symbol = settings.currencySymbol || '$';
 
