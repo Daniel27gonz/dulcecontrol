@@ -1,14 +1,11 @@
 import { motion } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
-import { Plus, ChefHat, FileText, Users, Receipt, ClipboardList, RefreshCw, BookOpen, Clock, TrendingUp, DollarSign, LogOut, Settings } from 'lucide-react';
+import { Plus, ChefHat, FileText, Users, Receipt, ClipboardList, RefreshCw, BookOpen, Clock, TrendingUp, DollarSign } from 'lucide-react';
 import { useApp } from '@/context/AppContext';
 import { AppLayout } from '@/components/AppLayout';
-import { Button } from '@/components/ui/button';
-import { toast } from 'sonner';
-import dashboardBg from '@/assets/dashboard-bg.jpg';
-import dulceControlHeaderLogo from '@/assets/dulcecontrol-header-logo.png';
 import { useMemo } from 'react';
 import { useMonthlyFinancials } from '@/hooks/useMonthlyFinancials';
+import dashboardBg from '@/assets/dashboard-bg.jpg';
 
 const quickActions = [
 { icon: Plus, label: 'Nueva Receta', path: '/calculator', description: 'Crea y costea' },
@@ -21,16 +18,10 @@ const quickActions = [
 
 export default function DashboardPage() {
   const navigate = useNavigate();
-  const { user, recipes, orders, settings, logout } = useApp();
+  const { user, recipes, orders, settings } = useApp();
 
   // Use the same unified financial hook as Finances page
   const currentMonthFinancials = useMonthlyFinancials(new Date());
-
-  const handleLogout = async () => {
-    await logout();
-    toast.success('Sesión cerrada correctamente');
-    navigate('/');
-  };
 
   const stats = useMemo(() => {
     const totalRecipes = recipes.length;
@@ -69,29 +60,6 @@ export default function DashboardPage() {
   return (
     <AppLayout>
       <div className="min-h-screen bg-background relative">
-        {/* Mobile top action bar */}
-        <div className="flex items-center justify-end px-4 py-2 md:hidden">
-          <div className="flex items-center gap-1">
-            <Button
-              asChild
-              variant="ghost"
-              size="icon-sm"
-              className="text-muted-foreground hover:text-primary">
-              <a href="/settings">
-                <Settings className="w-5 h-5" />
-              </a>
-            </Button>
-            <Button
-              onClick={handleLogout}
-              variant="ghost"
-              size="sm"
-              className="text-muted-foreground hover:text-foreground gap-1.5">
-              <LogOut className="w-4 h-4" />
-              Salir
-            </Button>
-          </div>
-        </div>
-
         {/* Background image with overlay */}
         <div className="absolute inset-0 z-0">
           <img
