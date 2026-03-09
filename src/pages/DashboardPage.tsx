@@ -78,9 +78,9 @@ export default function DashboardPage() {
 
   return (
     <AppLayout>
-      <div className="min-h-screen bg-background relative overflow-hidden">
-        {/* Mobile sticky top bar - matching reference design */}
-        <div className="sticky top-0 z-40 flex items-center justify-between px-4 py-3 md:hidden bg-white shadow-sm border-b border-border/40">
+      <div className="min-h-screen bg-background relative">
+        {/* Mobile fixed top bar */}
+        <div className="fixed top-0 left-0 right-0 z-40 flex items-center justify-between px-4 py-3 md:hidden bg-white shadow-sm border-b border-border/40">
           <div className="flex items-center">
             <img src={dulceControlHeaderLogo} alt="DulceControl" className="h-10 object-contain" />
           </div>
@@ -116,6 +116,9 @@ export default function DashboardPage() {
           
           <div className="absolute inset-0 bg-gradient-to-b from-background/80 via-background/60 to-background" />
         </div>
+
+        {/* Spacer for fixed mobile bar */}
+        <div className="h-14 md:hidden" />
 
         <motion.div
           variants={containerVariants}
