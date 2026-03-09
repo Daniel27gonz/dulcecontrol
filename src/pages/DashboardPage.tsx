@@ -92,6 +92,15 @@ export default function DashboardPage() {
           </div>
         </div>
 
+        {/* Background image with overlay */}
+        <div className="absolute inset-0 z-0">
+          <img
+            src={dashboardBg}
+            alt=""
+            className="w-full h-full object-cover opacity-[0.08]" />
+          <div className="absolute inset-0 bg-gradient-to-b from-background/80 via-background/60 to-background" />
+        </div>
+
         <motion.div
           variants={containerVariants}
           initial="hidden"
