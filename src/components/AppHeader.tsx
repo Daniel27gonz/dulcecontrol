@@ -56,7 +56,7 @@ export function AppHeader({ title, showGreeting = false, showBack = false }: App
   const showInstallButton = isInstallable && !isInstalled;
 
   return (
-    <div className="bg-gradient-to-br from-caramel/20 to-accent/20 p-4 pt-10 safe-top">
+    <div className="sticky top-0 z-40 bg-gradient-to-br from-caramel/20 to-accent/20 p-4 pt-10 safe-top backdrop-blur-sm">
       <div className="flex items-center justify-between gap-2">
         <div className="flex-1 min-w-0 flex items-center gap-2">
           {showBack && (
