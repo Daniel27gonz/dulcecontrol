@@ -393,34 +393,6 @@ export default function SettingsPage() {
           </Card>
         </motion.div>
 
-        {/* Acceso rápido a Ingredientes */}
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.3 }}
-        >
-          <Card 
-            className="border-border/50 shadow-warm cursor-pointer hover:border-primary/30 transition-colors"
-            onClick={() => navigate('/ingredients')}
-          >
-            <CardContent className="p-4">
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-3">
-                  <div className="p-2 rounded-xl bg-caramel/10">
-                    <Package className="w-5 h-5 text-caramel" />
-                  </div>
-                  <div>
-                    <p className="font-medium">Control de Materia Prima</p>
-                    <p className="text-sm text-muted-foreground">
-                      {configuredIngredients} ingredientes con precio configurado
-                    </p>
-                  </div>
-                </div>
-                <ChevronRight className="w-5 h-5 text-muted-foreground" />
-              </div>
-            </CardContent>
-          </Card>
-        </motion.div>
 
         {/* Ayuda */}
         <motion.div
