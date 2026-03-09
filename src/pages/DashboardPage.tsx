@@ -8,6 +8,7 @@ import { toast } from 'sonner';
 import dashboardBg from '@/assets/dashboard-bg.jpg';
 import dulceControlHeaderLogo from '@/assets/dulcecontrol-header-logo.png';
 import { useMemo } from 'react';
+import { useMonthlyFinancials } from '@/hooks/useMonthlyFinancials';
 
 const quickActions = [
 { icon: Plus, label: 'Nueva Receta', path: '/calculator', description: 'Crea y costea' },
