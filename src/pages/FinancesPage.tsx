@@ -11,15 +11,12 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { useApp } from '@/context/AppContext';
-import { useBaseIngredients, INGREDIENT_CATEGORIES } from '@/context/BaseIngredientsContext';
-import { useIndirectCosts } from '@/context/IndirectCostsContext';
-import { useLabor } from '@/context/LaborContext';
-import { useQuotations } from '@/context/QuotationsContext';
 import { BottomNav } from '@/components/BottomNav';
 import { AppHeader } from '@/components/AppHeader';
 import { TransactionForm } from '@/components/finances/TransactionForm';
 import { FinanceChart } from '@/components/finances/FinanceChart';
 import { TransactionList } from '@/components/finances/TransactionList';
+import { useMonthlyFinancials } from '@/hooks/useMonthlyFinancials';
 import { format, startOfMonth, endOfMonth, isWithinInterval } from 'date-fns';
 import { es } from 'date-fns/locale';
 import { cn } from '@/lib/utils';
