@@ -1,10 +1,12 @@
-import { useLocation } from 'react-router-dom';
+import { useLocation, useNavigate } from 'react-router-dom';
 import {
   Home, Package, Calculator, FileText, Sparkles, ClipboardList, Wallet,
-  HelpCircle, Settings, ChefHat, Users, Receipt
+  HelpCircle, Settings, ChefHat, Users, Receipt, LogOut
 } from 'lucide-react';
 import dulceControlLogo from '@/assets/dulcecontrol-logo.png';
 import { NavLink } from '@/components/NavLink';
+import { useApp } from '@/context/AppContext';
+import { toast } from 'sonner';
 import {
   Sidebar,
   SidebarContent,
@@ -37,8 +39,16 @@ const bottomItems = [
 
 export function AppSidebar() {
   const location = useLocation();
+  const navigate = useNavigate();
+  const { logout } = useApp();
 
   const isActive = (path: string) => location.pathname === path;
+
+  const handleLogout = async () => {
+    await logout();
+    toast.success('Sesión cerrada correctamente');
+    navigate('/');
+  };
 
   return (
     <Sidebar collapsible="offcanvas" className="border-r border-border/50">
@@ -93,6 +103,17 @@ export function AppSidebar() {
               </SidebarMenuButton>
             </SidebarMenuItem>
           ))}
+
+          {/* Logout button */}
+          <SidebarMenuItem>
+            <SidebarMenuButton
+              onClick={handleLogout}
+              className="flex items-center gap-3 px-3 py-2.5 rounded-xl text-destructive hover:bg-destructive/10 hover:text-destructive transition-all duration-200 cursor-pointer"
+            >
+              <LogOut className="w-5 h-5 shrink-0" />
+              <span className="text-sm">Cerrar Sesión</span>
+            </SidebarMenuButton>
+          </SidebarMenuItem>
         </SidebarMenu>
       </SidebarFooter>
     </Sidebar>
