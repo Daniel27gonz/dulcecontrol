@@ -90,24 +90,26 @@ export default function DashboardPage() {
             Actualizar
           </Button>
           <div className="flex items-center gap-1">
-            asChild
-            variant="ghost"
-            size="icon"
-            className="text-muted-foreground hover:text-primary"
-          >
-            <a href="/settings">
-              <Settings className="w-5 h-5" />
-            </a>
-          </Button>
-          <Button
-            onClick={handleLogout}
-            variant="ghost"
-            size="sm"
-            className="text-muted-foreground hover:text-destructive gap-1"
-          >
-            <LogOut className="w-4 h-4" />
-            Salir
-          </Button>
+            <Button
+              asChild
+              variant="ghost"
+              size="icon"
+              className="text-muted-foreground hover:text-primary"
+            >
+              <a href="/settings">
+                <Settings className="w-5 h-5" />
+              </a>
+            </Button>
+            <Button
+              onClick={handleLogout}
+              variant="ghost"
+              size="sm"
+              className="text-muted-foreground hover:text-destructive gap-1"
+            >
+              <LogOut className="w-4 h-4" />
+              Salir
+            </Button>
+          </div>
         </div>
 
         {/* Background image with overlay */}
