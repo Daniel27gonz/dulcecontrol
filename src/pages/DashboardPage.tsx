@@ -1,6 +1,6 @@
 import { motion } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
-import { Plus, ChefHat, FileText, Users, Receipt, ClipboardList, RefreshCw, BookOpen, Clock, TrendingUp, DollarSign, LogOut, Settings } from 'lucide-react';
+import { Plus, ChefHat, FileText, Users, Receipt, ClipboardList, RefreshCw, BookOpen, Clock, TrendingUp, DollarSign } from 'lucide-react';
 import { useApp } from '@/context/AppContext';
 import { AppLayout } from '@/components/AppLayout';
 import { Button } from '@/components/ui/button';
