@@ -3,6 +3,8 @@ import { useNavigate } from 'react-router-dom';
 import { Plus, ChefHat, FileText, Users, Receipt, ClipboardList, RefreshCw, BookOpen, Clock, TrendingUp, DollarSign, LogOut, Settings } from 'lucide-react';
 import { useApp } from '@/context/AppContext';
 import { AppLayout } from '@/components/AppLayout';
+import { Button } from '@/components/ui/button';
+import { toast } from 'sonner';
 import dashboardBg from '@/assets/dashboard-bg.jpg';
 import { useMemo } from 'react';
 
