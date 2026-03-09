@@ -1,8 +1,10 @@
 import { motion } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
-import { Plus, ChefHat, FileText, Users, Receipt, ClipboardList, RefreshCw, BookOpen, Clock, TrendingUp, DollarSign } from 'lucide-react';
+import { Plus, ChefHat, FileText, Users, Receipt, ClipboardList, RefreshCw, BookOpen, Clock, TrendingUp, DollarSign, LogOut, Settings } from 'lucide-react';
 import { useApp } from '@/context/AppContext';
 import { AppLayout } from '@/components/AppLayout';
+import { Button } from '@/components/ui/button';
+import { toast } from 'sonner';
 import dashboardBg from '@/assets/dashboard-bg.jpg';
 import { useMemo } from 'react';
 
@@ -17,7 +19,13 @@ const quickActions = [
 
 export default function DashboardPage() {
   const navigate = useNavigate();
-  const { user, recipes, orders, transactions, settings } = useApp();
+  const { user, recipes, orders, transactions, settings, logout } = useApp();
+
+  const handleLogout = async () => {
+    await logout();
+    toast.success('Sesión cerrada correctamente');
+    navigate('/');
+  };
 
   const stats = useMemo(() => {
     const now = new Date();
@@ -86,6 +94,29 @@ export default function DashboardPage() {
           animate="visible"
           className="relative z-10 p-4 sm:p-6 lg:p-8 max-w-5xl mx-auto space-y-8"
         >
+          {/* Mobile top bar with logout */}
+          <motion.div variants={itemVariants} className="flex items-center justify-end gap-1 md:hidden -mb-4">
+            <Button
+              asChild
+              variant="ghost"
+              size="icon"
+              className="text-muted-foreground hover:text-primary"
+            >
+              <a href="/settings">
+                <Settings className="w-5 h-5" />
+              </a>
+            </Button>
+            <Button
+              onClick={handleLogout}
+              variant="ghost"
+              size="sm"
+              className="text-muted-foreground hover:text-destructive gap-1"
+            >
+              <LogOut className="w-4 h-4" />
+              Salir
+            </Button>
+          </motion.div>
+
           {/* Hero Welcome */}
           <motion.div
             variants={itemVariants}
