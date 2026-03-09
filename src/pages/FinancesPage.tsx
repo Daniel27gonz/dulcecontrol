@@ -310,6 +310,9 @@ function HistorialTransacciones({
   const [categoryFilter, setCategoryFilter] = useState<string>('all');
   const [monthPickerOpen, setMonthPickerOpen] = useState(false);
 
+  // Use the unified financial hook for summary cards
+  const histFinancials = useMonthlyFinancials(histMonth);
+
   const histMonthStart = startOfMonth(histMonth);
   const histMonthEnd = endOfMonth(histMonth);
 
@@ -325,9 +328,10 @@ function HistorialTransacciones({
     }).sort((a: any, b: any) => new Date(b.date).getTime() - new Date(a.date).getTime());
   }, [transactions, histMonth, typeFilter, categoryFilter]);
 
-  const histIncome = filteredTransactions.filter((t: any) => t.type === 'income').reduce((s: number, t: any) => s + t.amount, 0);
-  const histExpenses = filteredTransactions.filter((t: any) => t.type === 'expense').reduce((s: number, t: any) => s + t.amount, 0);
-  const histBalance = histIncome - histExpenses;
+  // Use unified hook values for summary cards
+  const histIncome = histFinancials.totalIncome;
+  const histExpenses = histFinancials.totalExpenses;
+  const histBalance = histFinancials.profit;
 
   // Available months from all transactions
   const availableMonths = useMemo(() => {
