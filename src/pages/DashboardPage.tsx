@@ -79,7 +79,7 @@ export default function DashboardPage() {
     <AppLayout>
       <div className="min-h-screen bg-background relative overflow-hidden">
         {/* Mobile sticky top bar */}
-        <div className="sticky top-0 z-40 flex items-center justify-end gap-1 p-3 bg-background/80 backdrop-blur-sm border-b border-border/30 md:hidden">
+        <div className="sticky top-0 z-40 flex items-center justify-between p-3 bg-background/80 backdrop-blur-sm border-b border-border/30 md:hidden">
           <Button
             onClick={() => window.location.reload()}
             variant="ghost"
@@ -89,7 +89,7 @@ export default function DashboardPage() {
             <RefreshCw className="w-4 h-4" />
             Actualizar
           </Button>
-          <Button
+          <div className="flex items-center gap-1">
             asChild
             variant="ghost"
             size="icon"
