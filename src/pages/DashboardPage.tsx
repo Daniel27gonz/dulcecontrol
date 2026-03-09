@@ -94,6 +94,29 @@ export default function DashboardPage() {
           animate="visible"
           className="relative z-10 p-4 sm:p-6 lg:p-8 max-w-5xl mx-auto space-y-8"
         >
+          {/* Mobile top bar with logout */}
+          <motion.div variants={itemVariants} className="flex items-center justify-end gap-1 md:hidden -mb-4">
+            <Button
+              asChild
+              variant="ghost"
+              size="icon"
+              className="text-muted-foreground hover:text-primary"
+            >
+              <a href="/settings">
+                <Settings className="w-5 h-5" />
+              </a>
+            </Button>
+            <Button
+              onClick={handleLogout}
+              variant="ghost"
+              size="sm"
+              className="text-muted-foreground hover:text-destructive gap-1"
+            >
+              <LogOut className="w-4 h-4" />
+              Salir
+            </Button>
+          </motion.div>
+
           {/* Hero Welcome */}
           <motion.div
             variants={itemVariants}
