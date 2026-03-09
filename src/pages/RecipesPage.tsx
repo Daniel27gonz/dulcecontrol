@@ -59,9 +59,8 @@ import { toast } from '@/hooks/use-toast';
 export default function RecipesPage() {
   const navigate = useNavigate();
   const { recipes, settings, deleteRecipe } = useApp();
-  const { getLaborCostPerHour, getTotalMonthlyHours } = useLabor();
-  const { getTotalIndirectCosts } = useIndirectCosts();
-  const { getCurrentIngredientCost } = useBaseIngredients();
+  const { getLastMonthLaborCostPerHour, getLastMonthTotalHours } = useLabor();
+  const { getTotalIndirectCostsLastMonth } = useIndirectCosts();
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedRecipe, setSelectedRecipe] = useState<Recipe | null>(null);
   const [recipeToDelete, setRecipeToDelete] = useState<Recipe | null>(null);
