@@ -102,7 +102,7 @@ export default function FinancesPage() {
                 <p className="text-sm font-medium text-muted-foreground">Gastos y compras del mes</p>
               </div>
               <p className="text-2xl font-bold text-destructive">
-                {cs}{monthlyData.combinedExpenses.toFixed(2)}
+                {cs}{monthlyData.totalExpenses.toFixed(2)}
               </p>
             </CardContent>
           </Card>
