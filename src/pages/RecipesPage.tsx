@@ -72,9 +72,9 @@ export default function RecipesPage() {
   const calculateRecipeCost = (recipe: Recipe) => {
     const WASTE_PERCENTAGE = 0.05;
 
-    // Calculate ingredients cost using current base ingredient prices (reactive master data)
+    // Usar misma lógica que CalculatorPage: pricePerUnit guardado en la receta
     const ingredientsCost = recipe.ingredients.reduce(
-      (sum, ing) => sum + getCurrentIngredientCost(ing),
+      (sum, ing) => sum + (ing.pricePerUnit * ing.quantityUsed),
       0
     );
 
@@ -87,9 +87,9 @@ export default function RecipesPage() {
 
     const totalProductHours = Math.max(0, totalElaborationTimeMinutes / 60);
 
-    const laborCostPerHour = getLaborCostPerHour();
-    const totalMonthlyHours = getTotalMonthlyHours();
-    const totalIndirectCosts = getTotalIndirectCosts();
+    const laborCostPerHour = getLastMonthLaborCostPerHour();
+    const totalMonthlyHours = getLastMonthTotalHours();
+    const totalIndirectCosts = getTotalIndirectCostsLastMonth();
     const indirectCostPerHour = totalMonthlyHours > 0 ? totalIndirectCosts / totalMonthlyHours : 0;
 
     const laborFinalCost = totalProductHours * laborCostPerHour;
