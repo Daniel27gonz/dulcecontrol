@@ -83,7 +83,7 @@ const LoginPage = () => {
               🔐 ¿Es tu primer acceso?
             </p>
             <p className="text-sm font-semibold text-foreground leading-relaxed">
-              Ingresa con el correo electrónico que utilizaste en la compra y usa tu <span className="text-primary font-extrabold">número de teléfono registrado</span> como contraseña temporal. Ejemplo: <span className="text-primary font-extrabold">521234567890</span>
+              Ingresa con el correo electrónico que utilizaste en la compra y usa la <span className="text-primary font-extrabold">contraseña temporal</span> que recibiste por correo.
             </p>
             <p className="text-sm text-muted-foreground mt-2">
               Luego podrás cambiar tu contraseña fácilmente desde la configuración ⚙️
