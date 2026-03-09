@@ -117,6 +117,9 @@ export default function DashboardPage() {
           <div className="absolute inset-0 bg-gradient-to-b from-background/80 via-background/60 to-background" />
         </div>
 
+        {/* Spacer for fixed mobile bar */}
+        <div className="h-14 md:hidden" />
+
         <motion.div
           variants={containerVariants}
           initial="hidden"
