@@ -51,7 +51,7 @@ import {
 import { useApp, Recipe } from '@/context/AppContext';
 import { useLabor } from '@/context/LaborContext';
 import { useIndirectCosts } from '@/context/IndirectCostsContext';
-import { useBaseIngredients } from '@/context/BaseIngredientsContext';
+
 import { BottomNav } from '@/components/BottomNav';
 import { AppHeader } from '@/components/AppHeader';
 import { toast } from '@/hooks/use-toast';
