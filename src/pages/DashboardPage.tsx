@@ -23,6 +23,9 @@ export default function DashboardPage() {
   const navigate = useNavigate();
   const { user, recipes, orders, settings } = useApp();
 
+  // Use the same unified financial hook as Finances page
+  const currentMonthFinancials = useMonthlyFinancials(new Date());
+
   const stats = useMemo(() => {
     const totalRecipes = recipes.length;
     const pendingOrders = orders.filter((o) => o.status === 'pending' || o.status === 'in_progress').length;
