@@ -97,7 +97,35 @@ export function IngredientAutocomplete({
 
   // Filter ingredients based on search - only show configured ones first
   const configuredIngredients = baseIngredients.filter(ing => ing.presentationPrice > 0);
-  const filteredIngredients = configuredIngredients.filter(ing =>
+
+  // Group by name: keep latest purchase, calculate total purchased
+  const consolidatedIngredients = (() => {
+    const byName: Record<string, { latest: BaseIngredient; totalQty: number; purchaseCount: number }> = {};
+    for (const ing of configuredIngredients) {
+      const key = ing.name.toLowerCase().trim();
+      if (!byName[key]) {
+        byName[key] = { latest: ing, totalQty: ing.quantityPurchased * ing.presentationQuantity, purchaseCount: 1 };
+      } else {
+        byName[key].purchaseCount += 1;
+        byName[key].totalQty += ing.quantityPurchased * ing.presentationQuantity;
+        // Keep the most recent purchase
+        const existingDate = byName[key].latest.purchaseDate || byName[key].latest.lastUpdated;
+        const newDate = ing.purchaseDate || ing.lastUpdated;
+        if (newDate > existingDate) {
+          byName[key].latest = ing;
+        }
+      }
+    }
+    return Object.values(byName).map(entry => ({
+      ...entry.latest,
+      _totalQty: entry.totalQty,
+      _purchaseCount: entry.purchaseCount,
+    }));
+  })();
+
+  type ConsolidatedIngredient = BaseIngredient & { _totalQty: number; _purchaseCount: number };
+
+  const filteredIngredients = consolidatedIngredients.filter(ing =>
     ing.name.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
@@ -108,7 +136,7 @@ export function IngredientAutocomplete({
     }
     acc[ing.category].push(ing);
     return acc;
-  }, {} as Record<string, BaseIngredient[]>);
+  }, {} as Record<string, ConsolidatedIngredient[]>);
 
   const handleInputClick = () => {
     setIsOpen(true);
