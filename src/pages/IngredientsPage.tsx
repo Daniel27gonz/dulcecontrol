@@ -427,8 +427,8 @@ export default function IngredientsPage() {
                             <div className="flex-1 min-w-0">
                               <h4 className="font-medium text-sm truncate">{ingredient.name}</h4>
                               <p className="text-xs text-muted-foreground mt-0.5">
-                                {settings.currencySymbol}{ingredient.presentationPrice.toFixed(2)} por{' '}
-                                {ingredient.presentationQuantity} {ingredient.purchaseUnit}
+                                Total pagado: {settings.currencySymbol}{(ingredient.presentationPrice * (ingredient.quantityPurchased || 1)).toFixed(2)} por{' '}
+                                {ingredient.presentationQuantity * (ingredient.quantityPurchased || 1)} {ingredient.purchaseUnit}
                               </p>
                               <div className="flex items-center gap-2 mt-1">
                                 <span className="text-xs font-semibold text-primary">
