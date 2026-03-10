@@ -269,7 +269,7 @@ export default function IngredientsPage() {
       <AppHeader title="Ingredientes" />
 
       <div className="p-4 space-y-4">
-        <Tabs defaultValue="lista" className="w-full">
+        <Tabs defaultValue="lista" value={activeTab} onValueChange={setActiveTab} className="w-full">
           <TabsList className="w-full grid grid-cols-2">
             <TabsTrigger value="lista" className="flex items-center gap-2">
               <ShoppingCart className="w-4 h-4" />
