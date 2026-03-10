@@ -510,14 +510,16 @@ export default function IngredientsPage() {
         </Tabs>
       </div>
 
-      {/* Fixed Add Button */}
-      <Button
-        onClick={handleOpenAdd}
-        className="fixed bottom-24 right-4 h-14 w-14 rounded-full shadow-lg z-30"
-        size="icon"
-      >
-        <Plus className="w-6 h-6" />
-      </Button>
+      {/* Fixed Add Button - only on Compras tab */}
+      {activeTab === 'lista' && (
+        <Button
+          onClick={handleOpenAdd}
+          className="fixed bottom-24 right-4 rounded-full shadow-lg z-30 px-5 h-12 gap-2"
+        >
+          <Plus className="w-5 h-5" />
+          <span className="text-sm font-medium">Agregar compra</span>
+        </Button>
+      )}
 
       {/* Add Modal */}
       <Dialog open={showAddModal} onOpenChange={setShowAddModal}>
