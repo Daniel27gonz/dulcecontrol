@@ -524,9 +524,12 @@ export default function IngredientsPage() {
         <DialogContent className="max-w-md max-h-[90vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2">
-              <Plus className="w-5 h-5" />
-              Agregar ingrediente
+              <ShoppingCart className="w-5 h-5" />
+              Agregar compra
             </DialogTitle>
+            <p className="text-xs text-muted-foreground mt-1">
+              Registra tu compra y el ingrediente quedará disponible para tus recetas y en finanzas.
+            </p>
           </DialogHeader>
           <IngredientForm
             formData={formData}
