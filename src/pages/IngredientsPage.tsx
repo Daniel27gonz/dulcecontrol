@@ -502,11 +502,29 @@ export default function IngredientsPage() {
                     {filteredList.map((ingredient: BaseIngredient) => (
                       <Card key={ingredient.id} className="p-3 flex items-center gap-3">
                         <span className="text-lg">{CATEGORY_EMOJI[ingredient.category] || '📦'}</span>
-                        <div className="flex flex-col">
+                        <div className="flex-1 min-w-0 flex flex-col">
                           <span className="font-medium text-sm">{ingredient.name}</span>
                           <span className="text-xs text-muted-foreground capitalize">
                             {INGREDIENT_CATEGORIES.find(c => c.id === ingredient.category)?.name || ingredient.category}
                           </span>
+                        </div>
+                        <div className="flex items-center gap-1">
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            className="h-8 w-8"
+                            onClick={() => handleOpenEdit(ingredient)}
+                          >
+                            <Pencil className="w-4 h-4" />
+                          </Button>
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            className="h-8 w-8 text-destructive hover:text-destructive"
+                            onClick={() => setDeleteConfirmId(ingredient.id)}
+                          >
+                            <Trash2 className="w-4 h-4" />
+                          </Button>
                         </div>
                       </Card>
                     ))}
