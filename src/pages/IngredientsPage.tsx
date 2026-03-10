@@ -55,6 +55,7 @@ export default function IngredientsPage() {
   const { ingredients, addIngredient, updateIngredient, deleteIngredient, findDuplicate } = useBaseIngredients();
   const { settings } = useApp();
   
+  const [activeTab, setActiveTab] = useState('lista');
   const [searchTerm, setSearchTerm] = useState('');
   const [listSearchTerm, setListSearchTerm] = useState('');
   const [selectedCategory, setSelectedCategory] = useState<string>('all');
