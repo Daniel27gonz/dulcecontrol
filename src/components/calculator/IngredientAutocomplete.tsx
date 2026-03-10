@@ -230,7 +230,7 @@ export function IngredientAutocomplete({
   };
 
   const categories = Object.keys(groupedIngredients).sort();
-  const hasConfiguredIngredients = configuredIngredients.length > 0;
+  const hasConfiguredIngredients = consolidatedIngredients.length > 0;
   const previewCost = calculateCostPerBaseUnit(
     parseFloat(quickAddForm.presentationPrice) || 0,
     parseFloat(quickAddForm.presentationQuantity) || 0,
