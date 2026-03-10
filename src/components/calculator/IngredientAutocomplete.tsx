@@ -332,8 +332,13 @@ export function IngredientAutocomplete({
                       <div className="flex-1 min-w-0">
                         <span className="text-sm font-semibold block truncate">{ingredient.name}</span>
                         <span className="text-xs text-muted-foreground block mt-0.5">
-                          {settings.currencySymbol}{ingredient.presentationPrice} por {ingredient.presentationQuantity} {ingredient.purchaseUnit}
+                          Última: {settings.currencySymbol}{ingredient.presentationPrice} por {ingredient.presentationQuantity} {ingredient.purchaseUnit}
                         </span>
+                        {ingredient._purchaseCount > 1 && (
+                          <span className="text-xs text-accent-foreground/70 block mt-0.5">
+                            📦 {ingredient._purchaseCount} compras · Total: {ingredient._totalQty} {ingredient.purchaseUnit}
+                          </span>
+                        )}
                       </div>
                       <div className="text-right ml-3 flex-shrink-0 bg-primary/10 px-2 py-1 rounded-lg">
                         <span className="text-sm font-bold text-primary block">
