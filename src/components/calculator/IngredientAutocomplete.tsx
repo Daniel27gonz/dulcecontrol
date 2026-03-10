@@ -97,7 +97,35 @@ export function IngredientAutocomplete({
 
   // Filter ingredients based on search - only show configured ones first
   const configuredIngredients = baseIngredients.filter(ing => ing.presentationPrice > 0);
-  const filteredIngredients = configuredIngredients.filter(ing =>
+
+  // Group by name: keep latest purchase, calculate total purchased
+  const consolidatedIngredients = (() => {
+    const byName: Record<string, { latest: BaseIngredient; totalQty: number; purchaseCount: number }> = {};
+    for (const ing of configuredIngredients) {
+      const key = ing.name.toLowerCase().trim();
+      if (!byName[key]) {
+        byName[key] = { latest: ing, totalQty: ing.quantityPurchased * ing.presentationQuantity, purchaseCount: 1 };
+      } else {
+        byName[key].purchaseCount += 1;
+        byName[key].totalQty += ing.quantityPurchased * ing.presentationQuantity;
+        // Keep the most recent purchase
+        const existingDate = byName[key].latest.purchaseDate || byName[key].latest.lastUpdated;
+        const newDate = ing.purchaseDate || ing.lastUpdated;
+        if (newDate > existingDate) {
+          byName[key].latest = ing;
+        }
+      }
+    }
+    return Object.values(byName).map(entry => ({
+      ...entry.latest,
+      _totalQty: entry.totalQty,
+      _purchaseCount: entry.purchaseCount,
+    }));
+  })();
+
+  type ConsolidatedIngredient = BaseIngredient & { _totalQty: number; _purchaseCount: number };
+
+  const filteredIngredients = consolidatedIngredients.filter(ing =>
     ing.name.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
@@ -108,7 +136,7 @@ export function IngredientAutocomplete({
     }
     acc[ing.category].push(ing);
     return acc;
-  }, {} as Record<string, BaseIngredient[]>);
+  }, {} as Record<string, ConsolidatedIngredient[]>);
 
   const handleInputClick = () => {
     setIsOpen(true);
@@ -202,7 +230,7 @@ export function IngredientAutocomplete({
   };
 
   const categories = Object.keys(groupedIngredients).sort();
-  const hasConfiguredIngredients = configuredIngredients.length > 0;
+  const hasConfiguredIngredients = consolidatedIngredients.length > 0;
   const previewCost = calculateCostPerBaseUnit(
     parseFloat(quickAddForm.presentationPrice) || 0,
     parseFloat(quickAddForm.presentationQuantity) || 0,
@@ -304,8 +332,13 @@ export function IngredientAutocomplete({
                       <div className="flex-1 min-w-0">
                         <span className="text-sm font-semibold block truncate">{ingredient.name}</span>
                         <span className="text-xs text-muted-foreground block mt-0.5">
-                          {settings.currencySymbol}{ingredient.presentationPrice} por {ingredient.presentationQuantity} {ingredient.purchaseUnit}
+                          Última: {settings.currencySymbol}{ingredient.presentationPrice} por {ingredient.presentationQuantity} {ingredient.purchaseUnit}
                         </span>
+                        {ingredient._purchaseCount > 1 && (
+                          <span className="text-xs text-accent-foreground/70 block mt-0.5">
+                            📦 {ingredient._purchaseCount} compras · Total: {ingredient._totalQty} {ingredient.purchaseUnit}
+                          </span>
+                        )}
                       </div>
                       <div className="text-right ml-3 flex-shrink-0 bg-primary/10 px-2 py-1 rounded-lg">
                         <span className="text-sm font-bold text-primary block">
