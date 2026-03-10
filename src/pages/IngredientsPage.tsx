@@ -55,6 +55,7 @@ export default function IngredientsPage() {
   const { ingredients, addIngredient, updateIngredient, deleteIngredient, findDuplicate } = useBaseIngredients();
   const { settings } = useApp();
   
+  const [activeTab, setActiveTab] = useState('lista');
   const [searchTerm, setSearchTerm] = useState('');
   const [listSearchTerm, setListSearchTerm] = useState('');
   const [selectedCategory, setSelectedCategory] = useState<string>('all');
@@ -268,7 +269,7 @@ export default function IngredientsPage() {
       <AppHeader title="Ingredientes" />
 
       <div className="p-4 space-y-4">
-        <Tabs defaultValue="lista" className="w-full">
+        <Tabs defaultValue="lista" value={activeTab} onValueChange={setActiveTab} className="w-full">
           <TabsList className="w-full grid grid-cols-2">
             <TabsTrigger value="lista" className="flex items-center gap-2">
               <ShoppingCart className="w-4 h-4" />
@@ -509,14 +510,16 @@ export default function IngredientsPage() {
         </Tabs>
       </div>
 
-      {/* Fixed Add Button */}
-      <Button
-        onClick={handleOpenAdd}
-        className="fixed bottom-24 right-4 h-14 w-14 rounded-full shadow-lg z-30"
-        size="icon"
-      >
-        <Plus className="w-6 h-6" />
-      </Button>
+      {/* Fixed Add Button - only on Compras tab */}
+      {activeTab === 'lista' && (
+        <Button
+          onClick={handleOpenAdd}
+          className="fixed bottom-24 right-4 rounded-full shadow-lg z-30 px-5 h-12 gap-2"
+        >
+          <Plus className="w-5 h-5" />
+          <span className="text-sm font-medium">Agregar compra</span>
+        </Button>
+      )}
 
       {/* Add Modal */}
       <Dialog open={showAddModal} onOpenChange={setShowAddModal}>
