@@ -158,10 +158,13 @@ export default function IngredientsPage() {
       return false;
     }
     
-    const duplicate = findDuplicate(formData.name, isEdit ? editingIngredient?.id : undefined);
-    if (duplicate) {
-      setFormError(`Ya existe un ingrediente con ese nombre. ¿Deseas editarlo?`);
-      return false;
+    // Allow duplicate names for new purchases (isEdit still checks duplicates excluding current)
+    if (isEdit) {
+      const duplicate = findDuplicate(formData.name, editingIngredient?.id);
+      if (duplicate) {
+        setFormError(`Ya existe otro ingrediente con ese nombre.`);
+        return false;
+      }
     }
 
     const qty = parseFloat(formData.presentationQuantity);
