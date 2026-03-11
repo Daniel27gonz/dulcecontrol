@@ -10,7 +10,7 @@ import { LaborProvider } from "@/context/LaborContext";
 import { IndirectCostsProvider } from "@/context/IndirectCostsContext";
 import { InstallPrompt } from "@/components/InstallPrompt";
 import { UpdatePopup } from "@/components/UpdatePopup";
-import WelcomePage from "./pages/WelcomePage";
+
 import LoginPage from "./pages/LoginPage";
 import RegisterPage from "./pages/RegisterPage";
 import DashboardPage from "./pages/DashboardPage";
