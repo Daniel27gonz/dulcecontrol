@@ -234,10 +234,14 @@ export function AppProvider({ children }: { children: ReactNode }) {
 
     if (transactionsData) {
       // Load other income rows and backfill missing transaction syncs
-      const { data: otherIncomeData } = await (supabase as any)
+      const { data: otherIncomeData, error: otherIncomeError } = await supabase
         .from('other_income')
         .select('id, concept, amount, date')
         .eq('user_id', userId);
+
+      if (otherIncomeError) {
+        console.error('Error loading other_income:', otherIncomeError);
+      }
 
       const otherIncomeRows = (otherIncomeData || []) as Array<{
         id: string;

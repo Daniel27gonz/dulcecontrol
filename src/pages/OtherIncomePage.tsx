@@ -43,7 +43,7 @@ export default function OtherIncomePage() {
 
   const loadRecords = useCallback(async () => {
     if (!user) return;
-    const { data } = await (supabase as any)
+    const { data } = await supabase
       .from('other_income')
       .select('*')
       .eq('user_id', user.id)
@@ -113,14 +113,14 @@ export default function OtherIncomePage() {
 
     if (editingRecord) {
       // Update existing
-      const { error } = await (supabase as any)
+      const { error } = await supabase
         .from('other_income')
         .update({
           concept: concept.trim(),
           amount: parsedAmount,
           date,
           note: note.trim() || null,
-        } as any)
+        })
         .eq('id', editingRecord.id)
         .eq('user_id', user.id);
 
@@ -133,7 +133,7 @@ export default function OtherIncomePage() {
       await syncTransaction({
         userId: user.id,
         sourceId: editingRecord.id,
-        sourceType: 'other_income' as any,
+        sourceType: 'other_income',
         type: 'income',
         description: `Otro ingreso: ${concept.trim()}`,
         amount: parsedAmount,
@@ -144,7 +144,7 @@ export default function OtherIncomePage() {
       toast.success('Ingreso actualizado correctamente');
     } else {
       // Insert new
-      const { data, error } = await (supabase as any)
+      const { data, error } = await supabase
         .from('other_income')
         .insert({
           user_id: user.id,
@@ -152,7 +152,7 @@ export default function OtherIncomePage() {
           amount: parsedAmount,
           date,
           note: note.trim() || null,
-        } as any)
+        })
         .select()
         .single();
 
@@ -164,8 +164,8 @@ export default function OtherIncomePage() {
       // Sync to transactions
       await syncTransaction({
         userId: user.id,
-        sourceId: (data as any).id,
-        sourceType: 'other_income' as any,
+        sourceId: data.id,
+        sourceType: 'other_income',
         type: 'income',
         description: `Otro ingreso: ${concept.trim()}`,
         amount: parsedAmount,
@@ -184,7 +184,7 @@ export default function OtherIncomePage() {
   const handleDelete = async (record: OtherIncomeRecord) => {
     if (!user) return;
 
-    await (supabase as any)
+    await supabase
       .from('other_income')
       .delete()
       .eq('id', record.id)
