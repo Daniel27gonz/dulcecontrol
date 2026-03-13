@@ -100,8 +100,12 @@ export function useMonthlyFinancials(selectedMonth: Date): MonthlyFinancials {
     const profit = totalIncome - totalExpenses;
 
     // Anticipos
-    const anticipos = incomeTransactions.filter(t => t.description.toLowerCase().includes('anticipo'));
+    const anticipos = incomeTransactions.filter(t => t.sourceType === 'order_advance');
     const totalAnticipos = anticipos.reduce((sum, t) => sum + t.amount, 0);
+
+    // Order payments (pago completo de pedidos)
+    const orderPayments = incomeTransactions.filter(t => t.sourceType === 'order');
+    const totalOrderPayments = orderPayments.reduce((sum, t) => sum + t.amount, 0);
 
     // Other income (from other_income source)
     const otherIncomeTransactions = incomeTransactions.filter(t => t.sourceType === 'other_income');
