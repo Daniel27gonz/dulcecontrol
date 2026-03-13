@@ -123,6 +123,7 @@ export function useMonthlyFinancials(selectedMonth: Date): MonthlyFinancials {
       monthTransactions,
       totalLaborCost,
       totalAnticipos,
+      totalOrderPayments,
       ingredientsByCategory,
       indirectByCategory,
       depreciationByEquipment,
