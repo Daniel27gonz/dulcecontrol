@@ -24,6 +24,7 @@ import IngredientsPage from "./pages/IngredientsPage";
 import LaborPage from "./pages/LaborPage";
 import IndirectCostsPage from "./pages/IndirectCostsPage";
 import SettingsPage from "./pages/SettingsPage";
+import OtherIncomePage from "./pages/OtherIncomePage";
 import HelpPage from "./pages/HelpPage";
 import NotFound from "./pages/NotFound";
 
