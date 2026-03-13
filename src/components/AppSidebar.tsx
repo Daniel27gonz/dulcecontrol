@@ -1,7 +1,7 @@
 import { useLocation, useNavigate } from 'react-router-dom';
 import {
   Home, Package, Calculator, FileText, Sparkles, ClipboardList, Wallet,
-  HelpCircle, Settings, ChefHat, Users, Receipt, LogOut
+  HelpCircle, Settings, ChefHat, Users, Receipt, LogOut, CircleDollarSign
 } from 'lucide-react';
 import dulceControlLogo from '@/assets/dulcecontrol-logo.png';
 import { NavLink } from '@/components/NavLink';
