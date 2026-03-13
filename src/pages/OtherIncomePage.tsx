@@ -113,7 +113,7 @@ export default function OtherIncomePage() {
 
     if (editingRecord) {
       // Update existing
-      const { error } = await supabase
+      const { error } = await (supabase as any)
         .from('other_income')
         .update({
           concept: concept.trim(),
