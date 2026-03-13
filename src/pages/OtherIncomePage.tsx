@@ -1,6 +1,6 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useMemo } from 'react';
 import { motion } from 'framer-motion';
-import { Plus, Trash2, DollarSign, StickyNote, Calendar as CalendarIcon } from 'lucide-react';
+import { Plus, Trash2, DollarSign, StickyNote, Calendar as CalendarIcon, ChevronLeft, ChevronRight } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -11,7 +11,7 @@ import { useApp } from '@/context/AppContext';
 import { supabase } from '@/integrations/supabase/client';
 import { syncTransaction, deleteTransactionBySource } from '@/lib/transactionSync';
 import { toast } from 'sonner';
-import { format } from 'date-fns';
+import { format, startOfMonth, endOfMonth } from 'date-fns';
 import { es } from 'date-fns/locale';
 
 interface OtherIncomeRecord {
@@ -27,6 +27,7 @@ export default function OtherIncomePage() {
   const [records, setRecords] = useState<OtherIncomeRecord[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [showForm, setShowForm] = useState(false);
+  const [selectedMonth, setSelectedMonth] = useState(() => new Date());
 
   // Form state
   const [concept, setConcept] = useState('');
@@ -35,6 +36,9 @@ export default function OtherIncomePage() {
   const [note, setNote] = useState('');
 
   const cs = settings.currencySymbol;
+
+  const prevMonth = () => setSelectedMonth(prev => new Date(prev.getFullYear(), prev.getMonth() - 1, 1));
+  const nextMonth = () => setSelectedMonth(prev => new Date(prev.getFullYear(), prev.getMonth() + 1, 1));
 
   const loadRecords = useCallback(async () => {
     if (!user) return;
@@ -58,6 +62,20 @@ export default function OtherIncomePage() {
   useEffect(() => {
     loadRecords();
   }, [loadRecords]);
+
+  // Filter records by selected month
+  const filteredRecords = useMemo(() => {
+    const monthStart = startOfMonth(selectedMonth);
+    const monthEnd = endOfMonth(selectedMonth);
+    return records.filter(r => {
+      const d = new Date(r.date);
+      return d >= monthStart && d <= monthEnd;
+    });
+  }, [records, selectedMonth]);
+
+  const totalMonthIncome = useMemo(() => {
+    return filteredRecords.reduce((sum, r) => sum + r.amount, 0);
+  }, [filteredRecords]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -134,8 +152,6 @@ export default function OtherIncomePage() {
     visible: { opacity: 1, y: 0 },
   };
 
-  const totalOtherIncome = records.reduce((sum, r) => sum + r.amount, 0);
-
   return (
     <AppLayout>
       <div className="min-h-screen bg-background pb-24">
@@ -151,6 +167,21 @@ export default function OtherIncomePage() {
             <p className="text-sm text-muted-foreground">Registra ingresos que no provienen de pedidos</p>
           </motion.div>
 
+          {/* Month Selector */}
+          <motion.div variants={itemVariants} className="flex items-center justify-center gap-3">
+            <Button variant="ghost" size="icon" onClick={prevMonth} className="h-9 w-9 rounded-full">
+              <ChevronLeft className="w-5 h-5" />
+            </Button>
+            <div className="bg-card border border-border/50 rounded-xl px-5 py-2 min-w-[180px] text-center">
+              <p className="text-base font-semibold text-foreground capitalize">
+                {format(selectedMonth, 'MMMM yyyy', { locale: es })}
+              </p>
+            </div>
+            <Button variant="ghost" size="icon" onClick={nextMonth} className="h-9 w-9 rounded-full">
+              <ChevronRight className="w-5 h-5" />
+            </Button>
+          </motion.div>
+
           {/* Summary Card */}
           <motion.div variants={itemVariants}>
             <Card className="bg-success/5 border-success/20">
@@ -160,8 +191,8 @@ export default function OtherIncomePage() {
                     <DollarSign className="w-5 h-5 text-success" />
                   </div>
                   <div>
-                    <p className="text-sm text-muted-foreground">Total otros ingresos</p>
-                    <p className="text-2xl font-bold text-success">{cs}{totalOtherIncome.toFixed(2)}</p>
+                    <p className="text-sm text-muted-foreground">Total del mes</p>
+                    <p className="text-2xl font-bold text-success">{cs}{totalMonthIncome.toFixed(2)}</p>
                   </div>
                 </div>
               </CardContent>
@@ -245,15 +276,15 @@ export default function OtherIncomePage() {
           <motion.div variants={itemVariants} className="space-y-3">
             {isLoading ? (
               <p className="text-center text-muted-foreground text-sm py-8">Cargando...</p>
-            ) : records.length === 0 ? (
+            ) : filteredRecords.length === 0 ? (
               <Card>
                 <CardContent className="p-8 text-center">
                   <DollarSign className="w-12 h-12 mx-auto text-muted-foreground/30 mb-3" />
-                  <p className="text-muted-foreground text-sm">No hay otros ingresos registrados</p>
+                  <p className="text-muted-foreground text-sm">No hay ingresos registrados en este mes</p>
                 </CardContent>
               </Card>
             ) : (
-              records.map((record) => (
+              filteredRecords.map((record) => (
                 <Card key={record.id} className="bg-card">
                   <CardContent className="p-4">
                     <div className="flex items-start justify-between gap-3">
