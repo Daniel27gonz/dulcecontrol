@@ -278,6 +278,13 @@ export function AppProvider({ children }: { children: ReactNode }) {
         }
       });
 
+      // Other income
+      const { data: otherIncomeData } = await supabase
+        .from('other_income')
+        .select('id')
+        .eq('user_id', userId);
+      otherIncomeData?.forEach(oi => validSourceIds.add(`other_income:${oi.id}`));
+
       // Filter: keep only valid transactions
       const orphanIds: string[] = [];
       const validTransactions = transactionsData.filter(t => {
