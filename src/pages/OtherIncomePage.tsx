@@ -133,7 +133,7 @@ export default function OtherIncomePage() {
       await syncTransaction({
         userId: user.id,
         sourceId: editingRecord.id,
-        sourceType: 'other_income' as any,
+        sourceType: 'other_income',
         type: 'income',
         description: `Otro ingreso: ${concept.trim()}`,
         amount: parsedAmount,
