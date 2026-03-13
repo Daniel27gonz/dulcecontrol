@@ -43,7 +43,7 @@ export default function OtherIncomePage() {
 
   const loadRecords = useCallback(async () => {
     if (!user) return;
-    const { data } = await supabase
+    const { data } = await (supabase as any)
       .from('other_income')
       .select('*')
       .eq('user_id', user.id)
@@ -113,7 +113,7 @@ export default function OtherIncomePage() {
 
     if (editingRecord) {
       // Update existing
-      const { error } = await supabase
+      const { error } = await (supabase as any)
         .from('other_income')
         .update({
           concept: concept.trim(),
@@ -144,7 +144,7 @@ export default function OtherIncomePage() {
       toast.success('Ingreso actualizado correctamente');
     } else {
       // Insert new
-      const { data, error } = await supabase
+      const { data, error } = await (supabase as any)
         .from('other_income')
         .insert({
           user_id: user.id,
@@ -184,7 +184,7 @@ export default function OtherIncomePage() {
   const handleDelete = async (record: OtherIncomeRecord) => {
     if (!user) return;
 
-    await supabase
+    await (supabase as any)
       .from('other_income')
       .delete()
       .eq('id', record.id)
