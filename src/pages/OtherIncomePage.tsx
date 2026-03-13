@@ -164,8 +164,8 @@ export default function OtherIncomePage() {
       // Sync to transactions
       await syncTransaction({
         userId: user.id,
-        sourceId: (data as any).id,
-        sourceType: 'other_income' as any,
+        sourceId: data.id,
+        sourceType: 'other_income',
         type: 'income',
         description: `Otro ingreso: ${concept.trim()}`,
         amount: parsedAmount,
