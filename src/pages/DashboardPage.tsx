@@ -1,6 +1,6 @@
 import { motion } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
-import { Plus, ChefHat, FileText, Users, Receipt, ClipboardList, RefreshCw, BookOpen, Clock, TrendingUp, DollarSign } from 'lucide-react';
+import { Plus, ChefHat, FileText, Users, Receipt, ClipboardList, RefreshCw, BookOpen, Clock, TrendingUp, DollarSign, CircleDollarSign } from 'lucide-react';
 import { useApp } from '@/context/AppContext';
 import { AppLayout } from '@/components/AppLayout';
 import { useMemo } from 'react';
@@ -13,7 +13,8 @@ const quickActions = [
 { icon: Users, label: 'Mano de Obra', path: '/labor', description: 'Gestionar equipo' },
 { icon: Receipt, label: 'Gastos del Mes', path: '/indirect-costs', description: 'Costos fijos' },
 { icon: FileText, label: 'Cotizaciones', path: '/quotations', description: 'Presupuestos' },
-{ icon: ClipboardList, label: 'Pedidos', path: '/orders', description: 'Seguimiento' }];
+{ icon: ClipboardList, label: 'Pedidos', path: '/orders', description: 'Seguimiento' },
+{ icon: CircleDollarSign, label: 'Otros Ingresos', path: '/other-income', description: 'Ventas extras' }];
 
 
 export default function DashboardPage() {

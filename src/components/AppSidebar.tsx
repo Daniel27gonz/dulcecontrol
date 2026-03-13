@@ -1,7 +1,7 @@
 import { useLocation, useNavigate } from 'react-router-dom';
 import {
   Home, Package, Calculator, FileText, Sparkles, ClipboardList, Wallet,
-  HelpCircle, Settings, ChefHat, Users, Receipt, LogOut
+  HelpCircle, Settings, ChefHat, Users, Receipt, LogOut, CircleDollarSign
 } from 'lucide-react';
 import dulceControlLogo from '@/assets/dulcecontrol-logo.png';
 import { NavLink } from '@/components/NavLink';
@@ -29,6 +29,7 @@ const mainItems = [
   { title: 'Cotizar', url: '/quotations', icon: FileText },
   { title: 'Diseño', url: '/personalization', icon: Sparkles },
   { title: 'Pedidos', url: '/orders', icon: ClipboardList },
+  { title: 'Otros Ingresos', url: '/other-income', icon: CircleDollarSign },
   { title: 'Finanzas', url: '/finances', icon: Wallet },
 ];
 

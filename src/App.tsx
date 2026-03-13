@@ -24,6 +24,7 @@ import IngredientsPage from "./pages/IngredientsPage";
 import LaborPage from "./pages/LaborPage";
 import IndirectCostsPage from "./pages/IndirectCostsPage";
 import SettingsPage from "./pages/SettingsPage";
+import OtherIncomePage from "./pages/OtherIncomePage";
 import HelpPage from "./pages/HelpPage";
 import NotFound from "./pages/NotFound";
 
@@ -61,6 +62,7 @@ function AppRoutes() {
       <Route path="/calculator" element={<ProtectedRoute><CalculatorPage /></ProtectedRoute>} />
       <Route path="/recipes" element={<ProtectedRoute><RecipesPage /></ProtectedRoute>} />
       <Route path="/orders" element={<ProtectedRoute><OrdersPage /></ProtectedRoute>} />
+      <Route path="/other-income" element={<ProtectedRoute><OtherIncomePage /></ProtectedRoute>} />
       <Route path="/quotations" element={<ProtectedRoute><QuotationsPage /></ProtectedRoute>} />
       <Route path="/personalization" element={<ProtectedRoute><PersonalizationPage /></ProtectedRoute>} />
       <Route path="/ingredients" element={<ProtectedRoute><IngredientsPage /></ProtectedRoute>} />
