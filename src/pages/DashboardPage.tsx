@@ -13,7 +13,8 @@ const quickActions = [
 { icon: Users, label: 'Mano de Obra', path: '/labor', description: 'Gestionar equipo' },
 { icon: Receipt, label: 'Gastos del Mes', path: '/indirect-costs', description: 'Costos fijos' },
 { icon: FileText, label: 'Cotizaciones', path: '/quotations', description: 'Presupuestos' },
-{ icon: ClipboardList, label: 'Pedidos', path: '/orders', description: 'Seguimiento' }];
+{ icon: ClipboardList, label: 'Pedidos', path: '/orders', description: 'Seguimiento' },
+{ icon: CircleDollarSign, label: 'Otros Ingresos', path: '/other-income', description: 'Ventas extras' }];
 
 
 export default function DashboardPage() {
