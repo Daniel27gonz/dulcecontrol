@@ -43,7 +43,7 @@ export default function OtherIncomePage() {
 
   const loadRecords = useCallback(async () => {
     if (!user) return;
-    const { data } = await supabase
+    const { data } = await (supabase as any)
       .from('other_income')
       .select('*')
       .eq('user_id', user.id)
