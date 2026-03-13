@@ -22,6 +22,7 @@ export interface MonthlyFinancials {
   depreciationByEquipment: Record<string, number>;
   totalDepreciation: number;
   otherExpenses: Transaction[];
+  totalOtherIncome: number;
 }
 
 export function useMonthlyFinancials(selectedMonth: Date): MonthlyFinancials {
