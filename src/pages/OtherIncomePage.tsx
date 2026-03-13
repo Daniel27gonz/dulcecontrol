@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback, useMemo } from 'react';
 import { motion } from 'framer-motion';
-import { Plus, Trash2, DollarSign, StickyNote, Calendar as CalendarIcon, ChevronLeft, ChevronRight } from 'lucide-react';
+import { Plus, Trash2, DollarSign, StickyNote, Calendar as CalendarIcon, ChevronLeft, ChevronRight, Edit2 } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -27,6 +27,7 @@ export default function OtherIncomePage() {
   const [records, setRecords] = useState<OtherIncomeRecord[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [showForm, setShowForm] = useState(false);
+  const [editingRecord, setEditingRecord] = useState<OtherIncomeRecord | null>(null);
   const [selectedMonth, setSelectedMonth] = useState(() => new Date());
 
   // Form state
@@ -77,6 +78,29 @@ export default function OtherIncomePage() {
     return filteredRecords.reduce((sum, r) => sum + r.amount, 0);
   }, [filteredRecords]);
 
+  const resetForm = () => {
+    setConcept('');
+    setAmount('');
+    setDate(format(new Date(), 'yyyy-MM-dd'));
+    setNote('');
+    setEditingRecord(null);
+    setShowForm(false);
+  };
+
+  const handleOpenAdd = () => {
+    resetForm();
+    setShowForm(true);
+  };
+
+  const handleOpenEdit = (record: OtherIncomeRecord) => {
+    setEditingRecord(record);
+    setConcept(record.concept);
+    setAmount(record.amount.toString());
+    setDate(record.date.split('T')[0]);
+    setNote(record.note || '');
+    setShowForm(true);
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!user) return;
@@ -87,45 +111,74 @@ export default function OtherIncomePage() {
       return;
     }
 
-    const { data, error } = await supabase
-      .from('other_income')
-      .insert({
-        user_id: user.id,
-        concept: concept.trim(),
+    if (editingRecord) {
+      // Update existing
+      const { error } = await supabase
+        .from('other_income')
+        .update({
+          concept: concept.trim(),
+          amount: parsedAmount,
+          date,
+          note: note.trim() || null,
+        } as any)
+        .eq('id', editingRecord.id)
+        .eq('user_id', user.id);
+
+      if (error) {
+        toast.error('Error al actualizar');
+        return;
+      }
+
+      // Re-sync transaction
+      await syncTransaction({
+        userId: user.id,
+        sourceId: editingRecord.id,
+        sourceType: 'other_income' as any,
+        type: 'income',
+        description: `Otro ingreso: ${concept.trim()}`,
         amount: parsedAmount,
+        category: 'otros_ingresos',
         date,
-        note: note.trim() || null,
-      } as any)
-      .select()
-      .single();
+      });
 
-    if (error) {
-      toast.error('Error al guardar');
-      return;
+      toast.success('Ingreso actualizado correctamente');
+    } else {
+      // Insert new
+      const { data, error } = await supabase
+        .from('other_income')
+        .insert({
+          user_id: user.id,
+          concept: concept.trim(),
+          amount: parsedAmount,
+          date,
+          note: note.trim() || null,
+        } as any)
+        .select()
+        .single();
+
+      if (error) {
+        toast.error('Error al guardar');
+        return;
+      }
+
+      // Sync to transactions
+      await syncTransaction({
+        userId: user.id,
+        sourceId: (data as any).id,
+        sourceType: 'other_income' as any,
+        type: 'income',
+        description: `Otro ingreso: ${concept.trim()}`,
+        amount: parsedAmount,
+        category: 'otros_ingresos',
+        date,
+      });
+
+      toast.success('Ingreso registrado correctamente');
     }
-
-    // Sync to transactions
-    await syncTransaction({
-      userId: user.id,
-      sourceId: (data as any).id,
-      sourceType: 'other_income' as any,
-      type: 'income',
-      description: `Otro ingreso: ${concept.trim()}`,
-      amount: parsedAmount,
-      category: 'otros_ingresos',
-      date,
-    });
 
     await refreshData();
     await loadRecords();
-
-    // Reset form
-    setConcept('');
-    setAmount('');
-    setDate(format(new Date(), 'yyyy-MM-dd'));
-    setNote('');
-    setShowForm(false);
-    toast.success('Ingreso registrado correctamente');
+    resetForm();
   };
 
   const handleDelete = async (record: OtherIncomeRecord) => {
@@ -202,12 +255,12 @@ export default function OtherIncomePage() {
           {/* Add Button */}
           <motion.div variants={itemVariants}>
             <Button
-              onClick={() => setShowForm(!showForm)}
+              onClick={() => showForm && !editingRecord ? resetForm() : handleOpenAdd()}
               className="w-full gap-2"
-              variant={showForm ? 'secondary' : 'default'}
+              variant={showForm && !editingRecord ? 'secondary' : 'default'}
             >
               <Plus className="w-4 h-4" />
-              {showForm ? 'Cancelar' : 'Registrar nuevo ingreso'}
+              {showForm && !editingRecord ? 'Cancelar' : 'Registrar nuevo ingreso'}
             </Button>
           </motion.div>
 
@@ -216,7 +269,9 @@ export default function OtherIncomePage() {
             <motion.div variants={itemVariants}>
               <Card>
                 <CardHeader className="pb-3">
-                  <CardTitle className="text-base">Nuevo ingreso</CardTitle>
+                  <CardTitle className="text-base">
+                    {editingRecord ? 'Editar ingreso' : 'Nuevo ingreso'}
+                  </CardTitle>
                 </CardHeader>
                 <CardContent>
                   <form onSubmit={handleSubmit} className="space-y-4">
@@ -263,9 +318,16 @@ export default function OtherIncomePage() {
                         rows={2}
                       />
                     </div>
-                    <Button type="submit" className="w-full">
-                      Guardar ingreso
-                    </Button>
+                    <div className="flex gap-2">
+                      {editingRecord && (
+                        <Button type="button" variant="secondary" className="flex-1" onClick={resetForm}>
+                          Cancelar
+                        </Button>
+                      )}
+                      <Button type="submit" className="flex-1">
+                        {editingRecord ? 'Actualizar' : 'Guardar ingreso'}
+                      </Button>
+                    </div>
                   </form>
                 </CardContent>
               </Card>
@@ -301,10 +363,18 @@ export default function OtherIncomePage() {
                           </div>
                         )}
                       </div>
-                      <div className="flex items-center gap-2">
+                      <div className="flex items-center gap-1.5">
                         <span className="text-lg font-bold text-success whitespace-nowrap">
                           {cs}{record.amount.toFixed(2)}
                         </span>
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          className="h-8 w-8 text-muted-foreground hover:bg-secondary"
+                          onClick={() => handleOpenEdit(record)}
+                        >
+                          <Edit2 className="w-4 h-4" />
+                        </Button>
                         <Button
                           variant="ghost"
                           size="icon"
