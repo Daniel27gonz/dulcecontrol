@@ -144,7 +144,7 @@ export default function OtherIncomePage() {
       toast.success('Ingreso actualizado correctamente');
     } else {
       // Insert new
-      const { data, error } = await supabase
+      const { data, error } = await (supabase as any)
         .from('other_income')
         .insert({
           user_id: user.id,
