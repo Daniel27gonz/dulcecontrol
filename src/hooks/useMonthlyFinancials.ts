@@ -102,6 +102,10 @@ export function useMonthlyFinancials(selectedMonth: Date): MonthlyFinancials {
     const anticipos = incomeTransactions.filter(t => t.description.toLowerCase().includes('anticipo'));
     const totalAnticipos = anticipos.reduce((sum, t) => sum + t.amount, 0);
 
+    // Other income (from other_income source)
+    const otherIncomeTransactions = incomeTransactions.filter(t => t.sourceType === 'other_income');
+    const totalOtherIncome = otherIncomeTransactions.reduce((sum, t) => sum + t.amount, 0);
+
     return {
       totalIncome,
       totalExpenses,
@@ -119,6 +123,7 @@ export function useMonthlyFinancials(selectedMonth: Date): MonthlyFinancials {
       depreciationByEquipment,
       totalDepreciation,
       otherExpenses,
+      totalOtherIncome,
     };
   }, [transactions, orders, quotations, baseIngredients, selectedMonth, equipment, getEquipmentDepreciation, getTotalDepreciation]);
 }
