@@ -113,14 +113,14 @@ export default function OtherIncomePage() {
 
     if (editingRecord) {
       // Update existing
-      const { error } = await (supabase as any)
+      const { error } = await supabase
         .from('other_income')
         .update({
           concept: concept.trim(),
           amount: parsedAmount,
           date,
           note: note.trim() || null,
-        } as any)
+        })
         .eq('id', editingRecord.id)
         .eq('user_id', user.id);
 
