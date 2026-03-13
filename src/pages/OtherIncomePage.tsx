@@ -144,7 +144,7 @@ export default function OtherIncomePage() {
       toast.success('Ingreso actualizado correctamente');
     } else {
       // Insert new
-      const { data, error } = await (supabase as any)
+      const { data, error } = await supabase
         .from('other_income')
         .insert({
           user_id: user.id,
@@ -152,7 +152,7 @@ export default function OtherIncomePage() {
           amount: parsedAmount,
           date,
           note: note.trim() || null,
-        } as any)
+        })
         .select()
         .single();
 
