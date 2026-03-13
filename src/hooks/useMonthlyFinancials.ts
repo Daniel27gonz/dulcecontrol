@@ -17,6 +17,7 @@ export interface MonthlyFinancials {
   monthTransactions: Transaction[];
   totalLaborCost: number;
   totalAnticipos: number;
+  totalOrderPayments: number;
   ingredientsByCategory: Record<string, number>;
   indirectByCategory: Record<string, number>;
   depreciationByEquipment: Record<string, number>;
