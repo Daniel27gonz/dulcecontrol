@@ -184,7 +184,7 @@ export default function OtherIncomePage() {
   const handleDelete = async (record: OtherIncomeRecord) => {
     if (!user) return;
 
-    await (supabase as any)
+    await supabase
       .from('other_income')
       .delete()
       .eq('id', record.id)
