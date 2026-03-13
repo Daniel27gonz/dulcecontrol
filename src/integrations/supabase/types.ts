@@ -154,6 +154,39 @@ export type Database = {
           },
         ]
       }
+      other_income: {
+        Row: {
+          amount: number
+          concept: string
+          created_at: string
+          date: string
+          id: string
+          note: string | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          amount: number
+          concept: string
+          created_at?: string
+          date?: string
+          id?: string
+          note?: string | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          amount?: number
+          concept?: string
+          created_at?: string
+          date?: string
+          id?: string
+          note?: string | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       pdf_settings: {
         Row: {
           business_email: string | null
