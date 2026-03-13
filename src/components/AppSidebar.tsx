@@ -29,7 +29,7 @@ const mainItems = [
   { title: 'Cotizar', url: '/quotations', icon: FileText },
   { title: 'Diseño', url: '/personalization', icon: Sparkles },
   { title: 'Pedidos', url: '/orders', icon: ClipboardList },
-  { title: 'Otros Ingresos', url: '/other-income', icon: Wallet },
+  { title: 'Otros Ingresos', url: '/other-income', icon: CircleDollarSign },
   { title: 'Finanzas', url: '/finances', icon: Wallet },
 ];
 
