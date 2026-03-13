@@ -3,7 +3,7 @@ import { supabase } from '@/integrations/supabase/client';
 interface SyncTransactionParams {
   userId: string;
   sourceId: string;
-  sourceType: 'ingredient' | 'indirect_cost' | 'worker' | 'order' | 'order_advance';
+  sourceType: 'ingredient' | 'indirect_cost' | 'worker' | 'order' | 'order_advance' | 'other_income';
   type: 'income' | 'expense';
   description: string;
   amount: number;
@@ -12,60 +12,56 @@ interface SyncTransactionParams {
 }
 
 export async function syncTransaction(params: SyncTransactionParams) {
-  // Check if transaction already exists for this source
-  const { data: allTransactions } = await supabase
+  const { data: existing, error: lookupError } = await supabase
     .from('transactions')
-    .select('*')
-    .eq('user_id', params.userId);
+    .select('id')
+    .eq('user_id', params.userId)
+    .eq('source_id', params.sourceId)
+    .eq('source_type', params.sourceType)
+    .order('created_at', { ascending: false })
+    .limit(1)
+    .maybeSingle();
 
-  const existing = allTransactions?.find(
-    (t: any) => t.source_id === params.sourceId && t.source_type === params.sourceType
-  );
+  if (lookupError) throw lookupError;
+
+  const payload = {
+    user_id: params.userId,
+    source_id: params.sourceId,
+    source_type: params.sourceType,
+    type: params.type,
+    description: params.description,
+    amount: params.amount,
+    category: params.category,
+    date: params.date,
+  };
 
   if (existing) {
-    await supabase
+    const { error } = await supabase
       .from('transactions')
       .update({
-        description: params.description,
-        amount: params.amount,
-        category: params.category,
-        date: params.date,
+        description: payload.description,
+        amount: payload.amount,
+        category: payload.category,
+        date: payload.date,
       })
       .eq('id', existing.id)
       .eq('user_id', params.userId);
-  } else {
-    await supabase
-      .from('transactions')
-      .insert({
-        user_id: params.userId,
-        source_id: params.sourceId,
-        source_type: params.sourceType,
-        type: params.type,
-        description: params.description,
-        amount: params.amount,
-        category: params.category,
-        date: params.date,
-      } as any);
+
+    if (error) throw error;
+    return;
   }
+
+  const { error } = await supabase.from('transactions').insert(payload);
+  if (error) throw error;
 }
 
 export async function deleteTransactionBySource(userId: string, sourceId: string, sourceType: string) {
-  const { data: allTransactions } = await supabase
+  const { error } = await supabase
     .from('transactions')
-    .select('*')
-    .eq('user_id', userId);
+    .delete()
+    .eq('user_id', userId)
+    .eq('source_id', sourceId)
+    .eq('source_type', sourceType);
 
-  const toDelete = allTransactions?.filter(
-    (t: any) => t.source_id === sourceId && t.source_type === sourceType
-  );
-
-  if (toDelete && toDelete.length > 0) {
-    for (const t of toDelete) {
-      await supabase
-        .from('transactions')
-        .delete()
-        .eq('id', t.id)
-        .eq('user_id', userId);
-    }
-  }
+  if (error) throw error;
 }
