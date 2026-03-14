@@ -120,10 +120,20 @@ export default function IngredientsPage() {
     });
   }, [groupedIngredients]);
 
+  // Conversión a gramos para todas las unidades
+  const GRAMS_MULTIPLIER: Record<string, number> = {
+    kg: 1000, g: 1, lb: 453.592, oz: 28.3495,
+    L: 1000, ml: 1, pza: 1, paquete: 1, caja: 1,
+  };
+
   const previewCost = useMemo(() => {
     const price = parseFloat(formData.presentationPrice) || 0;
-    return calculateCostPerBaseUnit(price, 0, formData.purchaseUnit);
-  }, [formData.presentationPrice, formData.purchaseUnit]);
+    const qty = parseFloat(formData.presentationQuantity) || 0;
+    if (price <= 0 || qty <= 0) return 0;
+    const gramsMultiplier = GRAMS_MULTIPLIER[formData.purchaseUnit] || 1;
+    const totalGrams = qty * gramsMultiplier;
+    return price / totalGrams;
+  }, [formData.presentationPrice, formData.presentationQuantity, formData.purchaseUnit]);
 
   const previewTotalPaid = useMemo(() => {
     const price = parseFloat(formData.presentationPrice) || 0;
@@ -432,7 +442,7 @@ export default function IngredientsPage() {
                               </p>
                               <div className="flex items-center gap-2 mt-1">
                                 <span className="text-xs font-semibold text-primary">
-                                  {settings.currencySymbol}{ingredient.costPerBaseUnit.toFixed(4)}/{getBaseUnit(ingredient.purchaseUnit)}
+                                  {settings.currencySymbol}{ingredient.costPerBaseUnit.toFixed(4)}/g
                                 </span>
                                 <span className="text-xs text-muted-foreground">
                                   • Compra: {ingredient.purchaseDate ? formatDate(ingredient.purchaseDate) : formatDate(ingredient.lastUpdated)}
@@ -834,9 +844,9 @@ function IngredientForm({
         <Card className="bg-primary/5 border-primary/20">
           <CardContent className="p-4">
             <div className="text-center">
-              <p className="text-xs text-muted-foreground mb-1">Costo calculado por unidad base</p>
+              <p className="text-xs text-muted-foreground mb-1">Costo calculado por gramo</p>
               <p className="text-2xl font-bold text-primary">
-                {currencySymbol}{previewCost.toFixed(4)} / {baseUnit}
+                {currencySymbol}{previewCost.toFixed(4)} / g
               </p>
               <p className="text-xs text-muted-foreground mt-1">
                 Este es el costo que se usará en tus recetas
