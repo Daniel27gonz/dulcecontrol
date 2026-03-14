@@ -1,5 +1,7 @@
 import { useState, useEffect } from 'react';
-import { Order, useApp } from '@/context/AppContext';
+import { Order, Recipe, useApp } from '@/context/AppContext';
+import { useLabor } from '@/context/LaborContext';
+import { useIndirectCosts } from '@/context/IndirectCostsContext';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -44,7 +46,9 @@ interface OrderFormProps {
 }
 
 export function OrderForm({ order, trigger, onClose }: OrderFormProps) {
-  const { recipes, addOrder, updateOrder, calculateRecipeCost, settings } = useApp();
+  const { recipes, addOrder, updateOrder, settings } = useApp();
+  const { getLastMonthLaborCostPerHour, getLastMonthTotalHours } = useLabor();
+  const { getTotalIndirectCostsLastMonth } = useIndirectCosts();
   const [open, setOpen] = useState(false);
   const [clientName, setClientName] = useState('');
   const [selectedRecipeId, setSelectedRecipeId] = useState('');
@@ -54,6 +58,51 @@ export function OrderForm({ order, trigger, onClose }: OrderFormProps) {
   const [customPrice, setCustomPrice] = useState<string>('');
 
   const isEditing = !!order;
+
+  // Same complete cost calculation as RecipesPage
+  const round2 = (n: number) => Math.round(n * 100) / 100;
+
+  const calculateFullRecipeCost = (recipe: Recipe) => {
+    const WASTE_PERCENTAGE = 0.05;
+
+    const ingredientsCost = recipe.ingredients.reduce(
+      (sum, ing) => sum + (ing.pricePerUnit * ing.quantityUsed),
+      0
+    );
+
+    const elaborationTime = recipe.elaborationTime || { preparation: 0, baking: 0, decoration: 0, packaging: 0 };
+    const totalElaborationTimeMinutes =
+      elaborationTime.preparation +
+      elaborationTime.baking +
+      elaborationTime.decoration +
+      elaborationTime.packaging;
+
+    const totalProductHours = Math.max(0, totalElaborationTimeMinutes / 60);
+
+    const laborCostPerHour = getLastMonthLaborCostPerHour();
+    const totalMonthlyHours = getLastMonthTotalHours();
+    const totalIndirectCosts = getTotalIndirectCostsLastMonth();
+    const indirectCostPerHour = totalMonthlyHours > 0 ? totalIndirectCosts / totalMonthlyHours : 0;
+
+    const laborFinalCost = totalProductHours * laborCostPerHour;
+    const indirectFinalCost = totalProductHours * indirectCostPerHour;
+
+    const extras = recipe.extras || [];
+    const extrasCost = extras.reduce((sum, extra) => sum + extra.quantity * extra.unitCost, 0);
+
+    const decorationHours = recipe.decorationHours || 0;
+    const laborDecorationCost = decorationHours * laborCostPerHour;
+
+    const baseCost = ingredientsCost + laborFinalCost + indirectFinalCost + extrasCost + laborDecorationCost;
+    const wasteCost = baseCost * WASTE_PERCENTAGE;
+
+    const totalCostWithWaste = round2(Math.max(0, baseCost + wasteCost));
+
+    const marginDecimal = Math.min(Math.max(recipe.marginPercentage || 50, 30), 90) / 100;
+    const suggestedPrice = round2(Math.max(0, totalCostWithWaste / (1 - marginDecimal)));
+
+    return { totalCost: totalCostWithWaste, suggestedPrice };
+  };
 
   // Load order data when editing
   useEffect(() => {
@@ -68,7 +117,7 @@ export function OrderForm({ order, trigger, onClose }: OrderFormProps) {
   }, [order, open]);
 
   const selectedRecipe = recipes.find(r => r.id === selectedRecipeId);
-  const recipeCost = selectedRecipe ? calculateRecipeCost(selectedRecipe) : null;
+  const recipeCost = selectedRecipe ? calculateFullRecipeCost(selectedRecipe) : null;
   const suggestedTotal = recipeCost ? recipeCost.suggestedPrice * quantity : 0;
   const finalPrice = customPrice ? parseFloat(customPrice) : suggestedTotal;
 
@@ -207,7 +256,7 @@ export function OrderForm({ order, trigger, onClose }: OrderFormProps) {
                 </SelectTrigger>
                 <SelectContent className="bg-background border">
                   {recipes.map((recipe) => {
-                    const cost = calculateRecipeCost(recipe);
+                    const cost = calculateFullRecipeCost(recipe);
                     return (
                       <SelectItem key={recipe.id} value={recipe.id}>
                         <span className="flex items-center justify-between w-full gap-2">
