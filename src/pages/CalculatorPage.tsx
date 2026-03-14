@@ -980,44 +980,19 @@ export default function CalculatorPage() {
                     </div>
                   </div>
 
+                  <div className="pt-4 border-t border-caramel/30">
+                    <div className="text-center">
+                      <p className="text-sm text-muted-foreground mb-1">Precio sugerido de venta</p>
+                      <p className="text-4xl font-bold text-foreground">
+                        {settings.currencySymbol}{round2(suggestedPrice).toFixed(2)}
+                      </p>
+                      <p className="text-xs text-muted-foreground mt-2">
+                        Fórmula: Costo ÷ (1 − margen)
+                      </p>
+                    </div>
+                  </div>
                 </CardContent>
               </Card>
-
-              {/* Tarjetas resumen: Costo, Precio, Ganancia */}
-              <div className="flex flex-col gap-4">
-                {/* Costo total */}
-                <Card className="bg-[hsl(220,15%,88%)] dark:bg-[hsl(220,15%,25%)] border-[hsl(220,10%,70%)] shadow-lg rounded-2xl">
-                  <CardContent className="p-5 text-center space-y-2">
-                    <DollarSign className="w-7 h-7 mx-auto text-[hsl(220,10%,40%)] dark:text-[hsl(220,10%,70%)]" />
-                    <p className="text-sm font-semibold text-[hsl(220,10%,35%)] dark:text-[hsl(220,10%,75%)]">Costo total de la receta</p>
-                    <p className="text-3xl font-bold text-[hsl(220,15%,20%)] dark:text-[hsl(220,15%,90%)]">
-                      {settings.currencySymbol}{round2(totalCostWithWaste).toFixed(2)}
-                    </p>
-                  </CardContent>
-                </Card>
-
-                {/* Precio sugerido */}
-                <Card className="bg-[hsl(350,70%,88%)] dark:bg-[hsl(350,40%,22%)] border-[hsl(350,60%,65%)] shadow-lg rounded-2xl">
-                  <CardContent className="p-5 text-center space-y-2">
-                    <Sparkles className="w-7 h-7 mx-auto text-[hsl(350,70%,45%)] dark:text-[hsl(350,60%,70%)]" />
-                    <p className="text-sm font-semibold text-[hsl(350,50%,30%)] dark:text-[hsl(350,50%,75%)]">Precio sugerido al cliente</p>
-                    <p className="text-3xl font-bold text-[hsl(350,70%,35%)] dark:text-[hsl(350,60%,80%)]">
-                      {settings.currencySymbol}{round2(suggestedPrice).toFixed(2)}
-                    </p>
-                  </CardContent>
-                </Card>
-
-                {/* Ganancia */}
-                <Card className="bg-[hsl(142,50%,85%)] dark:bg-[hsl(142,35%,18%)] border-[hsl(142,45%,50%)] shadow-lg rounded-2xl">
-                  <CardContent className="p-5 text-center space-y-2">
-                    <Check className="w-7 h-7 mx-auto text-[hsl(142,55%,30%)] dark:text-[hsl(142,45%,60%)]" />
-                    <p className="text-sm font-semibold text-[hsl(142,40%,25%)] dark:text-[hsl(142,40%,70%)]">Tu ganancia</p>
-                    <p className="text-3xl font-bold text-[hsl(142,55%,25%)] dark:text-[hsl(142,45%,70%)]">
-                      {settings.currencySymbol}{round2(suggestedPrice - totalCostWithWaste).toFixed(2)}
-                    </p>
-                  </CardContent>
-                </Card>
-              </div>
 
               {/* Información de producción */}
               {portions > 1 && (
