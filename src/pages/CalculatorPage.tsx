@@ -464,7 +464,7 @@ export default function CalculatorPage() {
                             <div className="flex items-center justify-between text-sm">
                               <span className="text-muted-foreground">Precio por {ing.unit}:</span>
                               <span className="font-semibold text-primary">
-                                {settings.currencySymbol}{ing.pricePerUnit.toFixed(4)}
+                                {settings.currencySymbol}{ing.pricePerUnit.toFixed(2)}
                               </span>
                             </div>
 
