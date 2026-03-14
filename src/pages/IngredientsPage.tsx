@@ -127,13 +127,12 @@ export default function IngredientsPage() {
   };
 
   const previewCost = useMemo(() => {
-    const price = parseFloat(formData.presentationPrice) || 0;
     const qty = parseFloat(formData.presentationQuantity) || 0;
-    if (price <= 0 || qty <= 0) return 0;
+    if (previewTotalPaid <= 0 || qty <= 0) return 0;
     const gramsMultiplier = GRAMS_MULTIPLIER[formData.purchaseUnit] || 1;
     const totalGrams = qty * gramsMultiplier;
-    return price / totalGrams;
-  }, [formData.presentationPrice, formData.presentationQuantity, formData.purchaseUnit]);
+    return previewTotalPaid / totalGrams;
+  }, [previewTotalPaid, formData.presentationQuantity, formData.purchaseUnit]);
 
   const previewTotalPaid = useMemo(() => {
     const price = parseFloat(formData.presentationPrice) || 0;
