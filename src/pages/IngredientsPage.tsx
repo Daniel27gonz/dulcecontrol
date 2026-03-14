@@ -844,9 +844,9 @@ function IngredientForm({
         <Card className="bg-primary/5 border-primary/20">
           <CardContent className="p-4">
             <div className="text-center">
-              <p className="text-xs text-muted-foreground mb-1">Costo calculado por unidad base</p>
+              <p className="text-xs text-muted-foreground mb-1">Costo calculado por gramo</p>
               <p className="text-2xl font-bold text-primary">
-                {currencySymbol}{previewCost.toFixed(4)} / {baseUnit}
+                {currencySymbol}{previewCost.toFixed(4)} / g
               </p>
               <p className="text-xs text-muted-foreground mt-1">
                 Este es el costo que se usará en tus recetas
