@@ -995,32 +995,35 @@ export default function CalculatorPage() {
               </Card>
 
               {/* Tarjetas resumen: Costo, Precio, Ganancia */}
-              <div className="grid grid-cols-3 gap-3">
+              <div className="flex flex-col gap-4">
                 {/* Costo total */}
-                <Card className="bg-muted border-border">
-                  <CardContent className="p-3 text-center space-y-1">
-                    <p className="text-xs text-muted-foreground font-medium">Costo total</p>
-                    <p className="text-lg font-bold text-foreground">
+                <Card className="bg-muted border-border shadow-md rounded-2xl">
+                  <CardContent className="p-5 text-center space-y-2">
+                    <DollarSign className="w-6 h-6 mx-auto text-muted-foreground" />
+                    <p className="text-sm text-muted-foreground font-medium">Costo total de la receta</p>
+                    <p className="text-2xl font-bold text-foreground">
                       {settings.currencySymbol}{round2(totalCostWithWaste).toFixed(2)}
                     </p>
                   </CardContent>
                 </Card>
 
                 {/* Precio sugerido */}
-                <Card className="bg-[hsl(25,80%,95%)] dark:bg-[hsl(25,40%,20%)] border-[hsl(25,60%,70%)]">
-                  <CardContent className="p-3 text-center space-y-1">
-                    <p className="text-xs text-muted-foreground font-medium">Precio sugerido</p>
-                    <p className="text-lg font-bold text-caramel">
+                <Card className="bg-[hsl(25,80%,95%)] dark:bg-[hsl(25,40%,20%)] border-[hsl(25,60%,70%)] shadow-md rounded-2xl">
+                  <CardContent className="p-5 text-center space-y-2">
+                    <Sparkles className="w-6 h-6 mx-auto text-caramel" />
+                    <p className="text-sm text-muted-foreground font-medium">Precio sugerido al cliente</p>
+                    <p className="text-2xl font-bold text-caramel">
                       {settings.currencySymbol}{round2(suggestedPrice).toFixed(2)}
                     </p>
                   </CardContent>
                 </Card>
 
                 {/* Ganancia */}
-                <Card className="bg-[hsl(142,40%,95%)] dark:bg-[hsl(142,30%,15%)] border-[hsl(142,40%,60%)]">
-                  <CardContent className="p-3 text-center space-y-1">
-                    <p className="text-xs text-muted-foreground font-medium">Tu ganancia</p>
-                    <p className="text-lg font-bold text-success">
+                <Card className="bg-[hsl(142,40%,95%)] dark:bg-[hsl(142,30%,15%)] border-[hsl(142,40%,60%)] shadow-md rounded-2xl">
+                  <CardContent className="p-5 text-center space-y-2">
+                    <Check className="w-6 h-6 mx-auto text-success" />
+                    <p className="text-sm text-muted-foreground font-medium">Tu ganancia</p>
+                    <p className="text-2xl font-bold text-success">
                       {settings.currencySymbol}{round2(suggestedPrice - totalCostWithWaste).toFixed(2)}
                     </p>
                   </CardContent>
