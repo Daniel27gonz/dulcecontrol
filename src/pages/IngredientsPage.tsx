@@ -10,7 +10,7 @@ import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, 
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { BottomNav } from '@/components/BottomNav';
 import { AppHeader } from '@/components/AppHeader';
-import { useBaseIngredients, BaseIngredient, INGREDIENT_CATEGORIES, PURCHASE_UNITS, getBaseUnit, getMultiplier, calculateCostPerBaseUnit } from '@/context/BaseIngredientsContext';
+import { useBaseIngredients, BaseIngredient, INGREDIENT_CATEGORIES, PURCHASE_UNITS, getBaseUnit, getMultiplier } from '@/context/BaseIngredientsContext';
 import { useApp } from '@/context/AppContext';
 import { toast } from '@/hooks/use-toast';
 import { cn } from '@/lib/utils';
@@ -35,9 +35,8 @@ interface IngredientFormData {
   name: string;
   category: string;
   purchaseUnit: string;
-  presentationQuantity: string;
-  presentationPrice: string;
-  quantityPurchased: string;
+  quantity: string;      // amount bought in purchase unit
+  totalPaid: string;     // total amount paid
   purchaseDate: string;
 }
 
@@ -45,9 +44,8 @@ const initialFormData: IngredientFormData = {
   name: '',
   category: 'otros',
   purchaseUnit: 'g',
-  presentationQuantity: '',
-  presentationPrice: '',
-  quantityPurchased: '1',
+  quantity: '',
+  totalPaid: '',
   purchaseDate: new Date().toISOString().split('T')[0],
 };
 
@@ -63,7 +61,7 @@ export default function IngredientsPage() {
   
   // Month filter state
   const now = new Date();
-  const [filterMonth, setFilterMonth] = useState(now.getMonth()); // 0-11
+  const [filterMonth, setFilterMonth] = useState(now.getMonth());
   const [filterYear, setFilterYear] = useState(now.getFullYear());
 
   const MONTH_NAMES = ['Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio', 'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre'];
@@ -81,13 +79,13 @@ export default function IngredientsPage() {
     return ingredients.filter(ing => {
       const matchesSearch = ing.name.toLowerCase().includes(searchTerm.toLowerCase());
       const matchesCategory = selectedCategory === 'all' || ing.category === selectedCategory;
-      // Filter by purchaseDate month/year
       const pDate = ing.purchaseDate ? new Date(ing.purchaseDate) : new Date(ing.lastUpdated);
       const matchesMonth = pDate.getMonth() === filterMonth && pDate.getFullYear() === filterYear;
       return matchesSearch && matchesCategory && matchesMonth;
     });
   }, [ingredients, searchTerm, selectedCategory, filterMonth, filterYear]);
 
+  // Monthly total: presentationPrice is total paid for new records
   const monthlyTotal = useMemo(() => {
     return filteredIngredients.reduce((sum, ing) => {
       return sum + (ing.presentationPrice * (ing.quantityPurchased || 1));
@@ -120,20 +118,16 @@ export default function IngredientsPage() {
     });
   }, [groupedIngredients]);
 
-  const previewTotalPaid = useMemo(() => {
-    const price = parseFloat(formData.presentationPrice) || 0;
-    const qty = parseFloat(formData.presentationQuantity) || 0;
-    return price * qty;
-  }, [formData.presentationPrice, formData.presentationQuantity]);
+  // Preview cost: totalPaid / (quantity × multiplier)
+  const previewCost = useMemo(() => {
+    const totalPaid = parseFloat(formData.totalPaid) || 0;
+    const qty = parseFloat(formData.quantity) || 0;
+    if (totalPaid <= 0 || qty <= 0) return 0;
+    const multiplier = getMultiplier(formData.purchaseUnit);
+    return totalPaid / (qty * multiplier);
+  }, [formData.totalPaid, formData.quantity, formData.purchaseUnit]);
 
   const previewBaseUnit = getBaseUnit(formData.purchaseUnit);
-
-  const previewCost = useMemo(() => {
-    const price = parseFloat(formData.presentationPrice) || 0;
-    if (price <= 0) return 0;
-    const multiplier = getMultiplier(formData.purchaseUnit);
-    return price / multiplier;
-  }, [formData.presentationPrice, formData.purchaseUnit]);
 
   const handleOpenAdd = () => {
     setFormData(initialFormData);
@@ -147,9 +141,8 @@ export default function IngredientsPage() {
       name: ingredient.name,
       category: ingredient.category,
       purchaseUnit: ingredient.purchaseUnit,
-      presentationQuantity: ingredient.presentationQuantity.toString(),
-      presentationPrice: ingredient.presentationPrice.toString(),
-      quantityPurchased: (ingredient.quantityPurchased || 1).toString(),
+      quantity: ingredient.presentationQuantity.toString(),
+      totalPaid: ingredient.presentationPrice.toString(),
       purchaseDate: ingredient.purchaseDate ? new Date(ingredient.purchaseDate).toISOString().split('T')[0] : new Date().toISOString().split('T')[0],
     });
     setFormError(null);
@@ -162,7 +155,6 @@ export default function IngredientsPage() {
       return false;
     }
     
-    // Allow duplicate names for new purchases (isEdit still checks duplicates excluding current)
     if (isEdit) {
       const duplicate = findDuplicate(formData.name, editingIngredient?.id);
       if (duplicate) {
@@ -171,15 +163,15 @@ export default function IngredientsPage() {
       }
     }
 
-    const qty = parseFloat(formData.presentationQuantity);
+    const qty = parseFloat(formData.quantity);
     if (!qty || qty <= 0) {
-      setFormError('La cantidad de presentación debe ser mayor a 0');
+      setFormError('La cantidad comprada debe ser mayor a 0');
       return false;
     }
 
-    const price = parseFloat(formData.presentationPrice);
-    if (!price || price <= 0) {
-      setFormError('El precio debe ser mayor a 0');
+    const totalPaid = parseFloat(formData.totalPaid);
+    if (!totalPaid || totalPaid <= 0) {
+      setFormError('El total pagado debe ser mayor a 0');
       return false;
     }
 
@@ -198,9 +190,9 @@ export default function IngredientsPage() {
       name: formData.name.trim(),
       category: formData.category,
       purchaseUnit: formData.purchaseUnit as any,
-      presentationQuantity: parseFloat(formData.presentationQuantity),
-      presentationPrice: parseFloat(formData.presentationPrice),
-      quantityPurchased: parseFloat(formData.quantityPurchased) || 1,
+      presentationQuantity: parseFloat(formData.quantity),
+      presentationPrice: parseFloat(formData.totalPaid),
+      quantityPurchased: 1,
       purchaseDate: new Date(formData.purchaseDate).toISOString(),
     });
 
@@ -224,9 +216,9 @@ export default function IngredientsPage() {
       name: formData.name.trim(),
       category: formData.category,
       purchaseUnit: formData.purchaseUnit as any,
-      presentationQuantity: parseFloat(formData.presentationQuantity),
-      presentationPrice: parseFloat(formData.presentationPrice),
-      quantityPurchased: parseFloat(formData.quantityPurchased) || 1,
+      presentationQuantity: parseFloat(formData.quantity),
+      presentationPrice: parseFloat(formData.totalPaid),
+      quantityPurchased: 1,
       purchaseDate: new Date(formData.purchaseDate).toISOString(),
     });
 
@@ -269,6 +261,11 @@ export default function IngredientsPage() {
   const getUnitLabel = (unit: string) => {
     const found = PURCHASE_UNITS.find(u => u.id === unit);
     return found?.name || unit;
+  };
+
+  // Display total paid for a card: presentationPrice × quantityPurchased
+  const getDisplayTotalPaid = (ing: BaseIngredient) => {
+    return ing.presentationPrice * (ing.quantityPurchased || 1);
   };
 
   return (
@@ -431,8 +428,7 @@ export default function IngredientsPage() {
                             <div className="flex-1 min-w-0">
                               <h4 className="font-medium text-sm truncate">{ingredient.name}</h4>
                               <p className="text-xs text-muted-foreground mt-0.5">
-                                Total pagado: {settings.currencySymbol}{(ingredient.presentationPrice * ingredient.presentationQuantity * (ingredient.quantityPurchased || 1)).toFixed(2)} por{' '}
-                                {ingredient.presentationQuantity * (ingredient.quantityPurchased || 1)} {ingredient.purchaseUnit}
+                                Total pagado: {settings.currencySymbol}{getDisplayTotalPaid(ingredient).toFixed(2)} — {ingredient.presentationQuantity} {ingredient.purchaseUnit}
                               </p>
                               <div className="flex items-center gap-2 mt-1">
                                 <span className="text-xs font-semibold text-primary">
@@ -562,7 +558,6 @@ export default function IngredientsPage() {
             formError={formError}
             setFormError={setFormError}
             previewCost={previewCost}
-            previewTotalPaid={previewTotalPaid}
             currencySymbol={settings.currencySymbol}
             onSave={handleSaveAdd}
             onCancel={() => setShowAddModal(false)}
@@ -586,7 +581,6 @@ export default function IngredientsPage() {
             formError={formError}
             setFormError={setFormError}
             previewCost={previewCost}
-            previewTotalPaid={previewTotalPaid}
             currencySymbol={settings.currencySymbol}
             onSave={handleSaveEdit}
             onCancel={() => setShowEditModal(false)}
@@ -618,14 +612,13 @@ export default function IngredientsPage() {
   );
 }
 
-// Separate form component for reuse
+// Separate form component
 interface IngredientFormProps {
   formData: IngredientFormData;
   setFormData: React.Dispatch<React.SetStateAction<IngredientFormData>>;
   formError: string | null;
   setFormError: React.Dispatch<React.SetStateAction<string | null>>;
   previewCost: number;
-  previewTotalPaid: number;
   currencySymbol: string;
   onSave: () => void;
   onCancel: () => void;
@@ -639,7 +632,6 @@ function IngredientForm({
   formError,
   setFormError,
   previewCost,
-  previewTotalPaid,
   currencySymbol,
   onSave,
   onCancel,
@@ -747,16 +739,16 @@ function IngredientForm({
           </Select>
         </div>
         <div>
-          <label className="block text-sm font-medium mb-1.5">Cantidad ({formData.purchaseUnit})</label>
+          <label className="block text-sm font-medium mb-1.5">Cantidad comprada ({formData.purchaseUnit})</label>
           <Input
             type="number"
-            value={formData.presentationQuantity}
+            value={formData.quantity}
             onChange={(e) => {
-              setFormData(prev => ({ ...prev, presentationQuantity: e.target.value }));
+              setFormData(prev => ({ ...prev, quantity: e.target.value }));
               setFormError(null);
             }}
             placeholder={
-              formData.purchaseUnit === 'kg' ? 'Ej: 1' :
+              formData.purchaseUnit === 'kg' ? 'Ej: 2' :
               formData.purchaseUnit === 'g' ? 'Ej: 500' :
               formData.purchaseUnit === 'lb' ? 'Ej: 1' :
               formData.purchaseUnit === 'oz' ? 'Ej: 1' :
@@ -770,7 +762,7 @@ function IngredientForm({
           />
           {(() => {
             const unit = PURCHASE_UNITS.find(u => u.id === formData.purchaseUnit);
-            const qty = parseFloat(formData.presentationQuantity) || 0;
+            const qty = parseFloat(formData.quantity) || 0;
             if (unit && unit.multiplier > 1 && qty > 0) {
               const totalBase = qty * unit.multiplier;
               return (
@@ -785,7 +777,7 @@ function IngredientForm({
       </div>
 
       <div>
-        <label className="block text-sm font-medium mb-1.5">Precio de la presentación</label>
+        <label className="block text-sm font-medium mb-1.5">Total pagado</label>
         <div className="relative">
           <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground">
             {currencySymbol}
@@ -793,32 +785,18 @@ function IngredientForm({
           <Input
             type="number"
             step="0.01"
-            value={formData.presentationPrice}
+            value={formData.totalPaid}
             onChange={(e) => {
-              setFormData(prev => ({ ...prev, presentationPrice: e.target.value }));
+              setFormData(prev => ({ ...prev, totalPaid: e.target.value }));
               setFormError(null);
             }}
             placeholder="0.00"
             className="pl-8"
           />
         </div>
-      </div>
-
-      <div>
-        <label className="block text-sm font-medium mb-1.5">Total pagado</label>
-        <div className="relative">
-          <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground">
-            {currencySymbol}
-          </span>
-          <Input
-            type="text"
-            value={previewTotalPaid.toFixed(2)}
-            readOnly
-            disabled
-            className="pl-8 bg-muted/50 font-semibold"
-          />
-        </div>
-        <p className="text-xs text-muted-foreground mt-1">Precio × Cantidad de presentación (se registra en Finanzas)</p>
+        <p className="text-xs text-muted-foreground mt-1">
+          Monto total de la compra (se registra en Finanzas)
+        </p>
       </div>
 
       <div>
