@@ -566,6 +566,7 @@ export default function IngredientsPage() {
             previewCost={previewCost}
             previewTotalPaid={previewTotalPaid}
             currencySymbol={settings.currencySymbol}
+            baseUnit={previewBaseUnit}
             onSave={handleSaveAdd}
             onCancel={() => setShowAddModal(false)}
             existingIngredients={ingredients}
