@@ -453,7 +453,7 @@ export default function CalculatorPage() {
                             });
                             toast({
                               title: '✅ Ingrediente cargado',
-                              description: `${selected.name} - ${settings.currencySymbol}${selected.costPerBaseUnit.toFixed(2)}/${selected.baseUnit}`,
+                              description: `${selected.name} - ${settings.currencySymbol}${['pieza', 'paquete', 'caja'].includes(selected.baseUnit) ? selected.costPerBaseUnit.toFixed(0) : selected.costPerBaseUnit.toFixed(2)}/${selected.baseUnit}`,
                             });
                           }}
                           placeholder="Toca para seleccionar ingrediente..."
