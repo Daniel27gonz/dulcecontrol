@@ -646,6 +646,7 @@ function IngredientForm({
   previewCost,
   previewTotalPaid,
   currencySymbol,
+  baseUnit,
   onSave,
   onCancel,
   isEdit = false,
