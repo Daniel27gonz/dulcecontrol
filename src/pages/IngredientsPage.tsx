@@ -631,7 +631,6 @@ interface IngredientFormProps {
   previewCost: number;
   previewTotalPaid: number;
   currencySymbol: string;
-  baseUnit: string;
   onSave: () => void;
   onCancel: () => void;
   isEdit?: boolean;
