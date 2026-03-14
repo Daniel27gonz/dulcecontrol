@@ -126,6 +126,12 @@ export default function IngredientsPage() {
     L: 1000, ml: 1, pza: 1, paquete: 1, caja: 1,
   };
 
+  const previewTotalPaid = useMemo(() => {
+    const price = parseFloat(formData.presentationPrice) || 0;
+    const qty = parseFloat(formData.presentationQuantity) || 0;
+    return price * qty;
+  }, [formData.presentationPrice, formData.presentationQuantity]);
+
   const previewCost = useMemo(() => {
     const qty = parseFloat(formData.presentationQuantity) || 0;
     if (previewTotalPaid <= 0 || qty <= 0) return 0;
@@ -133,12 +139,6 @@ export default function IngredientsPage() {
     const totalGrams = qty * gramsMultiplier;
     return previewTotalPaid / totalGrams;
   }, [previewTotalPaid, formData.presentationQuantity, formData.purchaseUnit]);
-
-  const previewTotalPaid = useMemo(() => {
-    const price = parseFloat(formData.presentationPrice) || 0;
-    const qty = parseFloat(formData.presentationQuantity) || 0;
-    return price * qty;
-  }, [formData.presentationPrice, formData.presentationQuantity]);
 
   const handleOpenAdd = () => {
     setFormData(initialFormData);
