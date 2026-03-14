@@ -435,18 +435,18 @@ export function IngredientAutocomplete({
                 </Select>
               </div>
               <div>
-                <label className="block text-sm font-medium mb-1.5">Cantidad</label>
+                <label className="block text-sm font-medium mb-1.5">Cantidad comprada ({quickAddForm.purchaseUnit})</label>
                 <Input
                   type="number"
                   value={quickAddForm.presentationQuantity}
                   onChange={(e) => setQuickAddForm(prev => ({ ...prev, presentationQuantity: e.target.value }))}
-                  placeholder="Ej: 1000"
+                  placeholder="Ej: 500"
                 />
               </div>
             </div>
 
             <div>
-              <label className="block text-sm font-medium mb-1.5">Precio</label>
+              <label className="block text-sm font-medium mb-1.5">Total pagado</label>
               <div className="relative">
                 <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground">
                   {settings.currencySymbol}
