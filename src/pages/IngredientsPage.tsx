@@ -840,7 +840,7 @@ function IngredientForm({
             <div className="text-center">
               <p className="text-xs text-muted-foreground mb-1">Costo calculado por {baseUnit}</p>
               <p className="text-2xl font-bold text-primary">
-                {currencySymbol}{previewCost.toFixed(4)} / {baseUnit}
+                {currencySymbol}{previewCost.toFixed(2)} / {baseUnit}
               </p>
               <p className="text-xs text-muted-foreground mt-1">
                 Este es el costo que se usará en tus recetas
