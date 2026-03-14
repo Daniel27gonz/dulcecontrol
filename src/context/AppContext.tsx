@@ -226,13 +226,59 @@ export function AppProvider({ children }: { children: ReactNode }) {
     }
 
     // Load transactions
-    const { data: transactionsData } = await supabase
+    let { data: transactionsData } = await supabase
       .from('transactions')
       .select('*')
       .eq('user_id', userId)
       .order('date', { ascending: false });
 
     if (transactionsData) {
+      // Load other income rows and backfill missing transaction syncs
+      const { data: otherIncomeData } = await (supabase as any)
+        .from('other_income')
+        .select('id, concept, amount, date')
+        .eq('user_id', userId);
+
+      const otherIncomeRows = (otherIncomeData || []) as Array<{
+        id: string;
+        concept: string;
+        amount: number;
+        date: string;
+      }>;
+
+      const missingOtherIncomeTransactions = otherIncomeRows.filter((oi) =>
+        !transactionsData.some(
+          (t) => t.source_type === 'other_income' && t.source_id === oi.id
+        )
+      );
+
+      if (missingOtherIncomeTransactions.length > 0) {
+        const { error: backfillError } = await supabase
+          .from('transactions')
+          .insert(
+            missingOtherIncomeTransactions.map((oi) => ({
+              user_id: userId,
+              type: 'income',
+              description: `Otro ingreso: ${oi.concept}`,
+              amount: Number(oi.amount),
+              category: 'otros_ingresos',
+              date: oi.date,
+              source_id: oi.id,
+              source_type: 'other_income',
+            }))
+          );
+
+        if (!backfillError) {
+          const { data: refreshedTransactions } = await supabase
+            .from('transactions')
+            .select('*')
+            .eq('user_id', userId)
+            .order('date', { ascending: false });
+
+          if (refreshedTransactions) transactionsData = refreshedTransactions;
+        }
+      }
+
       // Build sets of valid source IDs for each source type
       const validSourceIds = new Set<string>();
 
@@ -277,6 +323,9 @@ export function AppProvider({ children }: { children: ReactNode }) {
           });
         }
       });
+
+      // Other income
+      otherIncomeRows.forEach((oi) => validSourceIds.add(`other_income:${oi.id}`));
 
       // Filter: keep only valid transactions
       const orphanIds: string[] = [];

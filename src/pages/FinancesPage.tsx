@@ -263,11 +263,17 @@ export default function FinancesPage() {
         </motion.div>
 
         {/* Totals */}
-        <motion.div variants={itemVariants} className="grid grid-cols-2 gap-3">
+        <motion.div variants={itemVariants} className="grid grid-cols-3 gap-3">
           <Card className="bg-accent/10 border-accent/20">
             <CardContent className="p-4 text-center">
               <p className="text-xs text-muted-foreground mb-1">Total Anticipos</p>
               <p className="text-xl font-bold text-foreground">{cs}{monthlyData.totalAnticipos.toFixed(2)}</p>
+            </CardContent>
+          </Card>
+          <Card className="bg-primary/10 border-primary/20">
+            <CardContent className="p-4 text-center">
+              <p className="text-xs text-muted-foreground mb-1">Otros Ingresos</p>
+              <p className="text-xl font-bold text-primary">{cs}{monthlyData.totalOtherIncome.toFixed(2)}</p>
             </CardContent>
           </Card>
           <Card className="bg-success/10 border-success/20">
