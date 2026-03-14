@@ -100,20 +100,22 @@ export function IngredientAutocomplete({
 
   // Group by name: keep latest purchase, calculate total purchased
   const consolidatedIngredients = (() => {
+    // Sort by date descending first so most recent comes first
+    const sorted = [...configuredIngredients].sort((a, b) => {
+      const dateA = new Date(a.purchaseDate || a.lastUpdated).getTime();
+      const dateB = new Date(b.purchaseDate || b.lastUpdated).getTime();
+      return dateB - dateA; // most recent first
+    });
+    
     const byName: Record<string, { latest: BaseIngredient; totalQty: number; purchaseCount: number }> = {};
-    for (const ing of configuredIngredients) {
+    for (const ing of sorted) {
       const key = ing.name.toLowerCase().trim();
       if (!byName[key]) {
+        // First occurrence is already the most recent due to sorting
         byName[key] = { latest: ing, totalQty: ing.quantityPurchased * ing.presentationQuantity, purchaseCount: 1 };
       } else {
         byName[key].purchaseCount += 1;
         byName[key].totalQty += ing.quantityPurchased * ing.presentationQuantity;
-        // Keep the most recent purchase
-        const existingDate = byName[key].latest.purchaseDate || byName[key].latest.lastUpdated;
-        const newDate = ing.purchaseDate || ing.lastUpdated;
-        if (newDate > existingDate) {
-          byName[key].latest = ing;
-        }
       }
     }
     return Object.values(byName).map(entry => ({
