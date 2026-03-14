@@ -337,7 +337,7 @@ export function IngredientAutocomplete({
                       </div>
                       <div className="text-right ml-3 flex-shrink-0 bg-primary/10 px-2 py-1 rounded-lg">
                         <span className="text-sm font-bold text-primary block">
-                          {settings.currencySymbol}{ingredient.costPerBaseUnit.toFixed(4)}
+                          {settings.currencySymbol}{ingredient.costPerBaseUnit.toFixed(2)}
                         </span>
                         <span className="text-xs text-muted-foreground">
                           por {getBaseUnit(ingredient.purchaseUnit)}
@@ -467,7 +467,7 @@ export function IngredientAutocomplete({
                 <CardContent className="p-3 text-center">
                   <p className="text-xs text-muted-foreground">Costo por unidad base</p>
                   <p className="text-xl font-bold text-primary">
-                    {settings.currencySymbol}{previewCost.toFixed(4)} / {getBaseUnit(quickAddForm.purchaseUnit)}
+                    {settings.currencySymbol}{previewCost.toFixed(2)} / {getBaseUnit(quickAddForm.purchaseUnit)}
                   </p>
                 </CardContent>
               </Card>
