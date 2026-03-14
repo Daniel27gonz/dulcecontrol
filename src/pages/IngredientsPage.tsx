@@ -120,10 +120,20 @@ export default function IngredientsPage() {
     });
   }, [groupedIngredients]);
 
+  // Conversión a gramos para todas las unidades
+  const GRAMS_MULTIPLIER: Record<string, number> = {
+    kg: 1000, g: 1, lb: 453.592, oz: 28.3495,
+    L: 1000, ml: 1, pza: 1, paquete: 1, caja: 1,
+  };
+
   const previewCost = useMemo(() => {
     const price = parseFloat(formData.presentationPrice) || 0;
-    return calculateCostPerBaseUnit(price, 0, formData.purchaseUnit);
-  }, [formData.presentationPrice, formData.purchaseUnit]);
+    const qty = parseFloat(formData.presentationQuantity) || 0;
+    if (price <= 0 || qty <= 0) return 0;
+    const gramsMultiplier = GRAMS_MULTIPLIER[formData.purchaseUnit] || 1;
+    const totalGrams = qty * gramsMultiplier;
+    return price / totalGrams;
+  }, [formData.presentationPrice, formData.presentationQuantity, formData.purchaseUnit]);
 
   const previewTotalPaid = useMemo(() => {
     const price = parseFloat(formData.presentationPrice) || 0;
