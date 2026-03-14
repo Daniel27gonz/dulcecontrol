@@ -436,7 +436,7 @@ export default function IngredientsPage() {
                               </p>
                               <div className="flex items-center gap-2 mt-1">
                                 <span className="text-xs font-semibold text-primary">
-                                  {settings.currencySymbol}{ingredient.costPerBaseUnit.toFixed(2)}/{getBaseUnit(ingredient.purchaseUnit)}
+                                  {settings.currencySymbol}{['pieza', 'paquete', 'caja'].includes(ingredient.purchaseUnit) ? ingredient.costPerBaseUnit.toFixed(0) : ingredient.costPerBaseUnit.toFixed(2)}/{getBaseUnit(ingredient.purchaseUnit)}
                                 </span>
                                 <span className="text-xs text-muted-foreground">
                                   • Compra: {ingredient.purchaseDate ? formatDate(ingredient.purchaseDate) : formatDate(ingredient.lastUpdated)}
