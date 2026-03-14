@@ -10,7 +10,7 @@ import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, 
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { BottomNav } from '@/components/BottomNav';
 import { AppHeader } from '@/components/AppHeader';
-import { useBaseIngredients, BaseIngredient, INGREDIENT_CATEGORIES, PURCHASE_UNITS, getBaseUnit, calculateCostPerBaseUnit } from '@/context/BaseIngredientsContext';
+import { useBaseIngredients, BaseIngredient, INGREDIENT_CATEGORIES, PURCHASE_UNITS, getBaseUnit, getMultiplier, calculateCostPerBaseUnit } from '@/context/BaseIngredientsContext';
 import { useApp } from '@/context/AppContext';
 import { toast } from '@/hooks/use-toast';
 import { cn } from '@/lib/utils';
@@ -120,25 +120,21 @@ export default function IngredientsPage() {
     });
   }, [groupedIngredients]);
 
-  // Conversión a gramos para todas las unidades
-  const GRAMS_MULTIPLIER: Record<string, number> = {
-    kg: 1000, g: 1, lb: 453.592, oz: 28.3495,
-    L: 1000, ml: 1, pza: 1, paquete: 1, caja: 1,
-  };
-
   const previewTotalPaid = useMemo(() => {
     const price = parseFloat(formData.presentationPrice) || 0;
     const qty = parseFloat(formData.presentationQuantity) || 0;
     return price * qty;
   }, [formData.presentationPrice, formData.presentationQuantity]);
 
+  const previewBaseUnit = getBaseUnit(formData.purchaseUnit);
+
   const previewCost = useMemo(() => {
     const price = parseFloat(formData.presentationPrice) || 0;
     const qty = parseFloat(formData.presentationQuantity) || 0;
     if (price <= 0 || qty <= 0) return 0;
-    const gramsMultiplier = GRAMS_MULTIPLIER[formData.purchaseUnit] || 1;
-    const totalGrams = qty * gramsMultiplier;
-    return price / totalGrams;
+    const multiplier = getMultiplier(formData.purchaseUnit);
+    const totalBaseUnits = qty * multiplier;
+    return price / totalBaseUnits;
   }, [formData.presentationPrice, formData.presentationQuantity, formData.purchaseUnit]);
 
   const handleOpenAdd = () => {
@@ -442,7 +438,7 @@ export default function IngredientsPage() {
                               </p>
                               <div className="flex items-center gap-2 mt-1">
                                 <span className="text-xs font-semibold text-primary">
-                                  {settings.currencySymbol}{ingredient.costPerBaseUnit.toFixed(4)}/g
+                                  {settings.currencySymbol}{ingredient.costPerBaseUnit.toFixed(4)}/{getBaseUnit(ingredient.purchaseUnit)}
                                 </span>
                                 <span className="text-xs text-muted-foreground">
                                   • Compra: {ingredient.purchaseDate ? formatDate(ingredient.purchaseDate) : formatDate(ingredient.lastUpdated)}
@@ -844,9 +840,9 @@ function IngredientForm({
         <Card className="bg-primary/5 border-primary/20">
           <CardContent className="p-4">
             <div className="text-center">
-              <p className="text-xs text-muted-foreground mb-1">Costo calculado por gramo</p>
+              <p className="text-xs text-muted-foreground mb-1">Costo calculado por {baseUnit}</p>
               <p className="text-2xl font-bold text-primary">
-                {currencySymbol}{previewCost.toFixed(4)} / g
+                {currencySymbol}{previewCost.toFixed(4)} / {baseUnit}
               </p>
               <p className="text-xs text-muted-foreground mt-1">
                 Este es el costo que se usará en tus recetas
