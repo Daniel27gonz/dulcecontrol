@@ -337,7 +337,7 @@ export function IngredientAutocomplete({
                       </div>
                       <div className="text-right ml-3 flex-shrink-0 bg-primary/10 px-2 py-1 rounded-lg">
                         <span className="text-sm font-bold text-primary block">
-                          {settings.currencySymbol}{ingredient.costPerBaseUnit.toFixed(2)}
+                          {settings.currencySymbol}{['pieza', 'paquete', 'caja'].includes(ingredient.purchaseUnit) ? ingredient.costPerBaseUnit.toFixed(0) : ingredient.costPerBaseUnit.toFixed(2)}
                         </span>
                         <span className="text-xs text-muted-foreground">
                           por {getBaseUnit(ingredient.purchaseUnit)}
