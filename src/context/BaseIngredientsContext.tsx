@@ -9,9 +9,9 @@ export interface BaseIngredient {
   name: string;
   category: string;
   purchaseUnit: 'kg' | 'g' | 'lb' | 'oz' | 'L' | 'ml' | 'pza' | 'paquete' | 'caja';
-  presentationQuantity: number;
-  presentationPrice: number;
-  quantityPurchased: number;
+  presentationQuantity: number; // quantity bought in purchase unit
+  presentationPrice: number;    // total paid
+  quantityPurchased: number;    // legacy, always 1 for new records
   costPerBaseUnit: number;
   purchaseDate: string | null;
   lastUpdated: string;
@@ -72,20 +72,22 @@ export function getMultiplier(purchaseUnit: string): number {
   return unit?.multiplier || 1;
 }
 
+/**
+ * Calculate cost per base unit.
+ * Formula: totalPaid / (quantity × multiplier)
+ * Examples:
+ *   2 kg, $50 → 50 / (2 × 1000) = $0.025/g
+ *   500 g, $28 → 28 / (500 × 1) = $0.056/g
+ *   30 pza, $90 → 90 / (30 × 1) = $3/pza
+ */
 export function calculateCostPerBaseUnit(
-  presentationPrice: number,
-  _presentationQuantity: number,
+  totalPaid: number,
+  quantity: number,
   purchaseUnit: string
 ): number {
-  if (presentationPrice <= 0) return 0;
-  
+  if (totalPaid <= 0 || quantity <= 0) return 0;
   const multiplier = getMultiplier(purchaseUnit);
-  
-  // Cost per base unit = price / multiplier
-  // e.g. kg: $15 / 1000 = $0.015/g
-  // e.g. g: $15 / 1 = $15/g
-  // e.g. pza: $15 / 1 = $15/pza
-  return presentationPrice / multiplier;
+  return totalPaid / (quantity * multiplier);
 }
 
 // Default ingredients for new users
@@ -131,21 +133,24 @@ interface BaseIngredientsContextType {
 
 const BaseIngredientsContext = createContext<BaseIngredientsContextType | undefined>(undefined);
 
-const recalculateCostPerBaseUnit = (ingredient: Omit<BaseIngredient, 'costPerBaseUnit'>): BaseIngredient => {
-  return {
-    ...ingredient,
-    costPerBaseUnit: calculateCostPerBaseUnit(
-      ingredient.presentationPrice,
-      ingredient.presentationQuantity,
-      ingredient.purchaseUnit
-    ),
-  };
-};
-
 export function BaseIngredientsProvider({ children }: { children: ReactNode }) {
   const [ingredients, setIngredients] = useState<BaseIngredient[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const { session } = useApp();
+
+  const mapDbToIngredient = (ing: any): BaseIngredient => ({
+    id: ing.id,
+    name: ing.name,
+    category: ing.category,
+    purchaseUnit: ing.purchase_unit as BaseIngredient['purchaseUnit'],
+    presentationQuantity: Number(ing.presentation_quantity),
+    presentationPrice: Number(ing.presentation_price),
+    quantityPurchased: Number(ing.quantity_purchased) || 1,
+    // Use stored cost_per_base_unit from DB to preserve backward compatibility
+    costPerBaseUnit: Number(ing.cost_per_base_unit),
+    purchaseDate: ing.purchase_date || null,
+    lastUpdated: ing.last_updated,
+  });
 
   const loadIngredients = useCallback(async () => {
     if (!session?.user) {
@@ -168,17 +173,7 @@ export function BaseIngredientsProvider({ children }: { children: ReactNode }) {
     }
 
     if (data && data.length > 0) {
-      setIngredients(data.map(ing => recalculateCostPerBaseUnit({
-        id: ing.id,
-        name: ing.name,
-        category: ing.category,
-        purchaseUnit: ing.purchase_unit as BaseIngredient['purchaseUnit'],
-        presentationQuantity: Number(ing.presentation_quantity),
-        presentationPrice: Number(ing.presentation_price),
-        quantityPurchased: Number((ing as any).quantity_purchased) || 1,
-        purchaseDate: (ing as any).purchase_date || null,
-        lastUpdated: ing.last_updated,
-      })));
+      setIngredients(data.map(mapDbToIngredient));
     } else {
       // Initialize with default ingredients for new users
       const defaultsToInsert = DEFAULT_INGREDIENTS.map(ing => {
@@ -203,17 +198,7 @@ export function BaseIngredientsProvider({ children }: { children: ReactNode }) {
       if (insertError) {
         console.error('Error inserting default ingredients:', insertError);
       } else if (insertedData) {
-        setIngredients(insertedData.map(ing => recalculateCostPerBaseUnit({
-          id: ing.id,
-          name: ing.name,
-          category: ing.category,
-          purchaseUnit: ing.purchase_unit as BaseIngredient['purchaseUnit'],
-          presentationQuantity: Number(ing.presentation_quantity),
-          presentationPrice: Number(ing.presentation_price),
-          quantityPurchased: Number((ing as any).quantity_purchased) || 1,
-          purchaseDate: (ing as any).purchase_date || null,
-          lastUpdated: ing.last_updated,
-        })));
+        setIngredients(insertedData.map(mapDbToIngredient));
       }
     }
     setIsLoading(false);
@@ -226,7 +211,12 @@ export function BaseIngredientsProvider({ children }: { children: ReactNode }) {
   const addIngredient = useCallback(async (ingredient: Omit<BaseIngredient, 'id' | 'lastUpdated' | 'costPerBaseUnit'>): Promise<BaseIngredient | null> => {
     if (!session?.user) return null;
 
-    const costPerBaseUnit = calculateCostPerBaseUnit(ingredient.presentationPrice, ingredient.presentationQuantity, ingredient.purchaseUnit);
+    // New formula: totalPaid / (quantity × multiplier)
+    const costPerBaseUnit = calculateCostPerBaseUnit(
+      ingredient.presentationPrice, // totalPaid
+      ingredient.presentationQuantity, // quantity
+      ingredient.purchaseUnit
+    );
 
     const { data, error } = await supabase
       .from('base_ingredients')
@@ -249,21 +239,11 @@ export function BaseIngredientsProvider({ children }: { children: ReactNode }) {
       return null;
     }
 
-    const newIngredient = recalculateCostPerBaseUnit({
-      id: data.id,
-      name: data.name,
-      category: data.category,
-      purchaseUnit: data.purchase_unit as BaseIngredient['purchaseUnit'],
-      presentationQuantity: Number(data.presentation_quantity),
-      presentationPrice: Number(data.presentation_price),
-      quantityPurchased: Number((data as any).quantity_purchased) || 1,
-      purchaseDate: (data as any).purchase_date || null,
-      lastUpdated: data.last_updated,
-    });
+    const newIngredient = mapDbToIngredient(data);
 
     setIngredients(prev => [...prev, newIngredient].sort((a, b) => a.name.localeCompare(b.name)));
 
-    // Sync with transactions - total = presentationPrice * quantityPurchased
+    // Sync with transactions - total paid is presentationPrice
     const totalAmount = ingredient.presentationPrice * (ingredient.quantityPurchased || 1);
     await syncTransaction({
       userId: session.user.id,
@@ -286,7 +266,12 @@ export function BaseIngredientsProvider({ children }: { children: ReactNode }) {
     if (!existing) return;
 
     const updatedIng = { ...existing, ...updates };
-    const costPerBaseUnit = calculateCostPerBaseUnit(updatedIng.presentationPrice, updatedIng.presentationQuantity, updatedIng.purchaseUnit);
+    // Recalculate cost with new formula
+    const costPerBaseUnit = calculateCostPerBaseUnit(
+      updatedIng.presentationPrice,
+      updatedIng.presentationQuantity,
+      updatedIng.purchaseUnit
+    );
 
     const { error } = await supabase
       .from('base_ingredients')
@@ -312,11 +297,15 @@ export function BaseIngredientsProvider({ children }: { children: ReactNode }) {
     setIngredients(prev =>
       prev.map(ing => {
         if (ing.id !== id) return ing;
-        return recalculateCostPerBaseUnit({ ...updatedIng, lastUpdated: new Date().toISOString() });
+        return {
+          ...updatedIng,
+          costPerBaseUnit,
+          lastUpdated: new Date().toISOString(),
+        };
       }).sort((a, b) => a.name.localeCompare(b.name))
     );
 
-    // Sync with transactions - total = presentationPrice * quantityPurchased
+    // Sync with transactions
     const totalAmount = updatedIng.presentationPrice * (updatedIng.quantityPurchased || 1);
     await syncTransaction({
       userId: session.user.id,
