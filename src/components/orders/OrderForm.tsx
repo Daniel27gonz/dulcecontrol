@@ -256,7 +256,7 @@ export function OrderForm({ order, trigger, onClose }: OrderFormProps) {
                 </SelectTrigger>
                 <SelectContent className="bg-background border">
                   {recipes.map((recipe) => {
-                    const cost = calculateRecipeCost(recipe);
+                    const cost = calculateFullRecipeCost(recipe);
                     return (
                       <SelectItem key={recipe.id} value={recipe.id}>
                         <span className="flex items-center justify-between w-full gap-2">
