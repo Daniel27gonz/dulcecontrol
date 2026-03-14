@@ -994,6 +994,39 @@ export default function CalculatorPage() {
                 </CardContent>
               </Card>
 
+              {/* Tarjetas resumen: Costo, Precio, Ganancia */}
+              <div className="grid grid-cols-3 gap-3">
+                {/* Costo total */}
+                <Card className="bg-muted border-border">
+                  <CardContent className="p-3 text-center space-y-1">
+                    <p className="text-xs text-muted-foreground font-medium">Costo total</p>
+                    <p className="text-lg font-bold text-foreground">
+                      {settings.currencySymbol}{round2(totalCostWithWaste).toFixed(2)}
+                    </p>
+                  </CardContent>
+                </Card>
+
+                {/* Precio sugerido */}
+                <Card className="bg-[hsl(25,80%,95%)] dark:bg-[hsl(25,40%,20%)] border-[hsl(25,60%,70%)]">
+                  <CardContent className="p-3 text-center space-y-1">
+                    <p className="text-xs text-muted-foreground font-medium">Precio sugerido</p>
+                    <p className="text-lg font-bold text-caramel">
+                      {settings.currencySymbol}{round2(suggestedPrice).toFixed(2)}
+                    </p>
+                  </CardContent>
+                </Card>
+
+                {/* Ganancia */}
+                <Card className="bg-[hsl(142,40%,95%)] dark:bg-[hsl(142,30%,15%)] border-[hsl(142,40%,60%)]">
+                  <CardContent className="p-3 text-center space-y-1">
+                    <p className="text-xs text-muted-foreground font-medium">Tu ganancia</p>
+                    <p className="text-lg font-bold text-success">
+                      {settings.currencySymbol}{round2(suggestedPrice - totalCostWithWaste).toFixed(2)}
+                    </p>
+                  </CardContent>
+                </Card>
+              </div>
+
               {/* Información de producción */}
               {portions > 1 && (
                 <Card className="bg-muted/50">
