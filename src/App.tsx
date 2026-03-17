@@ -10,7 +10,7 @@ import { LaborProvider } from "@/context/LaborContext";
 import { IndirectCostsProvider } from "@/context/IndirectCostsContext";
 import { InstallPrompt } from "@/components/InstallPrompt";
 import { UpdatePopup } from "@/components/UpdatePopup";
-
+import WelcomePage from "./pages/WelcomePage";
 import LoginPage from "./pages/LoginPage";
 import RegisterPage from "./pages/RegisterPage";
 import DashboardPage from "./pages/DashboardPage";
@@ -24,7 +24,6 @@ import IngredientsPage from "./pages/IngredientsPage";
 import LaborPage from "./pages/LaborPage";
 import IndirectCostsPage from "./pages/IndirectCostsPage";
 import SettingsPage from "./pages/SettingsPage";
-import OtherIncomePage from "./pages/OtherIncomePage";
 import HelpPage from "./pages/HelpPage";
 import NotFound from "./pages/NotFound";
 
@@ -55,14 +54,13 @@ function PublicRoute({ children }: { children: React.ReactNode }) {
 function AppRoutes() {
   return (
     <Routes>
-      <Route path="/" element={<Navigate to="/login" replace />} />
+      <Route path="/" element={<PublicRoute><WelcomePage /></PublicRoute>} />
       <Route path="/login" element={<PublicRoute><LoginPage /></PublicRoute>} />
       <Route path="/register" element={<PublicRoute><RegisterPage /></PublicRoute>} />
       <Route path="/dashboard" element={<ProtectedRoute><DashboardPage /></ProtectedRoute>} />
       <Route path="/calculator" element={<ProtectedRoute><CalculatorPage /></ProtectedRoute>} />
       <Route path="/recipes" element={<ProtectedRoute><RecipesPage /></ProtectedRoute>} />
       <Route path="/orders" element={<ProtectedRoute><OrdersPage /></ProtectedRoute>} />
-      <Route path="/other-income" element={<ProtectedRoute><OtherIncomePage /></ProtectedRoute>} />
       <Route path="/quotations" element={<ProtectedRoute><QuotationsPage /></ProtectedRoute>} />
       <Route path="/personalization" element={<ProtectedRoute><PersonalizationPage /></ProtectedRoute>} />
       <Route path="/ingredients" element={<ProtectedRoute><IngredientsPage /></ProtectedRoute>} />

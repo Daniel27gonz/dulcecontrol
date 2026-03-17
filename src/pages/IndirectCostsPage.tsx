@@ -1,8 +1,6 @@
-import { useState, useMemo } from 'react';
+import { useState } from 'react';
 import { motion } from 'framer-motion';
-import { Plus, Edit2, Trash2, Building2, Zap, HelpCircle, Receipt, Clock, AlertCircle, Wrench, ChevronLeft, ChevronRight, CalendarDays } from 'lucide-react';
-import { format, startOfMonth, endOfMonth, addMonths, subMonths } from 'date-fns';
-import { es } from 'date-fns/locale';
+import { Plus, Edit2, Trash2, Building2, Zap, HelpCircle, Receipt, Clock, AlertCircle, Wrench } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -23,7 +21,6 @@ type ModalMode = 'expense' | 'equipment';
 interface ExpenseFormData {
   concept: string;
   amount: number;
-  paymentDate: string;
 }
 
 interface EquipmentFormData {
@@ -35,7 +32,6 @@ interface EquipmentFormData {
 const initialExpenseFormData: ExpenseFormData = {
   concept: '',
   amount: 0,
-  paymentDate: '',
 };
 
 const initialEquipmentFormData: EquipmentFormData = {
@@ -60,24 +56,20 @@ export default function IndirectCostsPage() {
     deleteEquipment,
     getEquipmentDepreciation,
     getTotalDepreciation,
+    getTotalFixedExpenses,
     getTotalFixedWithDepreciation,
-    getTotalIndirectCostsLastMonth,
-    getTotalFixedExpensesLastMonth,
-    getTotalFixedWithDepreciationLastMonth,
-    getTotalVariableExpensesLastMonth,
-    getLastMonthLabel,
+    getTotalVariableExpenses,
+    getTotalIndirectCosts,
   } = useIndirectCosts();
   const { getTotalMonthlyHours } = useLabor();
   const { settings } = useApp();
   const { toast } = useToast();
 
-  // Cálculo del costo indirecto por hora - solo último mes registrado
+  // Cálculo del costo indirecto por hora
   const totalMonthlyHours = getTotalMonthlyHours();
-  const totalIndirectCosts = getTotalIndirectCostsLastMonth();
+  const totalIndirectCosts = getTotalIndirectCosts();
   const indirectCostPerHour = totalMonthlyHours > 0 ? Math.round((totalIndirectCosts / totalMonthlyHours) * 100) / 100 : 0;
-  const lastMonthLabel = getLastMonthLabel();
 
-  const [selectedMonth, setSelectedMonth] = useState(() => new Date());
   const [showModal, setShowModal] = useState(false);
   const [modalMode, setModalMode] = useState<ModalMode>('expense');
   const [modalType, setModalType] = useState<ExpenseType>('fixed');
@@ -85,23 +77,6 @@ export default function IndirectCostsPage() {
   const [editingEquipment, setEditingEquipment] = useState<Equipment | null>(null);
   const [expenseFormData, setExpenseFormData] = useState<ExpenseFormData>(initialExpenseFormData);
   const [equipmentFormData, setEquipmentFormData] = useState<EquipmentFormData>(initialEquipmentFormData);
-
-  const totalPaidSelectedMonth = useMemo(() => {
-    const monthStart = startOfMonth(selectedMonth);
-    const monthEnd = endOfMonth(selectedMonth);
-    
-    const filterByMonth = (expenses: Expense[]) => 
-      expenses.filter(e => {
-        if (!e.paymentDate) return false;
-        const d = new Date(e.paymentDate);
-        return d >= monthStart && d <= monthEnd;
-      }).reduce((sum, e) => sum + (e.amount || 0), 0);
-
-    const fixedTotal = filterByMonth(fixedExpenses);
-    const variableTotal = filterByMonth(variableExpenses);
-    
-    return fixedTotal + variableTotal + getTotalDepreciation();
-  }, [selectedMonth, fixedExpenses, variableExpenses, getTotalDepreciation]);
 
   const formatCurrency = (amount: number) => {
     const safeAmount = isNaN(amount) || amount < 0 ? 0 : amount;
@@ -123,7 +98,6 @@ export default function IndirectCostsPage() {
     setExpenseFormData({
       concept: expense.concept,
       amount: expense.amount,
-      paymentDate: expense.paymentDate || '',
     });
     setShowModal(true);
   };
@@ -154,28 +128,18 @@ export default function IndirectCostsPage() {
 
     const amount = Math.max(0, Math.round((expenseFormData.amount || 0) * 100) / 100);
 
-    if (amount <= 0) {
-      toast({ title: 'Error', description: 'El monto debe ser mayor a 0', variant: 'destructive' });
-      return;
-    }
-
-    if (!expenseFormData.paymentDate) {
-      toast({ title: 'Error', description: 'La fecha de pago es obligatoria', variant: 'destructive' });
-      return;
-    }
-
     if (editingExpense) {
       if (modalType === 'fixed') {
-        updateFixedExpense(editingExpense.id, { concept: expenseFormData.concept, amount, paymentDate: expenseFormData.paymentDate });
+        updateFixedExpense(editingExpense.id, { concept: expenseFormData.concept, amount });
       } else {
-        updateVariableExpense(editingExpense.id, { concept: expenseFormData.concept, amount, paymentDate: expenseFormData.paymentDate });
+        updateVariableExpense(editingExpense.id, { concept: expenseFormData.concept, amount });
       }
       toast({ title: '✅ Gasto actualizado', description: expenseFormData.concept });
     } else {
       if (modalType === 'fixed') {
-        addFixedExpense({ concept: expenseFormData.concept, amount, paymentDate: expenseFormData.paymentDate });
+        addFixedExpense({ concept: expenseFormData.concept, amount });
       } else {
-        addVariableExpense({ concept: expenseFormData.concept, amount, paymentDate: expenseFormData.paymentDate });
+        addVariableExpense({ concept: expenseFormData.concept, amount });
       }
       toast({ title: '✅ Gasto agregado', description: expenseFormData.concept });
     }
@@ -257,16 +221,9 @@ export default function IndirectCostsPage() {
 
   const ExpenseCard = ({ expense, type }: { expense: Expense; type: ExpenseType }) => (
     <div className="flex flex-col sm:flex-row sm:items-center justify-between py-3 border-b border-border last:border-0 gap-2">
-      <div className="flex-1 min-w-0">
-        <div className="flex items-center justify-between gap-2">
-          <p className="font-medium text-foreground text-sm">{expense.concept}</p>
-          <span className="font-semibold text-foreground text-sm sm:hidden">{formatCurrency(expense.amount)}</span>
-        </div>
-        {expense.paymentDate && (
-          <p className="text-xs text-muted-foreground mt-0.5">
-            Fecha de pago: {new Date(expense.paymentDate).toLocaleDateString('es-MX')}
-          </p>
-        )}
+      <div className="flex items-center justify-between sm:flex-1 sm:min-w-0 gap-2">
+        <p className="font-medium text-foreground text-sm">{expense.concept}</p>
+        <span className="font-semibold text-foreground text-sm sm:hidden">{formatCurrency(expense.amount)}</span>
       </div>
       <div className="flex items-center justify-between sm:justify-end gap-2 sm:gap-2 shrink-0">
         <span className="font-semibold text-foreground text-sm hidden sm:block">{formatCurrency(expense.amount)}</span>
@@ -358,7 +315,7 @@ export default function IndirectCostsPage() {
 
   return (
     <div className="min-h-screen bg-background pb-24">
-      <AppHeader title="Gastos del Mes" showBack />
+      <AppHeader title="Gastos Indirectos" showBack />
 
       <ScrollArea className="h-[calc(100vh-140px)]">
         <motion.div
@@ -367,43 +324,125 @@ export default function IndirectCostsPage() {
           animate="visible"
           className="p-4 space-y-4"
         >
-
-          {/* Month Selector */}
-          <motion.div variants={itemVariants} className="flex items-center justify-center gap-4">
-            <Button variant="ghost" size="icon" className="h-9 w-9" onClick={() => setSelectedMonth(prev => subMonths(prev, 1))}>
-              <ChevronLeft className="w-5 h-5" />
-            </Button>
-            <div className="flex items-center gap-2 text-foreground font-semibold text-base">
-              <CalendarDays className="w-5 h-5 text-primary" />
-              <span className="capitalize">{format(selectedMonth, 'MMMM yyyy', { locale: es })}</span>
-            </div>
-            <Button variant="ghost" size="icon" className="h-9 w-9" onClick={() => setSelectedMonth(prev => addMonths(prev, 1))}>
-              <ChevronRight className="w-5 h-5" />
-            </Button>
-          </motion.div>
-
-          {/* Total Pagado del Mes */}
+          {/* Info Card */}
           <motion.div variants={itemVariants}>
-            <Card className="bg-primary/10 border-primary/30">
-              <CardContent className="p-4 text-center">
+            <Card className="bg-primary/5 border-primary/20">
+              <CardContent className="p-4 flex gap-3">
+                <HelpCircle className="w-5 h-5 text-primary shrink-0 mt-0.5" />
                 <p className="text-sm text-muted-foreground">
-                  Total pagado — <span className="capitalize">{format(selectedMonth, 'MMMM yyyy', { locale: es })}</span>
+                  Aquí calculas lo que cuesta tu negocio aunque no estés horneando.
                 </p>
-                <p className="text-2xl sm:text-3xl font-bold text-primary mt-1">{formatCurrency(totalPaidSelectedMonth)}</p>
               </CardContent>
             </Card>
           </motion.div>
 
-
-          {/* Costo Indirecto por Hora - compact */}
-          <motion.div variants={itemVariants}>
-            <div className="flex items-center justify-center gap-2 text-xs text-muted-foreground">
-              <Clock className="w-3.5 h-3.5" />
-              <span>Costo/hora: {totalMonthlyHours > 0 ? `${formatCurrency(totalIndirectCosts)} ÷ ${totalMonthlyHours}h = ${formatCurrency(indirectCostPerHour)}/h` : 'Agrega horas de trabajo'}</span>
-            </div>
+          {/* Summary Cards */}
+          <motion.div variants={itemVariants} className="grid grid-cols-2 gap-3">
+            <Card className="bg-muted/50">
+              <CardContent className="p-3 text-center">
+                <Building2 className="w-5 h-5 sm:w-6 sm:h-6 mx-auto text-muted-foreground mb-1" />
+                <p className="text-xs text-muted-foreground">Fijos + Deprec.</p>
+                <p className="font-bold text-foreground text-sm sm:text-base">{formatCurrency(getTotalFixedWithDepreciation())}</p>
+              </CardContent>
+            </Card>
+            <Card className="bg-muted/50">
+              <CardContent className="p-3 text-center">
+                <Zap className="w-5 h-5 sm:w-6 sm:h-6 mx-auto text-muted-foreground mb-1" />
+                <p className="text-xs text-muted-foreground">Variables</p>
+                <p className="font-bold text-foreground text-sm sm:text-base">{formatCurrency(getTotalVariableExpenses())}</p>
+              </CardContent>
+            </Card>
           </motion.div>
 
-          {/* Depreciation Section */}
+          {/* Total */}
+          <motion.div variants={itemVariants}>
+            <Card className="bg-warm/10 border-warm/30">
+              <CardContent className="p-4">
+                <div className="flex items-center justify-between">
+                  <div className="min-w-0 flex-1">
+                    <p className="text-sm text-muted-foreground">Total Gastos Indirectos</p>
+                    <p className="text-xl sm:text-2xl font-bold text-warm">{formatCurrency(totalIndirectCosts)}</p>
+                  </div>
+                  <Receipt className="w-8 h-8 sm:w-10 sm:h-10 text-warm/50 shrink-0" />
+                </div>
+                <p className="text-xs text-muted-foreground mt-2">Mensuales</p>
+              </CardContent>
+            </Card>
+          </motion.div>
+
+          {/* Costo Indirecto por Hora */}
+          <motion.div variants={itemVariants}>
+            <Card className="bg-primary/10 border-primary/30">
+              <CardContent className="p-4">
+                <div className="flex items-center justify-between">
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center gap-2 mb-1">
+                      <Clock className="w-5 h-5 text-primary shrink-0" />
+                      <p className="text-sm font-medium text-foreground">Costo Indirecto por Hora</p>
+                    </div>
+                    {totalMonthlyHours > 0 ? (
+                      <>
+                        <p className="text-xl sm:text-2xl font-bold text-primary">{formatCurrency(indirectCostPerHour)}</p>
+                        <p className="text-xs text-muted-foreground mt-1">
+                          Basado en {totalMonthlyHours.toLocaleString('es-MX')} horas mensuales
+                        </p>
+                      </>
+                    ) : (
+                      <div className="flex items-start gap-2 mt-2 text-amber-600">
+                        <AlertCircle className="w-4 h-4 shrink-0 mt-0.5" />
+                        <p className="text-sm">Agrega horas de trabajo para calcular</p>
+                      </div>
+                    )}
+                  </div>
+                </div>
+                {totalMonthlyHours > 0 && (
+                  <p className="text-xs text-muted-foreground mt-3 pt-3 border-t border-primary/20">
+                    Este valor indica cuánto cuesta tu negocio por cada hora de trabajo.
+                  </p>
+                )}
+              </CardContent>
+            </Card>
+          </motion.div>
+
+          {/* Fixed Expenses Section */}
+          <motion.div variants={itemVariants}>
+            <Card>
+              <CardHeader className="pb-2">
+                <div className="flex items-center justify-between gap-2">
+                  <div className="flex items-center gap-2 min-w-0">
+                    <Building2 className="w-5 h-5 text-primary shrink-0" />
+                    <CardTitle className="text-base truncate">Gastos Fijos</CardTitle>
+                  </div>
+                  <Button variant="outline" size="sm" onClick={() => handleOpenAddExpense('fixed')} className="shrink-0">
+                    <Plus className="w-4 h-4" />
+                    <span className="hidden sm:inline ml-1">Agregar</span>
+                  </Button>
+                </div>
+                <p className="text-xs text-muted-foreground mt-1">
+                  Existen aunque no tengas pedidos.
+                </p>
+              </CardHeader>
+              <CardContent className="pt-0">
+                {fixedExpenses.length === 0 ? (
+                  <p className="text-sm text-muted-foreground text-center py-4">
+                    Sin gastos fijos registrados
+                  </p>
+                ) : (
+                  <div className="divide-y divide-border">
+                    {fixedExpenses.map((expense) => (
+                      <ExpenseCard key={expense.id} expense={expense} type="fixed" />
+                    ))}
+                  </div>
+                )}
+                <div className="mt-3 pt-3 border-t border-border flex justify-between items-center">
+                  <span className="font-medium text-muted-foreground text-sm">Subtotal:</span>
+                  <span className="font-bold text-foreground">{formatCurrency(getTotalFixedExpenses())}</span>
+                </div>
+              </CardContent>
+            </Card>
+          </motion.div>
+
+          {/* Depreciation Section - Inside Fixed Expenses concept */}
           <motion.div variants={itemVariants}>
             <Card className="border-amber-500/30 bg-amber-500/5">
               <CardHeader className="pb-2">
@@ -441,40 +480,20 @@ export default function IndirectCostsPage() {
             </Card>
           </motion.div>
 
-          {/* Fixed Expenses Section */}
+          {/* Total Fixed with Depreciation */}
           <motion.div variants={itemVariants}>
-            <Card>
-              <CardHeader className="pb-2">
-                <div className="flex items-center justify-between gap-2">
-                  <div className="flex items-center gap-2 min-w-0">
-                    <Building2 className="w-5 h-5 text-primary shrink-0" />
-                    <CardTitle className="text-base truncate">Gastos Fijos</CardTitle>
+            <Card className="bg-primary/5 border-primary/20">
+              <CardContent className="p-4">
+                <div className="flex justify-between items-center">
+                  <div>
+                    <p className="text-sm text-muted-foreground">Total Gastos Fijos</p>
+                    <p className="text-xs text-muted-foreground">(incluye depreciación)</p>
                   </div>
-                  <Button variant="outline" size="sm" onClick={() => handleOpenAddExpense('fixed')} className="shrink-0">
-                    <Plus className="w-4 h-4" />
-                    <span className="hidden sm:inline ml-1">Agregar</span>
-                  </Button>
+                  <p className="text-lg sm:text-xl font-bold text-primary">{formatCurrency(getTotalFixedWithDepreciation())}</p>
                 </div>
-                <p className="text-xs text-muted-foreground mt-1">
-                  Existen aunque no tengas pedidos.
-                </p>
-              </CardHeader>
-              <CardContent className="pt-0">
-                {fixedExpenses.length === 0 ? (
-                  <p className="text-sm text-muted-foreground text-center py-4">
-                    Sin gastos fijos registrados
-                  </p>
-                ) : (
-                  <div className="divide-y divide-border">
-                    {fixedExpenses.map((expense) => (
-                      <ExpenseCard key={expense.id} expense={expense} type="fixed" />
-                    ))}
-                  </div>
-                )}
               </CardContent>
             </Card>
           </motion.div>
-
 
           {/* Variable Expenses Section */}
           <motion.div variants={itemVariants}>
@@ -506,6 +525,10 @@ export default function IndirectCostsPage() {
                     ))}
                   </div>
                 )}
+                <div className="mt-3 pt-3 border-t border-border flex justify-between items-center">
+                  <span className="font-medium text-muted-foreground text-sm">Subtotal:</span>
+                  <span className="font-bold text-foreground">{formatCurrency(getTotalVariableExpenses())}</span>
+                </div>
               </CardContent>
             </Card>
           </motion.div>
@@ -548,17 +571,6 @@ export default function IndirectCostsPage() {
                   value={expenseFormData.amount || ''}
                   onChange={(e) => setExpenseFormData({ ...expenseFormData, amount: Math.max(0, Number(e.target.value) || 0) })}
                   placeholder="0.00"
-                  className="mt-1"
-                />
-              </div>
-
-              <div>
-                <Label htmlFor="paymentDate">Fecha de pago</Label>
-                <Input
-                  id="paymentDate"
-                  type="date"
-                  value={expenseFormData.paymentDate || ''}
-                  onChange={(e) => setExpenseFormData({ ...expenseFormData, paymentDate: e.target.value })}
                   className="mt-1"
                 />
               </div>

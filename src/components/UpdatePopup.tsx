@@ -36,27 +36,11 @@ export const UpdatePopup = () => {
     // Save the new version to localStorage
     localStorage.setItem(LAST_VERSION_KEY, APP_VERSION);
     
-    try {
-      // Unregister all service workers to force fresh content
-      if ('serviceWorker' in navigator) {
-        const registrations = await navigator.serviceWorker.getRegistrations();
-        await Promise.all(registrations.map(r => r.unregister()));
-      }
-      
-      // Clear all caches
-      if ('caches' in window) {
-        const cacheNames = await caches.keys();
-        await Promise.all(cacheNames.map(name => caches.delete(name)));
-      }
-    } catch (e) {
-      console.warn('[UpdatePopup] Error clearing caches:', e);
-    }
-    
     // Small delay for UX
-    await new Promise(resolve => setTimeout(resolve, 300));
+    await new Promise(resolve => setTimeout(resolve, 500));
     
-    // Hard reload bypassing cache
-    window.location.href = window.location.origin + window.location.pathname + '?v=' + Date.now();
+    // Reload the page to apply changes
+    window.location.reload();
   };
 
   const handleLater = () => {

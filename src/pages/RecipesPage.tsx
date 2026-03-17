@@ -51,7 +51,7 @@ import {
 import { useApp, Recipe } from '@/context/AppContext';
 import { useLabor } from '@/context/LaborContext';
 import { useIndirectCosts } from '@/context/IndirectCostsContext';
-
+import { useBaseIngredients } from '@/context/BaseIngredientsContext';
 import { BottomNav } from '@/components/BottomNav';
 import { AppHeader } from '@/components/AppHeader';
 import { toast } from '@/hooks/use-toast';
@@ -59,8 +59,9 @@ import { toast } from '@/hooks/use-toast';
 export default function RecipesPage() {
   const navigate = useNavigate();
   const { recipes, settings, deleteRecipe } = useApp();
-  const { getLastMonthLaborCostPerHour, getLastMonthTotalHours } = useLabor();
-  const { getTotalIndirectCostsLastMonth } = useIndirectCosts();
+  const { getLaborCostPerHour, getTotalMonthlyHours } = useLabor();
+  const { getTotalIndirectCosts } = useIndirectCosts();
+  const { getCurrentIngredientCost } = useBaseIngredients();
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedRecipe, setSelectedRecipe] = useState<Recipe | null>(null);
   const [recipeToDelete, setRecipeToDelete] = useState<Recipe | null>(null);
@@ -72,9 +73,9 @@ export default function RecipesPage() {
   const calculateRecipeCost = (recipe: Recipe) => {
     const WASTE_PERCENTAGE = 0.05;
 
-    // Usar misma lógica que CalculatorPage: pricePerUnit guardado en la receta
+    // Calculate ingredients cost using current base ingredient prices (reactive master data)
     const ingredientsCost = recipe.ingredients.reduce(
-      (sum, ing) => sum + (ing.pricePerUnit * ing.quantityUsed),
+      (sum, ing) => sum + getCurrentIngredientCost(ing),
       0
     );
 
@@ -87,9 +88,9 @@ export default function RecipesPage() {
 
     const totalProductHours = Math.max(0, totalElaborationTimeMinutes / 60);
 
-    const laborCostPerHour = getLastMonthLaborCostPerHour();
-    const totalMonthlyHours = getLastMonthTotalHours();
-    const totalIndirectCosts = getTotalIndirectCostsLastMonth();
+    const laborCostPerHour = getLaborCostPerHour();
+    const totalMonthlyHours = getTotalMonthlyHours();
+    const totalIndirectCosts = getTotalIndirectCosts();
     const indirectCostPerHour = totalMonthlyHours > 0 ? totalIndirectCosts / totalMonthlyHours : 0;
 
     const laborFinalCost = totalProductHours * laborCostPerHour;

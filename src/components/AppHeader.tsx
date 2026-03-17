@@ -16,8 +16,8 @@ export function AppHeader({ title, showGreeting = false, showBack = false }: App
   const { logout, user, settings } = useApp();
   const { isInstallable, isInstalled, promptInstall, hasNativePrompt, isIOS } = usePWAInstall();
 
-  const handleLogout = async () => {
-    await logout();
+  const handleLogout = () => {
+    logout();
     toast.success('Sesión cerrada correctamente');
     navigate('/');
   };
@@ -56,7 +56,7 @@ export function AppHeader({ title, showGreeting = false, showBack = false }: App
   const showInstallButton = isInstallable && !isInstalled;
 
   return (
-    <div className="sticky top-0 z-40 bg-gradient-to-br from-caramel/20 to-accent/20 p-4 pt-10 safe-top backdrop-blur-sm">
+    <div className="bg-gradient-to-br from-caramel/20 to-accent/20 p-4 pt-10 safe-top">
       <div className="flex items-center justify-between gap-2">
         <div className="flex-1 min-w-0 flex items-center gap-2">
           {showBack && (
@@ -108,11 +108,10 @@ export function AppHeader({ title, showGreeting = false, showBack = false }: App
           <Button
             onClick={handleLogout}
             variant="ghost"
-            size="sm"
-            className="text-muted-foreground hover:text-destructive gap-1"
+            size="icon"
+            className="text-muted-foreground hover:text-destructive"
           >
-            <LogOut className="w-4 h-4" />
-            <span className="hidden sm:inline">Cerrar Sesión</span>
+            <LogOut className="w-5 h-5" />
           </Button>
         </div>
       </div>

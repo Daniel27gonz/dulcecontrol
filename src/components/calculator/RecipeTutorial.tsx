@@ -30,7 +30,7 @@ const TUTORIAL_STEPS: TutorialStep[] = [
     tip: "Si el kilo de harina cuesta $2,000 y usas 500g, pon precio: $2 por gramo, cantidad: 500g"
   },
   {
-    title: "Paso 3: Gastos del mes",
+    title: "Paso 3: Gastos indirectos",
     description: "Aquí van los costos que no son ingredientes: gas, luz, empaque, tu tiempo de trabajo, etc.",
     emoji: "💡",
     tip: "¡No olvides tu mano de obra! Tu tiempo también tiene valor."

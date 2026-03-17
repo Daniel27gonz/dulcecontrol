@@ -1,13 +1,11 @@
 import React, { createContext, useContext, useState, useEffect, useCallback, ReactNode } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useApp } from './AppContext';
-import { syncTransaction, deleteTransactionBySource } from '@/lib/transactionSync';
 
 export interface Expense {
   id: string;
   concept: string;
   amount: number;
-  paymentDate: string | null;
   lastUpdated: string;
 }
 
@@ -39,16 +37,12 @@ interface IndirectCostsContextType {
   getTotalFixedWithDepreciation: () => number;
   getTotalVariableExpenses: () => number;
   getTotalIndirectCosts: () => number;
-  getTotalIndirectCostsLastMonth: () => number;
-  getTotalFixedExpensesLastMonth: () => number;
-  getTotalFixedWithDepreciationLastMonth: () => number;
-  getTotalVariableExpensesLastMonth: () => number;
-  getLastMonthLabel: () => string;
   refreshCosts: () => Promise<void>;
 }
 
 const IndirectCostsContext = createContext<IndirectCostsContextType | undefined>(undefined);
 
+// Default expenses for new users
 const DEFAULT_FIXED_EXPENSES = [
   'Renta del local',
   'Parte proporcional de renta de casa',
@@ -109,7 +103,6 @@ export function IndirectCostsProvider({ children }: { children: ReactNode }) {
             id: item.id,
             concept: item.concept,
             amount: Number(item.amount),
-            paymentDate: item.payment_date || null,
             lastUpdated: item.last_updated,
           });
         } else if (item.cost_type === 'variable') {
@@ -117,7 +110,6 @@ export function IndirectCostsProvider({ children }: { children: ReactNode }) {
             id: item.id,
             concept: item.concept,
             amount: Number(item.amount),
-            paymentDate: item.payment_date || null,
             lastUpdated: item.last_updated,
           });
         } else if (item.cost_type === 'equipment') {
@@ -135,6 +127,7 @@ export function IndirectCostsProvider({ children }: { children: ReactNode }) {
       setVariableExpenses(variable);
       setEquipment(equip);
     } else {
+      // Initialize defaults for new users
       const defaultsToInsert = [
         ...DEFAULT_FIXED_EXPENSES.map(concept => ({
           user_id: session.user.id,
@@ -167,7 +160,6 @@ export function IndirectCostsProvider({ children }: { children: ReactNode }) {
               id: item.id,
               concept: item.concept,
               amount: Number(item.amount),
-              paymentDate: item.payment_date || null,
               lastUpdated: item.last_updated,
             });
           } else if (item.cost_type === 'variable') {
@@ -175,7 +167,6 @@ export function IndirectCostsProvider({ children }: { children: ReactNode }) {
               id: item.id,
               concept: item.concept,
               amount: Number(item.amount),
-              paymentDate: item.payment_date || null,
               lastUpdated: item.last_updated,
             });
           }
@@ -192,21 +183,6 @@ export function IndirectCostsProvider({ children }: { children: ReactNode }) {
     loadCosts();
   }, [loadCosts]);
 
-  // Helper to sync expense with transactions
-  const syncExpenseTransaction = useCallback(async (expense: { id: string; concept: string; amount: number; paymentDate: string | null }, costType: string) => {
-    if (!session?.user || expense.amount <= 0) return;
-    await syncTransaction({
-      userId: session.user.id,
-      sourceId: expense.id,
-      sourceType: 'indirect_cost',
-      type: 'expense',
-      description: `Gasto: ${expense.concept}`,
-      amount: expense.amount,
-      category: costType === 'fixed' ? 'gasto fijo' : 'gasto variable',
-      date: expense.paymentDate || new Date().toISOString(),
-    });
-  }, [session?.user]);
-
   // Fixed Expenses
   const addFixedExpense = useCallback(async (expense: Omit<Expense, 'id' | 'lastUpdated'>) => {
     if (!session?.user) return;
@@ -218,7 +194,6 @@ export function IndirectCostsProvider({ children }: { children: ReactNode }) {
         cost_type: 'fixed',
         concept: expense.concept,
         amount: expense.amount,
-        payment_date: expense.paymentDate || null,
       }])
       .select()
       .single();
@@ -232,24 +207,19 @@ export function IndirectCostsProvider({ children }: { children: ReactNode }) {
       id: data.id,
       concept: data.concept,
       amount: Number(data.amount),
-      paymentDate: data.payment_date || null,
       lastUpdated: data.last_updated,
     }]);
-
-    await syncExpenseTransaction({ id: data.id, concept: data.concept, amount: Number(data.amount), paymentDate: data.payment_date || null }, 'fixed');
-  }, [session?.user, syncExpenseTransaction]);
+  }, [session?.user]);
 
   const updateFixedExpense = useCallback(async (id: string, updates: Partial<Omit<Expense, 'id' | 'lastUpdated'>>) => {
     if (!session?.user) return;
 
-    const updateData: Record<string, unknown> = { last_updated: new Date().toISOString() };
-    if (updates.concept !== undefined) updateData.concept = updates.concept;
-    if (updates.amount !== undefined) updateData.amount = updates.amount;
-    if (updates.paymentDate !== undefined) updateData.payment_date = updates.paymentDate;
-
     const { error } = await supabase
       .from('indirect_costs')
-      .update(updateData)
+      .update({
+        ...updates,
+        last_updated: new Date().toISOString(),
+      })
       .eq('id', id)
       .eq('user_id', session.user.id);
 
@@ -258,15 +228,10 @@ export function IndirectCostsProvider({ children }: { children: ReactNode }) {
       return;
     }
 
-    const existing = fixedExpenses.find(e => e.id === id);
-    const updated = { ...existing!, ...updates };
-
     setFixedExpenses(prev => prev.map(exp =>
       exp.id === id ? { ...exp, ...updates, lastUpdated: new Date().toISOString() } : exp
     ));
-
-    await syncExpenseTransaction({ id, concept: updated.concept, amount: updated.amount, paymentDate: updated.paymentDate }, 'fixed');
-  }, [session?.user, fixedExpenses, syncExpenseTransaction]);
+  }, [session?.user]);
 
   const deleteFixedExpense = useCallback(async (id: string) => {
     if (!session?.user) return;
@@ -283,7 +248,6 @@ export function IndirectCostsProvider({ children }: { children: ReactNode }) {
     }
 
     setFixedExpenses(prev => prev.filter(exp => exp.id !== id));
-    await deleteTransactionBySource(session.user.id, id, 'indirect_cost');
   }, [session?.user]);
 
   // Variable Expenses
@@ -297,7 +261,6 @@ export function IndirectCostsProvider({ children }: { children: ReactNode }) {
         cost_type: 'variable',
         concept: expense.concept,
         amount: expense.amount,
-        payment_date: expense.paymentDate || null,
       }])
       .select()
       .single();
@@ -311,24 +274,19 @@ export function IndirectCostsProvider({ children }: { children: ReactNode }) {
       id: data.id,
       concept: data.concept,
       amount: Number(data.amount),
-      paymentDate: data.payment_date || null,
       lastUpdated: data.last_updated,
     }]);
-
-    await syncExpenseTransaction({ id: data.id, concept: data.concept, amount: Number(data.amount), paymentDate: data.payment_date || null }, 'variable');
-  }, [session?.user, syncExpenseTransaction]);
+  }, [session?.user]);
 
   const updateVariableExpense = useCallback(async (id: string, updates: Partial<Omit<Expense, 'id' | 'lastUpdated'>>) => {
     if (!session?.user) return;
 
-    const updateData: Record<string, unknown> = { last_updated: new Date().toISOString() };
-    if (updates.concept !== undefined) updateData.concept = updates.concept;
-    if (updates.amount !== undefined) updateData.amount = updates.amount;
-    if (updates.paymentDate !== undefined) updateData.payment_date = updates.paymentDate;
-
     const { error } = await supabase
       .from('indirect_costs')
-      .update(updateData)
+      .update({
+        ...updates,
+        last_updated: new Date().toISOString(),
+      })
       .eq('id', id)
       .eq('user_id', session.user.id);
 
@@ -337,15 +295,10 @@ export function IndirectCostsProvider({ children }: { children: ReactNode }) {
       return;
     }
 
-    const existing = variableExpenses.find(e => e.id === id);
-    const updated = { ...existing!, ...updates };
-
     setVariableExpenses(prev => prev.map(exp =>
       exp.id === id ? { ...exp, ...updates, lastUpdated: new Date().toISOString() } : exp
     ));
-
-    await syncExpenseTransaction({ id, concept: updated.concept, amount: updated.amount, paymentDate: updated.paymentDate }, 'variable');
-  }, [session?.user, variableExpenses, syncExpenseTransaction]);
+  }, [session?.user]);
 
   const deleteVariableExpense = useCallback(async (id: string) => {
     if (!session?.user) return;
@@ -362,7 +315,6 @@ export function IndirectCostsProvider({ children }: { children: ReactNode }) {
     }
 
     setVariableExpenses(prev => prev.filter(exp => exp.id !== id));
-    await deleteTransactionBySource(session.user.id, id, 'indirect_cost');
   }, [session?.user]);
 
   // Equipment
@@ -387,32 +339,13 @@ export function IndirectCostsProvider({ children }: { children: ReactNode }) {
       return;
     }
 
-    const newEquip = {
+    setEquipment(prev => [...prev, {
       id: data.id,
       name: data.concept,
       purchaseCost: Number(data.purchase_cost || 0),
       usefulLifeMonths: Number(data.useful_life_months || 0),
       lastUpdated: data.last_updated,
-    };
-
-    setEquipment(prev => [...prev, newEquip]);
-
-    // Sync depreciation as expense transaction
-    const depreciation = newEquip.usefulLifeMonths > 0 && newEquip.purchaseCost > 0
-      ? Math.round((newEquip.purchaseCost / newEquip.usefulLifeMonths) * 100) / 100
-      : 0;
-    if (depreciation > 0) {
-      await syncTransaction({
-        userId: session.user.id,
-        sourceId: data.id,
-        sourceType: 'indirect_cost',
-        type: 'expense',
-        description: `Depreciación: ${newEquip.name}`,
-        amount: depreciation,
-        category: 'depreciación',
-        date: new Date().toISOString(),
-      });
-    }
+    }]);
   }, [session?.user]);
 
   const updateEquipment = useCallback(async (id: string, updates: Partial<Omit<Equipment, 'id' | 'lastUpdated'>>) => {
@@ -434,32 +367,10 @@ export function IndirectCostsProvider({ children }: { children: ReactNode }) {
       return;
     }
 
-    const existing = equipment.find(e => e.id === id);
-    const updated = { ...existing!, ...updates };
-
     setEquipment(prev => prev.map(eq =>
       eq.id === id ? { ...eq, ...updates, lastUpdated: new Date().toISOString() } : eq
     ));
-
-    // Sync updated depreciation
-    const depreciation = (updated.usefulLifeMonths || 0) > 0 && (updated.purchaseCost || 0) > 0
-      ? Math.round((updated.purchaseCost / updated.usefulLifeMonths) * 100) / 100
-      : 0;
-    if (depreciation > 0) {
-      await syncTransaction({
-        userId: session.user.id,
-        sourceId: id,
-        sourceType: 'indirect_cost',
-        type: 'expense',
-        description: `Depreciación: ${updated.name}`,
-        amount: depreciation,
-        category: 'depreciación',
-        date: new Date().toISOString(),
-      });
-    } else {
-      await deleteTransactionBySource(session.user.id, id, 'indirect_cost');
-    }
-  }, [session?.user, equipment]);
+  }, [session?.user]);
 
   const deleteEquipment = useCallback(async (id: string) => {
     if (!session?.user) return;
@@ -476,7 +387,6 @@ export function IndirectCostsProvider({ children }: { children: ReactNode }) {
     }
 
     setEquipment(prev => prev.filter(eq => eq.id !== id));
-    await deleteTransactionBySource(session.user.id, id, 'indirect_cost');
   }, [session?.user]);
 
   // Calculations
@@ -505,54 +415,6 @@ export function IndirectCostsProvider({ children }: { children: ReactNode }) {
     return Math.round((getTotalFixedWithDepreciation() + getTotalVariableExpenses()) * 100) / 100;
   }, [getTotalFixedWithDepreciation, getTotalVariableExpenses]);
 
-  // Helper: find last registered month across all expenses
-  const getLastMonth = useCallback((): { year: number; month: number } | null => {
-    const allExpenses = [...fixedExpenses, ...variableExpenses];
-    const withDate = allExpenses.filter(e => e.paymentDate);
-    if (withDate.length === 0) return null;
-    
-    const latestDate = withDate.reduce((latest, e) => {
-      const d = new Date(e.paymentDate!);
-      return d > latest ? d : latest;
-    }, new Date(0));
-    
-    return { year: latestDate.getFullYear(), month: latestDate.getMonth() };
-  }, [fixedExpenses, variableExpenses]);
-
-  const filterExpensesByLastMonth = useCallback((expenses: Expense[]): Expense[] => {
-    const lm = getLastMonth();
-    if (!lm) return expenses;
-    return expenses.filter(e => {
-      if (!e.paymentDate) return false;
-      const d = new Date(e.paymentDate);
-      return d.getFullYear() === lm.year && d.getMonth() === lm.month;
-    });
-  }, [getLastMonth]);
-
-  const getTotalFixedExpensesLastMonth = useCallback((): number => {
-    return Math.round(filterExpensesByLastMonth(fixedExpenses).reduce((sum, e) => sum + (e.amount || 0), 0) * 100) / 100;
-  }, [fixedExpenses, filterExpensesByLastMonth]);
-
-  const getTotalVariableExpensesLastMonth = useCallback((): number => {
-    return Math.round(filterExpensesByLastMonth(variableExpenses).reduce((sum, e) => sum + (e.amount || 0), 0) * 100) / 100;
-  }, [variableExpenses, filterExpensesByLastMonth]);
-
-  const getTotalFixedWithDepreciationLastMonth = useCallback((): number => {
-    return Math.round((getTotalFixedExpensesLastMonth() + getTotalDepreciation()) * 100) / 100;
-  }, [getTotalFixedExpensesLastMonth, getTotalDepreciation]);
-
-  // Filter expenses by the last registered month (based on paymentDate)
-  const getTotalIndirectCostsLastMonth = useCallback((): number => {
-    return Math.round((getTotalFixedExpensesLastMonth() + getTotalVariableExpensesLastMonth() + getTotalDepreciation()) * 100) / 100;
-  }, [getTotalFixedExpensesLastMonth, getTotalVariableExpensesLastMonth, getTotalDepreciation]);
-
-  const getLastMonthLabel = useCallback((): string => {
-    const lm = getLastMonth();
-    if (!lm) return '';
-    const monthNames = ['Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio', 'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre'];
-    return `${monthNames[lm.month]} ${lm.year}`;
-  }, [getLastMonth]);
-
   const refreshCosts = useCallback(async () => {
     await loadCosts();
   }, [loadCosts]);
@@ -578,11 +440,6 @@ export function IndirectCostsProvider({ children }: { children: ReactNode }) {
       getTotalFixedWithDepreciation,
       getTotalVariableExpenses,
       getTotalIndirectCosts,
-      getTotalIndirectCostsLastMonth,
-      getTotalFixedExpensesLastMonth,
-      getTotalFixedWithDepreciationLastMonth,
-      getTotalVariableExpensesLastMonth,
-      getLastMonthLabel,
       refreshCosts,
     }}>
       {children}

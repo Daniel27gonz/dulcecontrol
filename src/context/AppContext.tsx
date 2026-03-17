@@ -49,12 +49,6 @@ export interface Recipe {
   createdAt: string;
 }
 
-export interface OrderAdvance {
-  id: string;
-  amount: number;
-  date: string;
-}
-
 export interface Order {
   id: string;
   clientName: string;
@@ -62,10 +56,8 @@ export interface Order {
   recipeName: string;
   quantity: number;
   totalPrice: number;
-  status: 'pending' | 'in_progress' | 'completed' | 'paid' | 'cancelled';
+  status: 'pending' | 'in_progress' | 'completed' | 'cancelled';
   deliveryDate: string;
-  paymentDate: string | null;
-  advances: OrderAdvance[];
   createdAt: string;
 }
 
@@ -76,8 +68,6 @@ export interface Transaction {
   amount: number;
   category: string;
   date: string;
-  sourceId?: string | null;
-  sourceType?: string | null;
 }
 
 export interface UserSettings {
@@ -219,172 +209,25 @@ export function AppProvider({ children }: { children: ReactNode }) {
         totalPrice: Number(o.total_price),
         status: o.status as Order['status'],
         deliveryDate: o.delivery_date,
-        paymentDate: (o as any).payment_date || null,
-        advances: ((o as any).advances || []) as OrderAdvance[],
         createdAt: o.created_at,
       })));
     }
 
     // Load transactions
-    let { data: transactionsData } = await supabase
+    const { data: transactionsData } = await supabase
       .from('transactions')
       .select('*')
       .eq('user_id', userId)
       .order('date', { ascending: false });
 
     if (transactionsData) {
-      // Load other income rows and backfill missing transaction syncs
-      const { data: otherIncomeData } = await (supabase as any)
-        .from('other_income')
-        .select('id, concept, amount, date')
-        .eq('user_id', userId);
-
-      const otherIncomeRows = (otherIncomeData || []) as Array<{
-        id: string;
-        concept: string;
-        amount: number;
-        date: string;
-      }>;
-
-      const missingOtherIncomeTransactions = otherIncomeRows.filter((oi) =>
-        !transactionsData.some(
-          (t) => t.source_type === 'other_income' && t.source_id === oi.id
-        )
-      );
-
-      if (missingOtherIncomeTransactions.length > 0) {
-        const { error: backfillError } = await supabase
-          .from('transactions')
-          .insert(
-            missingOtherIncomeTransactions.map((oi) => ({
-              user_id: userId,
-              type: 'income',
-              description: `Otro ingreso: ${oi.concept}`,
-              amount: Number(oi.amount),
-              category: 'otros_ingresos',
-              date: oi.date,
-              source_id: oi.id,
-              source_type: 'other_income',
-            }))
-          );
-
-        if (!backfillError) {
-          const { data: refreshedTransactions } = await supabase
-            .from('transactions')
-            .select('*')
-            .eq('user_id', userId)
-            .order('date', { ascending: false });
-
-          if (refreshedTransactions) transactionsData = refreshedTransactions;
-        }
-      }
-
-      // Build sets of valid source IDs for each source type
-      const validSourceIds = new Set<string>();
-
-      // Ingredients
-      const { data: ingredientsData } = await supabase
-        .from('base_ingredients')
-        .select('id')
-        .eq('user_id', userId);
-      ingredientsData?.forEach(i => validSourceIds.add(`ingredient:${i.id}`));
-
-      // Workers
-      const { data: workersData } = await supabase
-        .from('workers')
-        .select('id')
-        .eq('user_id', userId);
-      workersData?.forEach(w => validSourceIds.add(`worker:${w.id}`));
-
-      // Indirect costs (includes equipment)
-      const { data: costsData } = await supabase
-        .from('indirect_costs')
-        .select('id')
-        .eq('user_id', userId);
-      costsData?.forEach(c => validSourceIds.add(`indirect_cost:${c.id}`));
-
-      // Orders - only paid orders should have income transactions
-      const validOrderIds = new Set<string>();
-      const { data: ordersSourceData } = await supabase
-        .from('orders')
-        .select('id, advances, status')
-        .eq('user_id', userId);
-      ordersSourceData?.forEach(o => {
-        validOrderIds.add(o.id);
-        // Only paid orders should have payment transactions
-        if (o.status === 'paid') {
-          validSourceIds.add(`order:${o.id}`);
-        }
-        // Advances are valid regardless of status (unless order is cancelled)
-        if (o.status !== 'cancelled') {
-          const advances = (o.advances as any[]) || [];
-          advances.forEach((a: any) => {
-            if (a.id) validSourceIds.add(`order_advance:${a.id}`);
-          });
-        }
-      });
-
-      // Other income
-      otherIncomeRows.forEach((oi) => validSourceIds.add(`other_income:${oi.id}`));
-
-      // Filter: keep only valid transactions
-      const orphanIds: string[] = [];
-      const validTransactions = transactionsData.filter(t => {
-        // Transactions without source: these are either truly manual or legacy auto-generated
-        // Remove legacy auto-generated ones (pattern: "Pedido:" or old system entries without source tracking)
-        if (!t.source_id || !t.source_type) {
-          const desc = (t.description || '').toLowerCase();
-          // Remove legacy auto-generated entries that should have had source tracking
-          if (desc.startsWith('pedido') || desc.startsWith('anticipo')) {
-            orphanIds.push(t.id);
-            return false;
-          }
-          return true; // keep truly manual transactions
-        }
-        const key = `${t.source_type}:${t.source_id}`;
-        if (validSourceIds.has(key)) return true;
-        orphanIds.push(t.id);
-        return false;
-      });
-
-      // Delete orphans from DB in background
-      if (orphanIds.length > 0) {
-        console.log(`Cleaning up ${orphanIds.length} orphan transaction(s)`);
-        for (const oid of orphanIds) {
-          supabase.from('transactions').delete().eq('id', oid).eq('user_id', userId).then();
-        }
-      }
-
-      setTransactions(validTransactions.map(t => ({
+      setTransactions(transactionsData.map(t => ({
         id: t.id,
         type: t.type as Transaction['type'],
         description: t.description,
         amount: Number(t.amount),
         category: t.category,
         date: t.date,
-        sourceId: t.source_id,
-        sourceType: t.source_type,
-      })));
-    }
-  };
-
-  // Reload transactions from DB to keep local state in sync
-  const reloadTransactions = async () => {
-    if (!session?.user) return;
-    const { data } = await supabase
-      .from('transactions')
-      .select('*')
-      .eq('user_id', session.user.id);
-    if (data) {
-      setTransactions(data.map(t => ({
-        id: t.id,
-        type: t.type as Transaction['type'],
-        description: t.description,
-        amount: Number(t.amount),
-        category: t.category,
-        date: t.date,
-        sourceId: t.source_id,
-        sourceType: t.source_type,
       })));
     }
   };
@@ -475,11 +318,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
   };
 
   const logout = async () => {
-    try {
-      await supabase.auth.signOut({ scope: 'local' });
-    } catch (error) {
-      console.warn('Logout error (clearing locally):', error);
-    }
+    await supabase.auth.signOut();
   };
 
   // Recipe functions
@@ -589,21 +428,25 @@ export function AppProvider({ children }: { children: ReactNode }) {
         totalPrice: Number(data.total_price),
         status: data.status as Order['status'],
         deliveryDate: data.delivery_date,
-        paymentDate: (data as any).payment_date || null,
-        advances: ((data as any).advances || []) as OrderAdvance[],
         createdAt: data.created_at,
       };
       
       setOrders(prev => [newOrder, ...prev]);
 
-      // Orders always start as 'pending' - income is registered when status changes to 'paid'
+      // Auto-add transaction for order income
+      await addTransaction({
+        type: 'income',
+        description: `Pedido: ${order.recipeName} x${order.quantity}`,
+        amount: order.totalPrice,
+        category: 'ventas',
+        date: new Date().toISOString(),
+      });
     }
   };
 
   const updateOrder = async (id: string, updates: Partial<Order>) => {
     if (!session?.user) return;
 
-    const existingOrder = orders.find(o => o.id === id);
     const updateData: Record<string, unknown> = {};
     if (updates.clientName !== undefined) updateData.client_name = updates.clientName;
     if (updates.recipeId !== undefined) updateData.recipe_id = updates.recipeId || null;
@@ -612,8 +455,6 @@ export function AppProvider({ children }: { children: ReactNode }) {
     if (updates.totalPrice !== undefined) updateData.total_price = updates.totalPrice;
     if (updates.status !== undefined) updateData.status = updates.status;
     if (updates.deliveryDate !== undefined) updateData.delivery_date = updates.deliveryDate;
-    if (updates.paymentDate !== undefined) updateData.payment_date = updates.paymentDate;
-    if (updates.advances !== undefined) updateData.advances = updates.advances;
 
     await supabase
       .from('orders')
@@ -621,101 +462,13 @@ export function AppProvider({ children }: { children: ReactNode }) {
       .eq('id', id)
       .eq('user_id', session.user.id);
 
-    const updatedOrder = { ...existingOrder!, ...updates };
-
     setOrders(prev =>
       prev.map(order => (order.id === id ? { ...order, ...updates } : order))
     );
-
-    // If status changed to paid, register the remaining balance as income
-    if (updates.status === 'paid' && existingOrder?.status !== 'paid') {
-      const { syncTransaction } = await import('@/lib/transactionSync');
-      const paymentDate = updates.paymentDate || updatedOrder.paymentDate || new Date().toISOString();
-      const totalAdvances = (updatedOrder.advances || []).reduce((sum: number, a: OrderAdvance) => sum + a.amount, 0);
-      const remainingBalance = Math.max(0, updatedOrder.totalPrice - totalAdvances);
-
-      if (remainingBalance > 0) {
-        await syncTransaction({
-          userId: session.user.id,
-          sourceId: id,
-          sourceType: 'order',
-          type: 'income',
-          description: `Pago de pedido: ${updatedOrder.recipeName} x${updatedOrder.quantity} - ${updatedOrder.clientName}`,
-          amount: remainingBalance,
-          category: 'pago de pedido',
-          date: paymentDate,
-        });
-      }
-    }
-
-    // If status changed away from paid OR to cancelled, remove the payment transaction and advance transactions
-    if (updates.status && (updates.status !== 'paid' && existingOrder?.status === 'paid') || updates.status === 'cancelled') {
-      const { deleteTransactionBySource } = await import('@/lib/transactionSync');
-      await deleteTransactionBySource(session.user.id, id, 'order');
-      // If cancelled, also remove advance transactions
-      if (updates.status === 'cancelled') {
-        for (const advance of (updatedOrder.advances || [])) {
-          await deleteTransactionBySource(session.user.id, advance.id, 'order_advance');
-        }
-      }
-    }
-
-    // If order is paid and amount changed, update the payment transaction
-    if (updatedOrder.status === 'paid' && updates.totalPrice !== undefined && existingOrder?.status === 'paid') {
-      const { syncTransaction } = await import('@/lib/transactionSync');
-      const totalAdvances = (updatedOrder.advances || []).reduce((sum: number, a: OrderAdvance) => sum + a.amount, 0);
-      const remainingBalance = Math.max(0, updatedOrder.totalPrice - totalAdvances);
-
-      if (remainingBalance > 0) {
-        await syncTransaction({
-          userId: session.user.id,
-          sourceId: id,
-          sourceType: 'order',
-          type: 'income',
-          description: `Pago de pedido: ${updatedOrder.recipeName} x${updatedOrder.quantity} - ${updatedOrder.clientName}`,
-          amount: remainingBalance,
-          category: 'pago de pedido',
-          date: updatedOrder.paymentDate || new Date().toISOString(),
-        });
-      }
-    }
-
-    // Sync advances with transactions
-    if (updates.advances !== undefined) {
-      const { syncTransaction, deleteTransactionBySource } = await import('@/lib/transactionSync');
-      const previousAdvances = existingOrder?.advances || [];
-      const newAdvances = updates.advances;
-
-      // Delete removed advances
-      for (const prev of previousAdvances) {
-        if (!newAdvances.find(a => a.id === prev.id)) {
-          await deleteTransactionBySource(session.user.id, prev.id, 'order_advance');
-        }
-      }
-
-      // Sync current advances
-      for (const advance of newAdvances) {
-        await syncTransaction({
-          userId: session.user.id,
-          sourceId: advance.id,
-          sourceType: 'order_advance' as any,
-          type: 'income',
-          description: `Anticipo: ${updatedOrder.recipeName} - ${updatedOrder.clientName}`,
-          amount: advance.amount,
-          category: 'anticipo de pedido',
-          date: advance.date,
-        });
-      }
-    }
-
-    // Reload transactions from DB to keep local state in sync
-    await reloadTransactions();
   };
 
   const deleteOrder = async (id: string) => {
     if (!session?.user) return;
-
-    const existingOrder = orders.find(o => o.id === id);
 
     await supabase
       .from('orders')
@@ -723,19 +476,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
       .eq('id', id)
       .eq('user_id', session.user.id);
 
-    // Delete linked transaction if it was a paid order
-    const { deleteTransactionBySource } = await import('@/lib/transactionSync');
-    await deleteTransactionBySource(session.user.id, id, 'order');
-
-    // Delete advance transactions
-    if (existingOrder?.advances) {
-      for (const advance of existingOrder.advances) {
-        await deleteTransactionBySource(session.user.id, advance.id, 'order_advance');
-      }
-    }
-
     setOrders(prev => prev.filter(order => order.id !== id));
-    await reloadTransactions();
   };
 
   // Transaction functions
@@ -763,8 +504,6 @@ export function AppProvider({ children }: { children: ReactNode }) {
         amount: Number(data.amount),
         category: data.category,
         date: data.date,
-        sourceId: data.source_id,
-        sourceType: data.source_type,
       }, ...prev]);
     }
   };

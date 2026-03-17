@@ -97,37 +97,7 @@ export function IngredientAutocomplete({
 
   // Filter ingredients based on search - only show configured ones first
   const configuredIngredients = baseIngredients.filter(ing => ing.presentationPrice > 0);
-
-  // Group by name: keep latest purchase, calculate total purchased
-  const consolidatedIngredients = (() => {
-    // Sort by date descending first so most recent comes first
-    const sorted = [...configuredIngredients].sort((a, b) => {
-      const dateA = new Date(a.purchaseDate || a.lastUpdated).getTime();
-      const dateB = new Date(b.purchaseDate || b.lastUpdated).getTime();
-      return dateB - dateA; // most recent first
-    });
-    
-    const byName: Record<string, { latest: BaseIngredient; totalQty: number; purchaseCount: number }> = {};
-    for (const ing of sorted) {
-      const key = ing.name.toLowerCase().trim();
-      if (!byName[key]) {
-        // First occurrence is already the most recent due to sorting
-        byName[key] = { latest: ing, totalQty: ing.quantityPurchased * ing.presentationQuantity, purchaseCount: 1 };
-      } else {
-        byName[key].purchaseCount += 1;
-        byName[key].totalQty += ing.quantityPurchased * ing.presentationQuantity;
-      }
-    }
-    return Object.values(byName).map(entry => ({
-      ...entry.latest,
-      _totalQty: entry.totalQty,
-      _purchaseCount: entry.purchaseCount,
-    }));
-  })();
-
-  type ConsolidatedIngredient = BaseIngredient & { _totalQty: number; _purchaseCount: number };
-
-  const filteredIngredients = consolidatedIngredients.filter(ing =>
+  const filteredIngredients = configuredIngredients.filter(ing =>
     ing.name.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
@@ -138,7 +108,7 @@ export function IngredientAutocomplete({
     }
     acc[ing.category].push(ing);
     return acc;
-  }, {} as Record<string, ConsolidatedIngredient[]>);
+  }, {} as Record<string, BaseIngredient[]>);
 
   const handleInputClick = () => {
     setIsOpen(true);
@@ -202,8 +172,6 @@ export function IngredientAutocomplete({
       purchaseUnit: quickAddForm.purchaseUnit as any,
       presentationQuantity: qty,
       presentationPrice: price,
-      quantityPurchased: 1,
-      purchaseDate: new Date().toISOString(),
     });
 
     if (!newIngredient) {
@@ -232,7 +200,7 @@ export function IngredientAutocomplete({
   };
 
   const categories = Object.keys(groupedIngredients).sort();
-  const hasConfiguredIngredients = consolidatedIngredients.length > 0;
+  const hasConfiguredIngredients = configuredIngredients.length > 0;
   const previewCost = calculateCostPerBaseUnit(
     parseFloat(quickAddForm.presentationPrice) || 0,
     parseFloat(quickAddForm.presentationQuantity) || 0,
@@ -339,7 +307,7 @@ export function IngredientAutocomplete({
                       </div>
                       <div className="text-right ml-3 flex-shrink-0 bg-primary/10 px-2 py-1 rounded-lg">
                         <span className="text-sm font-bold text-primary block">
-                          {settings.currencySymbol}{['pieza', 'paquete', 'caja'].includes(ingredient.purchaseUnit) ? ingredient.costPerBaseUnit.toFixed(0) : ingredient.costPerBaseUnit.toFixed(2)}
+                          {settings.currencySymbol}{ingredient.costPerBaseUnit.toFixed(4)}
                         </span>
                         <span className="text-xs text-muted-foreground">
                           por {getBaseUnit(ingredient.purchaseUnit)}
@@ -437,18 +405,18 @@ export function IngredientAutocomplete({
                 </Select>
               </div>
               <div>
-                <label className="block text-sm font-medium mb-1.5">Cantidad comprada ({quickAddForm.purchaseUnit})</label>
+                <label className="block text-sm font-medium mb-1.5">Cantidad</label>
                 <Input
                   type="number"
                   value={quickAddForm.presentationQuantity}
                   onChange={(e) => setQuickAddForm(prev => ({ ...prev, presentationQuantity: e.target.value }))}
-                  placeholder="Ej: 500"
+                  placeholder="Ej: 1000"
                 />
               </div>
             </div>
 
             <div>
-              <label className="block text-sm font-medium mb-1.5">Total pagado</label>
+              <label className="block text-sm font-medium mb-1.5">Precio</label>
               <div className="relative">
                 <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground">
                   {settings.currencySymbol}
@@ -469,7 +437,7 @@ export function IngredientAutocomplete({
                 <CardContent className="p-3 text-center">
                   <p className="text-xs text-muted-foreground">Costo por unidad base</p>
                   <p className="text-xl font-bold text-primary">
-                    {settings.currencySymbol}{['pieza', 'paquete', 'caja'].includes(quickAddForm.purchaseUnit) ? previewCost.toFixed(0) : previewCost.toFixed(2)} / {getBaseUnit(quickAddForm.purchaseUnit)}
+                    {settings.currencySymbol}{previewCost.toFixed(4)} / {getBaseUnit(quickAddForm.purchaseUnit)}
                   </p>
                 </CardContent>
               </Card>

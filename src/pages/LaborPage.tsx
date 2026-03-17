@@ -1,6 +1,6 @@
-import { useState, useMemo } from 'react';
+import { useState } from 'react';
 import { motion } from 'framer-motion';
-import { Plus, Users, Edit2, Trash2, Clock, DollarSign, Calendar, HelpCircle, CalendarDays, ChevronLeft, ChevronRight } from 'lucide-react';
+import { Plus, Users, Edit2, Trash2, Clock, DollarSign, Calendar, HelpCircle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -18,7 +18,6 @@ interface WorkerFormData {
   hoursPerDay: number;
   daysPerMonth: number;
   monthlySalary: number;
-  paymentDate: string;
 }
 
 const initialFormData: WorkerFormData = {
@@ -26,11 +25,10 @@ const initialFormData: WorkerFormData = {
   hoursPerDay: 8,
   daysPerMonth: 24,
   monthlySalary: 0,
-  paymentDate: new Date().toISOString().split('T')[0],
 };
 
 export default function LaborPage() {
-  const { workers, addWorker, updateWorker, deleteWorker, getLastMonthLaborCostPerHour, getLastMonthLabel } = useLabor();
+  const { workers, addWorker, updateWorker, deleteWorker, getAverageHourlyRate } = useLabor();
   const { settings } = useApp();
   const { toast } = useToast();
   
@@ -38,32 +36,7 @@ export default function LaborPage() {
   const [editingWorker, setEditingWorker] = useState<Worker | null>(null);
   const [formData, setFormData] = useState<WorkerFormData>(initialFormData);
 
-  // Month filter
-  const now = new Date();
-  const [filterMonth, setFilterMonth] = useState(now.getMonth());
-  const [filterYear, setFilterYear] = useState(now.getFullYear());
-  const MONTH_NAMES = ['Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio', 'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre'];
-
-  const handlePrevMonth = () => {
-    if (filterMonth === 0) { setFilterMonth(11); setFilterYear(y => y - 1); }
-    else setFilterMonth(m => m - 1);
-  };
-  const handleNextMonth = () => {
-    if (filterMonth === 11) { setFilterMonth(0); setFilterYear(y => y + 1); }
-    else setFilterMonth(m => m + 1);
-  };
-
-  const filteredWorkers = useMemo(() => {
-    return workers.filter(w => {
-      const pDate = w.paymentDate ? new Date(w.paymentDate) : new Date(w.lastUpdated);
-      return pDate.getMonth() === filterMonth && pDate.getFullYear() === filterYear;
-    });
-  }, [workers, filterMonth, filterYear]);
-
-  const monthlyTotal = useMemo(() => {
-    return filteredWorkers.reduce((sum, w) => sum + w.monthlySalary, 0);
-  }, [filteredWorkers]);
-
+  // Cálculos en tiempo real del formulario
   const previewMonthlyHours = formData.hoursPerDay * formData.daysPerMonth;
   const previewDailySalary = formData.daysPerMonth > 0 ? formData.monthlySalary / formData.daysPerMonth : 0;
   const previewHourlyRate = previewMonthlyHours > 0 ? formData.monthlySalary / previewMonthlyHours : 0;
@@ -85,7 +58,6 @@ export default function LaborPage() {
       hoursPerDay: worker.hoursPerDay,
       daysPerMonth: worker.daysPerMonth,
       monthlySalary: worker.monthlySalary,
-      paymentDate: worker.paymentDate ? new Date(worker.paymentDate).toISOString().split('T')[0] : new Date().toISOString().split('T')[0],
     });
     setShowModal(true);
   };
@@ -99,24 +71,12 @@ export default function LaborPage() {
       toast({ title: 'Error', description: 'Las horas y días deben ser mayores a 0', variant: 'destructive' });
       return;
     }
-    if (!formData.paymentDate) {
-      toast({ title: 'Error', description: 'La fecha de pago es obligatoria', variant: 'destructive' });
-      return;
-    }
-
-    const workerPayload = {
-      name: formData.name,
-      hoursPerDay: formData.hoursPerDay,
-      daysPerMonth: formData.daysPerMonth,
-      monthlySalary: formData.monthlySalary,
-      paymentDate: new Date(formData.paymentDate).toISOString(),
-    };
 
     if (editingWorker) {
-      updateWorker(editingWorker.id, workerPayload);
+      updateWorker(editingWorker.id, formData);
       toast({ title: '✅ Trabajador actualizado', description: formData.name });
     } else {
-      addWorker(workerPayload);
+      addWorker(formData);
       toast({ title: '✅ Trabajador agregado', description: formData.name });
     }
     
@@ -149,74 +109,48 @@ export default function LaborPage() {
         animate="visible"
         className="p-4 space-y-4"
       >
-        {/* Month Selector */}
+        {/* Info Card */}
         <motion.div variants={itemVariants}>
-          <div className="flex items-center justify-between bg-muted/50 rounded-xl p-2">
-            <Button variant="ghost" size="icon" onClick={handlePrevMonth} className="h-8 w-8">
-              <ChevronLeft className="w-4 h-4" />
-            </Button>
-            <div className="flex items-center gap-2 text-sm font-semibold">
-              <CalendarDays className="w-4 h-4 text-primary" />
-              {MONTH_NAMES[filterMonth]} {filterYear}
-            </div>
-            <Button variant="ghost" size="icon" onClick={handleNextMonth} className="h-8 w-8">
-              <ChevronRight className="w-4 h-4" />
-            </Button>
-          </div>
-        </motion.div>
-
-        {/* Monthly Total Banner */}
-        <motion.div variants={itemVariants}>
-          <div className="rounded-xl bg-primary/10 border border-primary/20 p-3 text-center">
-            <p className="text-xs text-muted-foreground font-medium">
-              Total pagado — {MONTH_NAMES[filterMonth]} {filterYear}
-            </p>
-            <p className="text-lg font-bold text-primary mt-0.5">
-              {formatCurrency(monthlyTotal)}
-            </p>
-          </div>
+          <Card className="bg-primary/5 border-primary/20">
+            <CardContent className="p-4 flex gap-3">
+              <HelpCircle className="w-5 h-5 text-primary shrink-0 mt-0.5" />
+              <p className="text-sm text-muted-foreground">
+                Este cálculo te permite saber cuánto cuesta realmente cada hora de trabajo en tu negocio.
+              </p>
+            </CardContent>
+          </Card>
         </motion.div>
 
         {/* Summary */}
-        {filteredWorkers.length > 0 && (() => {
-          const totalSalary = filteredWorkers.reduce((s, w) => s + w.monthlySalary, 0);
-          const totalHours = filteredWorkers.reduce((s, w) => s + w.monthlyHours, 0);
-          const costPerHour = totalHours > 0 ? totalSalary / totalHours : 0;
-          return (
-            <motion.div variants={itemVariants}>
-              <Card className="bg-warm/10 border-warm/30">
-                <CardContent className="p-3">
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <p className="text-xs text-muted-foreground">Costo promedio por hora</p>
-                      <div className="flex items-baseline gap-2">
-                        <p className="text-lg font-bold text-warm">{formatCurrency(costPerHour)}</p>
-                        <p className="text-[10px] text-muted-foreground">
-                          ({formatCurrency(totalSalary)} ÷ {totalHours}h)
-                        </p>
-                      </div>
-                    </div>
-                    <Users className="w-8 h-8 text-warm/50" />
+        {workers.length > 0 && (
+          <motion.div variants={itemVariants}>
+            <Card className="bg-warm/10 border-warm/30">
+              <CardContent className="p-4">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="text-sm text-muted-foreground">Costo promedio por hora</p>
+                    <p className="text-2xl font-bold text-warm">{formatCurrency(getAverageHourlyRate())}</p>
                   </div>
-                  <p className="text-[10px] text-muted-foreground mt-1">
-                    M.O. total ÷ Hrs. totales = Costo/h
-                  </p>
-                </CardContent>
-              </Card>
-            </motion.div>
-          );
-        })()}
+                  <Users className="w-10 h-10 text-warm/50" />
+                </div>
+                <p className="text-xs text-muted-foreground mt-2">
+                  {workers.length} trabajador{workers.length !== 1 ? 'es' : ''} registrado{workers.length !== 1 ? 's' : ''}
+                </p>
+              </CardContent>
+            </Card>
+          </motion.div>
+        )}
 
         {/* Add Button */}
         <motion.div variants={itemVariants}>
           <Button onClick={handleOpenAdd} variant="warm" className="w-full" size="lg">
             <Plus className="w-5 h-5" />
-            Agregar pago
+            Agregar trabajador
           </Button>
         </motion.div>
 
         {/* Workers List */}
-        {filteredWorkers.length === 0 ? (
+        {workers.length === 0 ? (
           <motion.div variants={itemVariants}>
             <Card className="border-dashed">
               <CardContent className="p-8 text-center">
@@ -230,22 +164,17 @@ export default function LaborPage() {
           </motion.div>
         ) : (
           <motion.div variants={itemVariants} className="space-y-3">
-            {filteredWorkers.map((worker) => (
+            {workers.map((worker) => (
               <Card key={worker.id} className="overflow-hidden">
                 <CardContent className="p-4">
-                  <div className="flex items-start justify-between">
+                  <div className="flex items-start justify-between mb-3">
                     <div>
                       <h3 className="font-semibold text-foreground">{worker.name}</h3>
                       <p className="text-xs text-muted-foreground">
-                        Fecha de pago: {worker.paymentDate ? new Date(worker.paymentDate).toLocaleDateString('es-MX') : 'Sin fecha'}
-                      </p>
-                      <p className="text-xs text-muted-foreground mt-1">
-                        <Clock className="w-3 h-3 inline mr-1" />{worker.monthlyHours}h mensuales
+                        Actualizado: {new Date(worker.lastUpdated).toLocaleDateString('es-MX')}
                       </p>
                     </div>
-                    <p className="text-sm font-bold text-primary">{formatCurrency(worker.monthlySalary)}</p>
-                  </div>
-                  <div className="flex justify-end gap-1 mt-1">
+                    <div className="flex gap-1">
                       <Button variant="ghost" size="icon" onClick={() => handleOpenEdit(worker)}>
                         <Edit2 className="w-4 h-4" />
                       </Button>
@@ -271,6 +200,35 @@ export default function LaborPage() {
                         </AlertDialogContent>
                       </AlertDialog>
                     </div>
+                  </div>
+
+                  {/* Worker details grid */}
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 sm:gap-3 text-sm">
+                    <div className="flex items-center gap-2 text-muted-foreground">
+                      <Clock className="w-4 h-4 shrink-0" />
+                      <span className="truncate">{worker.hoursPerDay}h/día × {worker.daysPerMonth} días</span>
+                    </div>
+                    <div className="flex items-center gap-2 text-muted-foreground">
+                      <Calendar className="w-4 h-4 shrink-0" />
+                      <span className="truncate">{worker.monthlyHours}h mensuales</span>
+                    </div>
+                  </div>
+
+                  {/* Salary breakdown */}
+                  <div className="mt-3 pt-3 border-t grid grid-cols-3 gap-2 text-center">
+                    <div>
+                      <p className="text-xs text-muted-foreground">Mensual</p>
+                      <p className="font-semibold text-foreground">{formatCurrency(worker.monthlySalary)}</p>
+                    </div>
+                    <div>
+                      <p className="text-xs text-muted-foreground">Diario</p>
+                      <p className="font-semibold text-foreground">{formatCurrency(worker.dailySalary)}</p>
+                    </div>
+                    <div className="bg-primary/10 rounded-lg p-1">
+                      <p className="text-xs text-primary">Por hora</p>
+                      <p className="font-bold text-primary">{formatCurrency(worker.hourlyRate)}</p>
+                    </div>
+                  </div>
                 </CardContent>
               </Card>
             ))}
@@ -283,7 +241,7 @@ export default function LaborPage() {
         <DialogContent className="max-w-[90vw] sm:max-w-md">
           <DialogHeader>
             <DialogTitle>
-              {editingWorker ? 'Editar trabajador' : 'Agregar pago'}
+              {editingWorker ? 'Editar trabajador' : 'Agregar trabajador'}
             </DialogTitle>
           </DialogHeader>
 
@@ -335,38 +293,26 @@ export default function LaborPage() {
               />
             </div>
 
-            <div>
-              <Label htmlFor="paymentDate">Fecha de pago *</Label>
-              <Input
-                id="paymentDate"
-                type="date"
-                value={formData.paymentDate}
-                onChange={(e) => setFormData({ ...formData, paymentDate: e.target.value })}
-              />
-            </div>
-
-            {/* Preview calculations - only show when key fields are filled */}
-            {formData.name.trim() && formData.paymentDate && previewMonthlyHours > 0 && (
-              <Card className="bg-muted/50">
-                <CardContent className="p-3">
-                  <p className="text-xs font-medium text-muted-foreground mb-2">Cálculos automáticos:</p>
-                  <div className="grid grid-cols-3 gap-2 text-center text-sm">
-                    <div>
-                      <p className="text-xs text-muted-foreground">Horas/mes</p>
-                      <p className="font-semibold">{previewMonthlyHours}</p>
-                    </div>
-                    <div>
-                      <p className="text-xs text-muted-foreground">Por día</p>
-                      <p className="font-semibold">{formatCurrency(previewDailySalary)}</p>
-                    </div>
-                    <div className="bg-primary/10 rounded p-1">
-                      <p className="text-xs text-primary">Por hora</p>
-                      <p className="font-bold text-primary">{formatCurrency(previewHourlyRate)}</p>
-                    </div>
+            {/* Preview calculations */}
+            <Card className="bg-muted/50">
+              <CardContent className="p-3">
+                <p className="text-xs font-medium text-muted-foreground mb-2">Cálculos automáticos:</p>
+                <div className="grid grid-cols-3 gap-2 text-center text-sm">
+                  <div>
+                    <p className="text-xs text-muted-foreground">Horas/mes</p>
+                    <p className="font-semibold">{previewMonthlyHours}</p>
                   </div>
-                </CardContent>
-              </Card>
-            )}
+                  <div>
+                    <p className="text-xs text-muted-foreground">Por día</p>
+                    <p className="font-semibold">{formatCurrency(previewDailySalary)}</p>
+                  </div>
+                  <div className="bg-primary/10 rounded p-1">
+                    <p className="text-xs text-primary">Por hora</p>
+                    <p className="font-bold text-primary">{formatCurrency(previewHourlyRate)}</p>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
           </div>
 
           <DialogFooter className="flex-col gap-2 sm:flex-row mt-4">

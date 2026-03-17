@@ -1,1 +1,0 @@
-ALTER TABLE public.base_ingredients ADD COLUMN IF NOT EXISTS quantity_purchased numeric NOT NULL DEFAULT 1;

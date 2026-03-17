@@ -114,8 +114,6 @@ export function QuotationCard({ quotation, onUpdate }: QuotationCardProps) {
       totalPrice: quotation.total,
       status: 'pending' as const,
       deliveryDate: new Date().toISOString(),
-      paymentDate: null,
-      advances: [],
       createdAt: new Date().toISOString(),
     };
 

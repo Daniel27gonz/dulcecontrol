@@ -1,7 +1,6 @@
 import React, { createContext, useContext, useState, useEffect, useCallback, ReactNode } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useApp, Ingredient } from './AppContext';
-import { syncTransaction, deleteTransactionBySource } from '@/lib/transactionSync';
 
 // Types
 export interface BaseIngredient {
@@ -9,11 +8,9 @@ export interface BaseIngredient {
   name: string;
   category: string;
   purchaseUnit: 'kg' | 'g' | 'lb' | 'oz' | 'L' | 'ml' | 'pza' | 'paquete' | 'caja';
-  presentationQuantity: number; // quantity bought in purchase unit
-  presentationPrice: number;    // total paid
-  quantityPurchased: number;    // legacy, always 1 for new records
+  presentationQuantity: number;
+  presentationPrice: number;
   costPerBaseUnit: number;
-  purchaseDate: string | null;
   lastUpdated: string;
 }
 
@@ -55,9 +52,9 @@ export const PURCHASE_UNITS = [
   { id: 'oz', name: 'Onza (oz)', baseUnit: 'g', multiplier: 28.3495 },
   { id: 'L', name: 'Litro (L)', baseUnit: 'ml', multiplier: 1000 },
   { id: 'ml', name: 'Mililitro (ml)', baseUnit: 'ml', multiplier: 1 },
-  { id: 'pza', name: 'Pieza', baseUnit: 'pieza', multiplier: 1 },
-  { id: 'paquete', name: 'Paquete', baseUnit: 'paquete', multiplier: 1 },
-  { id: 'caja', name: 'Caja', baseUnit: 'caja', multiplier: 1 },
+  { id: 'pza', name: 'Pieza', baseUnit: 'pza', multiplier: 1 },
+  { id: 'paquete', name: 'Paquete', baseUnit: 'pza', multiplier: 1 },
+  { id: 'caja', name: 'Caja', baseUnit: 'pza', multiplier: 1 },
 ] as const;
 
 export type PurchaseUnit = typeof PURCHASE_UNITS[number]['id'];
@@ -72,49 +69,44 @@ export function getMultiplier(purchaseUnit: string): number {
   return unit?.multiplier || 1;
 }
 
-/**
- * Calculate cost per base unit.
- * Formula: totalPaid / (quantity × multiplier)
- * Examples:
- *   2 kg, $50 → 50 / (2 × 1000) = $0.025/g
- *   500 g, $28 → 28 / (500 × 1) = $0.056/g
- *   30 pza, $90 → 90 / (30 × 1) = $3/pza
- */
 export function calculateCostPerBaseUnit(
-  totalPaid: number,
-  quantity: number,
+  presentationPrice: number,
+  presentationQuantity: number,
   purchaseUnit: string
 ): number {
-  if (totalPaid <= 0 || quantity <= 0) return 0;
+  if (presentationQuantity <= 0 || presentationPrice <= 0) return 0;
+  
   const multiplier = getMultiplier(purchaseUnit);
-  return totalPaid / (quantity * multiplier);
+  const totalBaseUnits = presentationQuantity * multiplier;
+  
+  return presentationPrice / totalBaseUnits;
 }
 
 // Default ingredients for new users
-const DEFAULT_INGREDIENTS: Omit<BaseIngredient, 'id' | 'lastUpdated' | 'costPerBaseUnit' | 'purchaseDate'>[] = [
-  { name: 'Harina de trigo', category: 'harinas', purchaseUnit: 'kg', presentationQuantity: 1, presentationPrice: 25, quantityPurchased: 1 },
-  { name: 'Harina integral', category: 'harinas', purchaseUnit: 'kg', presentationQuantity: 1, presentationPrice: 35, quantityPurchased: 1 },
-  { name: 'Maicena', category: 'harinas', purchaseUnit: 'g', presentationQuantity: 400, presentationPrice: 28, quantityPurchased: 1 },
-  { name: 'Harina de almendra', category: 'harinas', purchaseUnit: 'g', presentationQuantity: 500, presentationPrice: 180, quantityPurchased: 1 },
-  { name: 'Azúcar blanca', category: 'azucares', purchaseUnit: 'kg', presentationQuantity: 1, presentationPrice: 30, quantityPurchased: 1 },
-  { name: 'Azúcar glass', category: 'azucares', purchaseUnit: 'g', presentationQuantity: 500, presentationPrice: 35, quantityPurchased: 1 },
-  { name: 'Azúcar morena', category: 'azucares', purchaseUnit: 'kg', presentationQuantity: 1, presentationPrice: 40, quantityPurchased: 1 },
-  { name: 'Miel', category: 'azucares', purchaseUnit: 'g', presentationQuantity: 500, presentationPrice: 85, quantityPurchased: 1 },
-  { name: 'Leche entera', category: 'lacteos', purchaseUnit: 'L', presentationQuantity: 1, presentationPrice: 28, quantityPurchased: 1 },
-  { name: 'Leche condensada', category: 'lacteos', purchaseUnit: 'g', presentationQuantity: 397, presentationPrice: 45, quantityPurchased: 1 },
-  { name: 'Crema de leche', category: 'lacteos', purchaseUnit: 'ml', presentationQuantity: 500, presentationPrice: 65, quantityPurchased: 1 },
-  { name: 'Queso crema', category: 'lacteos', purchaseUnit: 'g', presentationQuantity: 190, presentationPrice: 48, quantityPurchased: 1 },
-  { name: 'Huevo', category: 'huevos', purchaseUnit: 'pza', presentationQuantity: 30, presentationPrice: 90, quantityPurchased: 1 },
-  { name: 'Mantequilla', category: 'grasas', purchaseUnit: 'g', presentationQuantity: 200, presentationPrice: 55, quantityPurchased: 1 },
-  { name: 'Aceite vegetal', category: 'grasas', purchaseUnit: 'L', presentationQuantity: 1, presentationPrice: 42, quantityPurchased: 1 },
-  { name: 'Cacao en polvo', category: 'chocolates', purchaseUnit: 'g', presentationQuantity: 250, presentationPrice: 65, quantityPurchased: 1 },
-  { name: 'Chocolate amargo', category: 'chocolates', purchaseUnit: 'g', presentationQuantity: 500, presentationPrice: 120, quantityPurchased: 1 },
-  { name: 'Polvo para hornear', category: 'levaduras', purchaseUnit: 'g', presentationQuantity: 200, presentationPrice: 25, quantityPurchased: 1 },
-  { name: 'Esencia de vainilla', category: 'esencias', purchaseUnit: 'ml', presentationQuantity: 120, presentationPrice: 45, quantityPurchased: 1 },
-  { name: 'Dulce de leche', category: 'rellenos', purchaseUnit: 'g', presentationQuantity: 500, presentationPrice: 75, quantityPurchased: 1 },
-  { name: 'Fondant', category: 'coberturas', purchaseUnit: 'g', presentationQuantity: 500, presentationPrice: 85, quantityPurchased: 1 },
-  { name: 'Almendras', category: 'frutos_secos', purchaseUnit: 'g', presentationQuantity: 200, presentationPrice: 95, quantityPurchased: 1 },
-  { name: 'Sal', category: 'otros', purchaseUnit: 'kg', presentationQuantity: 1, presentationPrice: 15, quantityPurchased: 1 },
+const DEFAULT_INGREDIENTS: Omit<BaseIngredient, 'id' | 'lastUpdated' | 'costPerBaseUnit'>[] = [
+  { name: 'Harina de trigo', category: 'harinas', purchaseUnit: 'kg', presentationQuantity: 1, presentationPrice: 25 },
+  { name: 'Harina integral', category: 'harinas', purchaseUnit: 'kg', presentationQuantity: 1, presentationPrice: 35 },
+  { name: 'Maicena', category: 'harinas', purchaseUnit: 'g', presentationQuantity: 400, presentationPrice: 28 },
+  { name: 'Harina de almendra', category: 'harinas', purchaseUnit: 'g', presentationQuantity: 500, presentationPrice: 180 },
+  { name: 'Azúcar blanca', category: 'azucares', purchaseUnit: 'kg', presentationQuantity: 1, presentationPrice: 30 },
+  { name: 'Azúcar glass', category: 'azucares', purchaseUnit: 'g', presentationQuantity: 500, presentationPrice: 35 },
+  { name: 'Azúcar morena', category: 'azucares', purchaseUnit: 'kg', presentationQuantity: 1, presentationPrice: 40 },
+  { name: 'Miel', category: 'azucares', purchaseUnit: 'g', presentationQuantity: 500, presentationPrice: 85 },
+  { name: 'Leche entera', category: 'lacteos', purchaseUnit: 'L', presentationQuantity: 1, presentationPrice: 28 },
+  { name: 'Leche condensada', category: 'lacteos', purchaseUnit: 'g', presentationQuantity: 397, presentationPrice: 45 },
+  { name: 'Crema de leche', category: 'lacteos', purchaseUnit: 'ml', presentationQuantity: 500, presentationPrice: 65 },
+  { name: 'Queso crema', category: 'lacteos', purchaseUnit: 'g', presentationQuantity: 190, presentationPrice: 48 },
+  { name: 'Huevo', category: 'huevos', purchaseUnit: 'pza', presentationQuantity: 30, presentationPrice: 90 },
+  { name: 'Mantequilla', category: 'grasas', purchaseUnit: 'g', presentationQuantity: 200, presentationPrice: 55 },
+  { name: 'Aceite vegetal', category: 'grasas', purchaseUnit: 'L', presentationQuantity: 1, presentationPrice: 42 },
+  { name: 'Cacao en polvo', category: 'chocolates', purchaseUnit: 'g', presentationQuantity: 250, presentationPrice: 65 },
+  { name: 'Chocolate amargo', category: 'chocolates', purchaseUnit: 'g', presentationQuantity: 500, presentationPrice: 120 },
+  { name: 'Polvo para hornear', category: 'levaduras', purchaseUnit: 'g', presentationQuantity: 200, presentationPrice: 25 },
+  { name: 'Esencia de vainilla', category: 'esencias', purchaseUnit: 'ml', presentationQuantity: 120, presentationPrice: 45 },
+  { name: 'Dulce de leche', category: 'rellenos', purchaseUnit: 'g', presentationQuantity: 500, presentationPrice: 75 },
+  { name: 'Fondant', category: 'coberturas', purchaseUnit: 'g', presentationQuantity: 500, presentationPrice: 85 },
+  { name: 'Almendras', category: 'frutos_secos', purchaseUnit: 'g', presentationQuantity: 200, presentationPrice: 95 },
+  { name: 'Sal', category: 'otros', purchaseUnit: 'kg', presentationQuantity: 1, presentationPrice: 15 },
 ];
 
 interface BaseIngredientsContextType {
@@ -127,30 +119,28 @@ interface BaseIngredientsContextType {
   getIngredientById: (id: string) => BaseIngredient | undefined;
   findDuplicate: (name: string, excludeId?: string) => BaseIngredient | undefined;
   refreshIngredients: () => Promise<void>;
+  // New: Get current price for recipe ingredient calculation
   getCurrentIngredientCost: (recipeIngredient: Ingredient) => number;
   calculateIngredientsWithCurrentPrices: (recipeIngredients: Ingredient[]) => { ingredient: Ingredient; currentCost: number }[];
 }
 
 const BaseIngredientsContext = createContext<BaseIngredientsContextType | undefined>(undefined);
 
+const recalculateCostPerBaseUnit = (ingredient: Omit<BaseIngredient, 'costPerBaseUnit'>): BaseIngredient => {
+  return {
+    ...ingredient,
+    costPerBaseUnit: calculateCostPerBaseUnit(
+      ingredient.presentationPrice,
+      ingredient.presentationQuantity,
+      ingredient.purchaseUnit
+    ),
+  };
+};
+
 export function BaseIngredientsProvider({ children }: { children: ReactNode }) {
   const [ingredients, setIngredients] = useState<BaseIngredient[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const { session } = useApp();
-
-  const mapDbToIngredient = (ing: any): BaseIngredient => ({
-    id: ing.id,
-    name: ing.name,
-    category: ing.category,
-    purchaseUnit: ing.purchase_unit as BaseIngredient['purchaseUnit'],
-    presentationQuantity: Number(ing.presentation_quantity),
-    presentationPrice: Number(ing.presentation_price),
-    quantityPurchased: Number(ing.quantity_purchased) || 1,
-    // Use stored cost_per_base_unit from DB to preserve backward compatibility
-    costPerBaseUnit: Number(ing.cost_per_base_unit),
-    purchaseDate: ing.purchase_date || null,
-    lastUpdated: ing.last_updated,
-  });
 
   const loadIngredients = useCallback(async () => {
     if (!session?.user) {
@@ -173,7 +163,15 @@ export function BaseIngredientsProvider({ children }: { children: ReactNode }) {
     }
 
     if (data && data.length > 0) {
-      setIngredients(data.map(mapDbToIngredient));
+      setIngredients(data.map(ing => recalculateCostPerBaseUnit({
+        id: ing.id,
+        name: ing.name,
+        category: ing.category,
+        purchaseUnit: ing.purchase_unit as BaseIngredient['purchaseUnit'],
+        presentationQuantity: Number(ing.presentation_quantity),
+        presentationPrice: Number(ing.presentation_price),
+        lastUpdated: ing.last_updated,
+      })));
     } else {
       // Initialize with default ingredients for new users
       const defaultsToInsert = DEFAULT_INGREDIENTS.map(ing => {
@@ -186,7 +184,6 @@ export function BaseIngredientsProvider({ children }: { children: ReactNode }) {
           presentation_quantity: ing.presentationQuantity,
           presentation_price: ing.presentationPrice,
           cost_per_base_unit: costPerBaseUnit,
-          quantity_purchased: ing.quantityPurchased,
         };
       });
 
@@ -198,7 +195,15 @@ export function BaseIngredientsProvider({ children }: { children: ReactNode }) {
       if (insertError) {
         console.error('Error inserting default ingredients:', insertError);
       } else if (insertedData) {
-        setIngredients(insertedData.map(mapDbToIngredient));
+        setIngredients(insertedData.map(ing => recalculateCostPerBaseUnit({
+          id: ing.id,
+          name: ing.name,
+          category: ing.category,
+          purchaseUnit: ing.purchase_unit as BaseIngredient['purchaseUnit'],
+          presentationQuantity: Number(ing.presentation_quantity),
+          presentationPrice: Number(ing.presentation_price),
+          lastUpdated: ing.last_updated,
+        })));
       }
     }
     setIsLoading(false);
@@ -211,12 +216,7 @@ export function BaseIngredientsProvider({ children }: { children: ReactNode }) {
   const addIngredient = useCallback(async (ingredient: Omit<BaseIngredient, 'id' | 'lastUpdated' | 'costPerBaseUnit'>): Promise<BaseIngredient | null> => {
     if (!session?.user) return null;
 
-    // New formula: totalPaid / (quantity × multiplier)
-    const costPerBaseUnit = calculateCostPerBaseUnit(
-      ingredient.presentationPrice, // totalPaid
-      ingredient.presentationQuantity, // quantity
-      ingredient.purchaseUnit
-    );
+    const costPerBaseUnit = calculateCostPerBaseUnit(ingredient.presentationPrice, ingredient.presentationQuantity, ingredient.purchaseUnit);
 
     const { data, error } = await supabase
       .from('base_ingredients')
@@ -228,9 +228,7 @@ export function BaseIngredientsProvider({ children }: { children: ReactNode }) {
         presentation_quantity: ingredient.presentationQuantity,
         presentation_price: ingredient.presentationPrice,
         cost_per_base_unit: costPerBaseUnit,
-        purchase_date: ingredient.purchaseDate || null,
-        quantity_purchased: ingredient.quantityPurchased || 1,
-      } as any])
+      }])
       .select()
       .single();
 
@@ -239,23 +237,17 @@ export function BaseIngredientsProvider({ children }: { children: ReactNode }) {
       return null;
     }
 
-    const newIngredient = mapDbToIngredient(data);
-
-    setIngredients(prev => [...prev, newIngredient].sort((a, b) => a.name.localeCompare(b.name)));
-
-    // Sync with transactions - total paid is presentationPrice
-    const totalAmount = ingredient.presentationPrice * (ingredient.quantityPurchased || 1);
-    await syncTransaction({
-      userId: session.user.id,
-      sourceId: data.id,
-      sourceType: 'ingredient',
-      type: 'expense',
-      description: ingredient.name,
-      amount: totalAmount,
-      category: 'ingredientes',
-      date: ingredient.purchaseDate || new Date().toISOString(),
+    const newIngredient = recalculateCostPerBaseUnit({
+      id: data.id,
+      name: data.name,
+      category: data.category,
+      purchaseUnit: data.purchase_unit as BaseIngredient['purchaseUnit'],
+      presentationQuantity: Number(data.presentation_quantity),
+      presentationPrice: Number(data.presentation_price),
+      lastUpdated: data.last_updated,
     });
 
+    setIngredients(prev => [...prev, newIngredient].sort((a, b) => a.name.localeCompare(b.name)));
     return newIngredient;
   }, [session?.user]);
 
@@ -266,12 +258,7 @@ export function BaseIngredientsProvider({ children }: { children: ReactNode }) {
     if (!existing) return;
 
     const updatedIng = { ...existing, ...updates };
-    // Recalculate cost with new formula
-    const costPerBaseUnit = calculateCostPerBaseUnit(
-      updatedIng.presentationPrice,
-      updatedIng.presentationQuantity,
-      updatedIng.purchaseUnit
-    );
+    const costPerBaseUnit = calculateCostPerBaseUnit(updatedIng.presentationPrice, updatedIng.presentationQuantity, updatedIng.purchaseUnit);
 
     const { error } = await supabase
       .from('base_ingredients')
@@ -282,10 +269,8 @@ export function BaseIngredientsProvider({ children }: { children: ReactNode }) {
         presentation_quantity: updatedIng.presentationQuantity,
         presentation_price: updatedIng.presentationPrice,
         cost_per_base_unit: costPerBaseUnit,
-        purchase_date: updatedIng.purchaseDate || null,
-        quantity_purchased: updatedIng.quantityPurchased || 1,
         last_updated: new Date().toISOString(),
-      } as any)
+      })
       .eq('id', id)
       .eq('user_id', session.user.id);
 
@@ -297,26 +282,9 @@ export function BaseIngredientsProvider({ children }: { children: ReactNode }) {
     setIngredients(prev =>
       prev.map(ing => {
         if (ing.id !== id) return ing;
-        return {
-          ...updatedIng,
-          costPerBaseUnit,
-          lastUpdated: new Date().toISOString(),
-        };
+        return recalculateCostPerBaseUnit({ ...updatedIng, lastUpdated: new Date().toISOString() });
       }).sort((a, b) => a.name.localeCompare(b.name))
     );
-
-    // Sync with transactions
-    const totalAmount = updatedIng.presentationPrice * (updatedIng.quantityPurchased || 1);
-    await syncTransaction({
-      userId: session.user.id,
-      sourceId: id,
-      sourceType: 'ingredient',
-      type: 'expense',
-      description: updatedIng.name,
-      amount: totalAmount,
-      category: 'ingredientes',
-      date: updatedIng.purchaseDate || new Date().toISOString(),
-    });
   }, [session?.user, ingredients]);
 
   const deleteIngredient = useCallback(async (id: string) => {
@@ -334,9 +302,6 @@ export function BaseIngredientsProvider({ children }: { children: ReactNode }) {
     }
 
     setIngredients(prev => prev.filter(ing => ing.id !== id));
-
-    // Delete linked transaction
-    await deleteTransactionBySource(session.user.id, id, 'ingredient');
   }, [session?.user]);
 
   const getIngredientsByCategory = useCallback((category: string) => {
@@ -358,6 +323,9 @@ export function BaseIngredientsProvider({ children }: { children: ReactNode }) {
     await loadIngredients();
   }, [loadIngredients]);
 
+  // Get the current cost for a recipe ingredient using master data
+  // If the ingredient has a baseIngredientId, use the current price from the base ingredient
+  // Otherwise, fall back to the stored pricePerUnit
   const getCurrentIngredientCost = useCallback((recipeIngredient: Ingredient): number => {
     if (recipeIngredient.baseIngredientId) {
       const baseIngredient = ingredients.find(ing => ing.id === recipeIngredient.baseIngredientId);
@@ -365,15 +333,18 @@ export function BaseIngredientsProvider({ children }: { children: ReactNode }) {
         return baseIngredient.costPerBaseUnit * recipeIngredient.quantityUsed;
       }
     }
+    // Fallback: try to find by name if no baseIngredientId (legacy recipes)
     const byName = ingredients.find(ing => 
       ing.name.toLowerCase().trim() === recipeIngredient.name.toLowerCase().trim()
     );
     if (byName) {
       return byName.costPerBaseUnit * recipeIngredient.quantityUsed;
     }
+    // Final fallback: use stored price
     return recipeIngredient.pricePerUnit * recipeIngredient.quantityUsed;
   }, [ingredients]);
 
+  // Calculate all ingredients with current prices for a recipe
   const calculateIngredientsWithCurrentPrices = useCallback((recipeIngredients: Ingredient[]) => {
     return recipeIngredients.map(ing => ({
       ingredient: ing,
