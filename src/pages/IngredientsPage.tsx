@@ -1,6 +1,7 @@
 import { useState, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Search, Plus, Filter, Pencil, Trash2, Package, ChevronDown, X } from 'lucide-react';
+import { Search, Plus, Filter, Pencil, Trash2, Package, X, ShoppingCart, ListChecks, CalendarDays, ChevronLeft, ChevronRight } from 'lucide-react';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
@@ -9,7 +10,7 @@ import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, 
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { BottomNav } from '@/components/BottomNav';
 import { AppHeader } from '@/components/AppHeader';
-import { useBaseIngredients, BaseIngredient, INGREDIENT_CATEGORIES, PURCHASE_UNITS, getBaseUnit, calculateCostPerBaseUnit } from '@/context/BaseIngredientsContext';
+import { useBaseIngredients, BaseIngredient, INGREDIENT_CATEGORIES, PURCHASE_UNITS, getBaseUnit, getMultiplier } from '@/context/BaseIngredientsContext';
 import { useApp } from '@/context/AppContext';
 import { toast } from '@/hooks/use-toast';
 import { cn } from '@/lib/utils';
@@ -34,26 +35,63 @@ interface IngredientFormData {
   name: string;
   category: string;
   purchaseUnit: string;
-  presentationQuantity: string;
-  presentationPrice: string;
+  quantity: string;      // amount bought in purchase unit
+  totalPaid: string;     // total amount paid
+  purchaseDate: string;
 }
 
 const initialFormData: IngredientFormData = {
   name: '',
   category: 'otros',
   purchaseUnit: 'g',
-  presentationQuantity: '',
-  presentationPrice: '',
+  quantity: '',
+  totalPaid: '',
+  purchaseDate: new Date().toISOString().split('T')[0],
 };
 
 export default function IngredientsPage() {
   const { ingredients, addIngredient, updateIngredient, deleteIngredient, findDuplicate } = useBaseIngredients();
   const { settings } = useApp();
   
+  const [activeTab, setActiveTab] = useState('lista');
   const [searchTerm, setSearchTerm] = useState('');
+  const [listSearchTerm, setListSearchTerm] = useState('');
   const [selectedCategory, setSelectedCategory] = useState<string>('all');
   const [showCategoryFilter, setShowCategoryFilter] = useState(false);
   
+  // Month filter state
+  const now = new Date();
+  const [filterMonth, setFilterMonth] = useState(now.getMonth());
+  const [filterYear, setFilterYear] = useState(now.getFullYear());
+
+  const MONTH_NAMES = ['Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio', 'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre'];
+
+  const handlePrevMonth = () => {
+    if (filterMonth === 0) { setFilterMonth(11); setFilterYear(y => y - 1); }
+    else setFilterMonth(m => m - 1);
+  };
+  const handleNextMonth = () => {
+    if (filterMonth === 11) { setFilterMonth(0); setFilterYear(y => y + 1); }
+    else setFilterMonth(m => m + 1);
+  };
+
+  const filteredIngredients = useMemo(() => {
+    return ingredients.filter(ing => {
+      const matchesSearch = ing.name.toLowerCase().includes(searchTerm.toLowerCase());
+      const matchesCategory = selectedCategory === 'all' || ing.category === selectedCategory;
+      const pDate = ing.purchaseDate ? new Date(ing.purchaseDate) : new Date(ing.lastUpdated);
+      const matchesMonth = pDate.getMonth() === filterMonth && pDate.getFullYear() === filterYear;
+      return matchesSearch && matchesCategory && matchesMonth;
+    });
+  }, [ingredients, searchTerm, selectedCategory, filterMonth, filterYear]);
+
+  // Monthly total: presentationPrice is total paid for new records
+  const monthlyTotal = useMemo(() => {
+    return filteredIngredients.reduce((sum, ing) => {
+      return sum + (ing.presentationPrice * (ing.quantityPurchased || 1));
+    }, 0);
+  }, [filteredIngredients]);
+
   const [showAddModal, setShowAddModal] = useState(false);
   const [showEditModal, setShowEditModal] = useState(false);
   const [editingIngredient, setEditingIngredient] = useState<BaseIngredient | null>(null);
@@ -61,15 +99,6 @@ export default function IngredientsPage() {
   
   const [formData, setFormData] = useState<IngredientFormData>(initialFormData);
   const [formError, setFormError] = useState<string | null>(null);
-
-  // Filter and group ingredients
-  const filteredIngredients = useMemo(() => {
-    return ingredients.filter(ing => {
-      const matchesSearch = ing.name.toLowerCase().includes(searchTerm.toLowerCase());
-      const matchesCategory = selectedCategory === 'all' || ing.category === selectedCategory;
-      return matchesSearch && matchesCategory;
-    });
-  }, [ingredients, searchTerm, selectedCategory]);
 
   const groupedIngredients = useMemo(() => {
     return filteredIngredients.reduce((acc, ing) => {
@@ -89,12 +118,16 @@ export default function IngredientsPage() {
     });
   }, [groupedIngredients]);
 
-  // Calculate preview cost
+  // Preview cost: totalPaid / (quantity × multiplier)
   const previewCost = useMemo(() => {
-    const price = parseFloat(formData.presentationPrice) || 0;
-    const qty = parseFloat(formData.presentationQuantity) || 0;
-    return calculateCostPerBaseUnit(price, qty, formData.purchaseUnit);
-  }, [formData]);
+    const totalPaid = parseFloat(formData.totalPaid) || 0;
+    const qty = parseFloat(formData.quantity) || 0;
+    if (totalPaid <= 0 || qty <= 0) return 0;
+    const multiplier = getMultiplier(formData.purchaseUnit);
+    return totalPaid / (qty * multiplier);
+  }, [formData.totalPaid, formData.quantity, formData.purchaseUnit]);
+
+  const previewBaseUnit = getBaseUnit(formData.purchaseUnit);
 
   const handleOpenAdd = () => {
     setFormData(initialFormData);
@@ -108,8 +141,9 @@ export default function IngredientsPage() {
       name: ingredient.name,
       category: ingredient.category,
       purchaseUnit: ingredient.purchaseUnit,
-      presentationQuantity: ingredient.presentationQuantity.toString(),
-      presentationPrice: ingredient.presentationPrice.toString(),
+      quantity: ingredient.presentationQuantity.toString(),
+      totalPaid: ingredient.presentationPrice.toString(),
+      purchaseDate: ingredient.purchaseDate ? new Date(ingredient.purchaseDate).toISOString().split('T')[0] : new Date().toISOString().split('T')[0],
     });
     setFormError(null);
     setShowEditModal(true);
@@ -121,21 +155,28 @@ export default function IngredientsPage() {
       return false;
     }
     
-    const duplicate = findDuplicate(formData.name, isEdit ? editingIngredient?.id : undefined);
-    if (duplicate) {
-      setFormError(`Ya existe un ingrediente con ese nombre. ¿Deseas editarlo?`);
-      return false;
+    if (isEdit) {
+      const duplicate = findDuplicate(formData.name, editingIngredient?.id);
+      if (duplicate) {
+        setFormError(`Ya existe otro ingrediente con ese nombre.`);
+        return false;
+      }
     }
 
-    const qty = parseFloat(formData.presentationQuantity);
+    const qty = parseFloat(formData.quantity);
     if (!qty || qty <= 0) {
-      setFormError('La cantidad de presentación debe ser mayor a 0');
+      setFormError('La cantidad comprada debe ser mayor a 0');
       return false;
     }
 
-    const price = parseFloat(formData.presentationPrice);
-    if (!price || price <= 0) {
-      setFormError('El precio debe ser mayor a 0');
+    const totalPaid = parseFloat(formData.totalPaid);
+    if (!totalPaid || totalPaid <= 0) {
+      setFormError('El total pagado debe ser mayor a 0');
+      return false;
+    }
+
+    if (!formData.purchaseDate) {
+      setFormError('La fecha de compra es obligatoria');
       return false;
     }
 
@@ -149,8 +190,10 @@ export default function IngredientsPage() {
       name: formData.name.trim(),
       category: formData.category,
       purchaseUnit: formData.purchaseUnit as any,
-      presentationQuantity: parseFloat(formData.presentationQuantity),
-      presentationPrice: parseFloat(formData.presentationPrice),
+      presentationQuantity: parseFloat(formData.quantity),
+      presentationPrice: parseFloat(formData.totalPaid),
+      quantityPurchased: 1,
+      purchaseDate: new Date(formData.purchaseDate).toISOString(),
     });
 
     if (result) {
@@ -173,8 +216,10 @@ export default function IngredientsPage() {
       name: formData.name.trim(),
       category: formData.category,
       purchaseUnit: formData.purchaseUnit as any,
-      presentationQuantity: parseFloat(formData.presentationQuantity),
-      presentationPrice: parseFloat(formData.presentationPrice),
+      presentationQuantity: parseFloat(formData.quantity),
+      presentationPrice: parseFloat(formData.totalPaid),
+      quantityPurchased: 1,
+      purchaseDate: new Date(formData.purchaseDate).toISOString(),
     });
 
     toast({
@@ -218,12 +263,62 @@ export default function IngredientsPage() {
     return found?.name || unit;
   };
 
+  // Display total paid for a card: presentationPrice × quantityPurchased
+  const getDisplayTotalPaid = (ing: BaseIngredient) => {
+    return ing.presentationPrice * (ing.quantityPurchased || 1);
+  };
+
   return (
     <div className="min-h-screen bg-background pb-24">
       <AppHeader title="Ingredientes" />
 
       <div className="p-4 space-y-4">
-        {/* Search and Filter Bar */}
+        <Tabs defaultValue="lista" value={activeTab} onValueChange={setActiveTab} className="w-full">
+          <TabsList className="w-full grid grid-cols-2">
+            <TabsTrigger value="lista" className="flex items-center gap-2">
+              <ShoppingCart className="w-4 h-4" />
+              Compras
+            </TabsTrigger>
+            <TabsTrigger value="compras" className="flex items-center gap-2">
+              <ListChecks className="w-4 h-4" />
+              Lista de Ingredientes
+            </TabsTrigger>
+          </TabsList>
+
+          <TabsContent value="lista" className="mt-4 space-y-4">
+        {/* Month Selector */}
+        <div className="flex items-center justify-between bg-muted/50 rounded-xl p-2">
+          <Button variant="ghost" size="icon" onClick={handlePrevMonth} className="h-8 w-8">
+            <ChevronLeft className="w-4 h-4" />
+          </Button>
+          <div className="flex items-center gap-2 text-sm font-semibold">
+            <CalendarDays className="w-4 h-4 text-primary" />
+            {MONTH_NAMES[filterMonth]} {filterYear}
+          </div>
+          <Button variant="ghost" size="icon" onClick={handleNextMonth} className="h-8 w-8">
+            <ChevronRight className="w-4 h-4" />
+          </Button>
+        </div>
+
+        {/* Monthly Total Banner */}
+        <div className="rounded-xl bg-primary/10 border border-primary/20 p-4 text-center">
+          <p className="text-sm text-muted-foreground font-medium">
+            Total pagado — {MONTH_NAMES[filterMonth]} {filterYear}
+          </p>
+          <p className="text-2xl font-bold text-primary mt-1">
+            {settings.currencySymbol}{monthlyTotal.toFixed(2)}
+          </p>
+        </div>
+
+        {/* Add Button */}
+        <Button
+          onClick={handleOpenAdd}
+          className="w-full rounded-xl h-11 gap-2"
+        >
+          <Plus className="w-5 h-5" />
+          <span className="text-sm font-medium">Agregar compra</span>
+        </Button>
+
         <div className="flex gap-2">
           <div className="relative flex-1">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
@@ -333,15 +428,14 @@ export default function IngredientsPage() {
                             <div className="flex-1 min-w-0">
                               <h4 className="font-medium text-sm truncate">{ingredient.name}</h4>
                               <p className="text-xs text-muted-foreground mt-0.5">
-                                {settings.currencySymbol}{ingredient.presentationPrice.toFixed(2)} por{' '}
-                                {ingredient.presentationQuantity} {ingredient.purchaseUnit}
+                                Total pagado: {settings.currencySymbol}{getDisplayTotalPaid(ingredient).toFixed(2)} — {ingredient.presentationQuantity} {ingredient.purchaseUnit}
                               </p>
                               <div className="flex items-center gap-2 mt-1">
                                 <span className="text-xs font-semibold text-primary">
-                                  {settings.currencySymbol}{ingredient.costPerBaseUnit.toFixed(4)}/{getBaseUnit(ingredient.purchaseUnit)}
+                                  {settings.currencySymbol}{['pieza', 'paquete', 'caja'].includes(ingredient.purchaseUnit) ? ingredient.costPerBaseUnit.toFixed(0) : ingredient.costPerBaseUnit.toFixed(2)}/{getBaseUnit(ingredient.purchaseUnit)}
                                 </span>
                                 <span className="text-xs text-muted-foreground">
-                                  • Actualizado: {formatDate(ingredient.lastUpdated)}
+                                  • Compra: {ingredient.purchaseDate ? formatDate(ingredient.purchaseDate) : formatDate(ingredient.lastUpdated)}
                                 </span>
                               </div>
                             </div>
@@ -373,25 +467,90 @@ export default function IngredientsPage() {
             })}
           </div>
         )}
+          </TabsContent>
+
+          <TabsContent value="compras" className="mt-4 space-y-4">
+            {ingredients.length === 0 ? (
+              <Card className="p-8 text-center">
+                <ListChecks className="w-12 h-12 mx-auto text-muted-foreground mb-3" />
+                <h3 className="font-semibold mb-1">Sin ingredientes</h3>
+                <p className="text-sm text-muted-foreground">
+                  Los ingredientes que registres en Compras aparecerán aquí automáticamente.
+                </p>
+              </Card>
+            ) : (() => {
+              const uniqueIngredients = [...new Map(ingredients.map((i: BaseIngredient) => [i.name.toLowerCase().trim(), i])).values()]
+                .sort((a: BaseIngredient, b: BaseIngredient) => a.name.localeCompare(b.name));
+              const filteredList = listSearchTerm
+                ? uniqueIngredients.filter((i: BaseIngredient) => i.name.toLowerCase().includes(listSearchTerm.toLowerCase()))
+                : uniqueIngredients;
+              return (
+                <>
+                  <div className="relative">
+                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                    <Input
+                      value={listSearchTerm}
+                      onChange={(e) => setListSearchTerm(e.target.value)}
+                      placeholder="Buscar en lista..."
+                      className="pl-10"
+                    />
+                  </div>
+                  <p className="text-sm text-muted-foreground">
+                    {filteredList.length} de {uniqueIngredients.length} ingrediente{uniqueIngredients.length !== 1 ? 's' : ''}
+                  </p>
+                  <div className="space-y-2">
+                    {filteredList.map((ingredient: BaseIngredient) => (
+                      <Card key={ingredient.id} className="p-3 flex items-center gap-3">
+                        <span className="text-lg">{CATEGORY_EMOJI[ingredient.category] || '📦'}</span>
+                        <div className="flex-1 min-w-0 flex flex-col">
+                          <span className="font-medium text-sm">{ingredient.name}</span>
+                          <span className="text-xs text-muted-foreground capitalize">
+                            {INGREDIENT_CATEGORIES.find(c => c.id === ingredient.category)?.name || ingredient.category}
+                          </span>
+                        </div>
+                        <div className="flex items-center gap-1">
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            className="h-8 w-8"
+                            onClick={() => handleOpenEdit(ingredient)}
+                          >
+                            <Pencil className="w-4 h-4" />
+                          </Button>
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            className="h-8 w-8 text-destructive hover:text-destructive"
+                            onClick={() => setDeleteConfirmId(ingredient.id)}
+                          >
+                            <Trash2 className="w-4 h-4" />
+                          </Button>
+                        </div>
+                      </Card>
+                    ))}
+                    {filteredList.length === 0 && (
+                      <p className="text-center text-sm text-muted-foreground py-4">No se encontraron ingredientes</p>
+                    )}
+                  </div>
+                </>
+              );
+            })()}
+          </TabsContent>
+        </Tabs>
       </div>
 
-      {/* Fixed Add Button */}
-      <Button
-        onClick={handleOpenAdd}
-        className="fixed bottom-24 right-4 h-14 w-14 rounded-full shadow-lg z-30"
-        size="icon"
-      >
-        <Plus className="w-6 h-6" />
-      </Button>
 
       {/* Add Modal */}
       <Dialog open={showAddModal} onOpenChange={setShowAddModal}>
         <DialogContent className="max-w-md max-h-[90vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2">
-              <Plus className="w-5 h-5" />
-              Agregar ingrediente
+              <ShoppingCart className="w-5 h-5" />
+              Agregar compra
             </DialogTitle>
+            <p className="text-xs text-muted-foreground mt-1">
+              Registra tu compra y el ingrediente quedará disponible para tus recetas y en finanzas.
+            </p>
           </DialogHeader>
           <IngredientForm
             formData={formData}
@@ -402,6 +561,7 @@ export default function IngredientsPage() {
             currencySymbol={settings.currencySymbol}
             onSave={handleSaveAdd}
             onCancel={() => setShowAddModal(false)}
+            existingIngredients={ingredients}
           />
         </DialogContent>
       </Dialog>
@@ -452,7 +612,7 @@ export default function IngredientsPage() {
   );
 }
 
-// Separate form component for reuse
+// Separate form component
 interface IngredientFormProps {
   formData: IngredientFormData;
   setFormData: React.Dispatch<React.SetStateAction<IngredientFormData>>;
@@ -463,6 +623,7 @@ interface IngredientFormProps {
   onSave: () => void;
   onCancel: () => void;
   isEdit?: boolean;
+  existingIngredients?: BaseIngredient[];
 }
 
 function IngredientForm({
@@ -475,8 +636,23 @@ function IngredientForm({
   onSave,
   onCancel,
   isEdit = false,
+  existingIngredients = [],
 }: IngredientFormProps) {
   const baseUnit = getBaseUnit(formData.purchaseUnit);
+  const [showSuggestions, setShowSuggestions] = useState(false);
+
+  const suggestions = useMemo(() => {
+    if (!formData.name || formData.name.length < 2 || isEdit) return [];
+    const term = formData.name.toLowerCase();
+    const uniqueNames = [...new Map(existingIngredients.map(i => [i.name.toLowerCase().trim(), i])).values()];
+    return uniqueNames.filter(i => i.name.toLowerCase().includes(term)).slice(0, 6);
+  }, [formData.name, existingIngredients, isEdit]);
+
+  const handleSelectSuggestion = (ingredient: BaseIngredient) => {
+    setFormData(prev => ({ ...prev, name: ingredient.name }));
+    setShowSuggestions(false);
+    setFormError(null);
+  };
 
   return (
     <div className="space-y-4">
@@ -486,16 +662,39 @@ function IngredientForm({
         </div>
       )}
 
-      <div>
+      <div className="relative">
         <label className="block text-sm font-medium mb-1.5">Nombre del ingrediente</label>
         <Input
           value={formData.name}
           onChange={(e) => {
             setFormData(prev => ({ ...prev, name: e.target.value }));
             setFormError(null);
+            setShowSuggestions(true);
           }}
+          onFocus={() => setShowSuggestions(true)}
+          onBlur={() => setTimeout(() => setShowSuggestions(false), 200)}
           placeholder="Ej: Harina de trigo"
+          autoComplete="off"
         />
+        {showSuggestions && suggestions.length > 0 && !isEdit && (
+          <div className="absolute z-50 top-full left-0 right-0 mt-1 bg-popover border border-border rounded-lg shadow-lg overflow-hidden">
+            {suggestions.map((ing) => (
+              <button
+                key={ing.id}
+                type="button"
+                onMouseDown={(e) => e.preventDefault()}
+                onClick={() => handleSelectSuggestion(ing)}
+                className="w-full text-left px-3 py-2 text-sm hover:bg-accent transition-colors flex items-center gap-2"
+              >
+                <span>{CATEGORY_EMOJI[ing.category] || '📦'}</span>
+                <span>{ing.name}</span>
+                <span className="ml-auto text-xs text-muted-foreground capitalize">
+                  {INGREDIENT_CATEGORIES.find(c => c.id === ing.category)?.name || ing.category}
+                </span>
+              </button>
+            ))}
+          </div>
+        )}
       </div>
 
       <div>
@@ -540,21 +739,45 @@ function IngredientForm({
           </Select>
         </div>
         <div>
-          <label className="block text-sm font-medium mb-1.5">Cantidad presentación</label>
+          <label className="block text-sm font-medium mb-1.5">Cantidad comprada ({formData.purchaseUnit})</label>
           <Input
             type="number"
-            value={formData.presentationQuantity}
+            value={formData.quantity}
             onChange={(e) => {
-              setFormData(prev => ({ ...prev, presentationQuantity: e.target.value }));
+              setFormData(prev => ({ ...prev, quantity: e.target.value }));
               setFormError(null);
             }}
-            placeholder="Ej: 1000"
+            placeholder={
+              formData.purchaseUnit === 'kg' ? 'Ej: 2' :
+              formData.purchaseUnit === 'g' ? 'Ej: 500' :
+              formData.purchaseUnit === 'lb' ? 'Ej: 1' :
+              formData.purchaseUnit === 'oz' ? 'Ej: 1' :
+              formData.purchaseUnit === 'L' ? 'Ej: 1' :
+              formData.purchaseUnit === 'ml' ? 'Ej: 500' :
+              formData.purchaseUnit === 'pza' ? 'Ej: 30' :
+              formData.purchaseUnit === 'paquete' ? 'Ej: 1' :
+              formData.purchaseUnit === 'caja' ? 'Ej: 1' :
+              'Ej: 1'
+            }
           />
+          {(() => {
+            const unit = PURCHASE_UNITS.find(u => u.id === formData.purchaseUnit);
+            const qty = parseFloat(formData.quantity) || 0;
+            if (unit && unit.multiplier > 1 && qty > 0) {
+              const totalBase = qty * unit.multiplier;
+              return (
+                <p className="text-xs text-muted-foreground mt-1">
+                  = {totalBase.toLocaleString()} {unit.baseUnit} (conversión automática)
+                </p>
+              );
+            }
+            return null;
+          })()}
         </div>
       </div>
 
       <div>
-        <label className="block text-sm font-medium mb-1.5">Precio de la presentación</label>
+        <label className="block text-sm font-medium mb-1.5">Total pagado</label>
         <div className="relative">
           <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground">
             {currencySymbol}
@@ -562,15 +785,30 @@ function IngredientForm({
           <Input
             type="number"
             step="0.01"
-            value={formData.presentationPrice}
+            value={formData.totalPaid}
             onChange={(e) => {
-              setFormData(prev => ({ ...prev, presentationPrice: e.target.value }));
+              setFormData(prev => ({ ...prev, totalPaid: e.target.value }));
               setFormError(null);
             }}
             placeholder="0.00"
             className="pl-8"
           />
         </div>
+        <p className="text-xs text-muted-foreground mt-1">
+          Monto total de la compra (se registra en Finanzas)
+        </p>
+      </div>
+
+      <div>
+        <label className="block text-sm font-medium mb-1.5">Fecha de compra *</label>
+        <Input
+          type="date"
+          value={formData.purchaseDate}
+          onChange={(e) => {
+            setFormData(prev => ({ ...prev, purchaseDate: e.target.value }));
+            setFormError(null);
+          }}
+        />
       </div>
 
       {/* Preview */}
@@ -578,11 +816,11 @@ function IngredientForm({
         <Card className="bg-primary/5 border-primary/20">
           <CardContent className="p-4">
             <div className="text-center">
-              <p className="text-xs text-muted-foreground mb-1">Costo calculado por unidad base</p>
+              <p className="text-xs text-muted-foreground mb-1">Costo calculado por {baseUnit}</p>
               <p className="text-2xl font-bold text-primary">
-                {currencySymbol}{previewCost.toFixed(4)} / {baseUnit}
+                {currencySymbol}{['pieza', 'paquete', 'caja'].includes(formData.purchaseUnit) ? previewCost.toFixed(0) : previewCost.toFixed(2)} / {baseUnit}
               </p>
-              <p className="text-xs text-muted-foreground mt-2">
+              <p className="text-xs text-muted-foreground mt-1">
                 Este es el costo que se usará en tus recetas
               </p>
             </div>

@@ -36,8 +36,8 @@ export default function CalculatorPage() {
   const editId = searchParams.get('edit');
   
   const { settings, recipes, addRecipe, updateRecipe, calculateRecipeCost, updateSettings } = useApp();
-  const { getLaborCostPerHour, getTotalMonthlyHours } = useLabor();
-  const { getTotalIndirectCosts } = useIndirectCosts();
+  const { getLastMonthLaborCostPerHour, getLastMonthTotalHours } = useLabor();
+  const { getTotalIndirectCostsLastMonth } = useIndirectCosts();
   
   const [currentStep, setCurrentStep] = useState(0);
   const [isEditing, setIsEditing] = useState(false);
@@ -110,10 +110,10 @@ export default function CalculatorPage() {
     }
   }, [editId, recipes]);
 
-  // Obtener costos globales
-  const laborCostPerHour = getLaborCostPerHour();
-  const totalMonthlyHours = getTotalMonthlyHours();
-  const totalIndirectCosts = getTotalIndirectCosts();
+  // Obtener costos globales (último mes registrado)
+  const laborCostPerHour = getLastMonthLaborCostPerHour();
+  const totalMonthlyHours = getLastMonthTotalHours();
+  const totalIndirectCosts = getTotalIndirectCostsLastMonth();
   const indirectCostPerHour = totalMonthlyHours > 0 ? totalIndirectCosts / totalMonthlyHours : 0;
 
   // Ingredientes
@@ -453,7 +453,7 @@ export default function CalculatorPage() {
                             });
                             toast({
                               title: '✅ Ingrediente cargado',
-                              description: `${selected.name} - ${settings.currencySymbol}${selected.costPerBaseUnit.toFixed(4)}/${selected.baseUnit}`,
+                              description: `${selected.name} - ${settings.currencySymbol}${['pieza', 'paquete', 'caja'].includes(selected.baseUnit) ? selected.costPerBaseUnit.toFixed(0) : selected.costPerBaseUnit.toFixed(2)}/${selected.baseUnit}`,
                             });
                           }}
                           placeholder="Toca para seleccionar ingrediente..."
@@ -464,7 +464,7 @@ export default function CalculatorPage() {
                             <div className="flex items-center justify-between text-sm">
                               <span className="text-muted-foreground">Precio por {ing.unit}:</span>
                               <span className="font-semibold text-primary">
-                                {settings.currencySymbol}{ing.pricePerUnit.toFixed(4)}
+                                {settings.currencySymbol}{ing.pricePerUnit.toFixed(2)}
                               </span>
                             </div>
 

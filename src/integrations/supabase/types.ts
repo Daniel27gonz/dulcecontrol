@@ -24,7 +24,9 @@ export type Database = {
           name: string
           presentation_price: number
           presentation_quantity: number
+          purchase_date: string | null
           purchase_unit: string
+          quantity_purchased: number
           user_id: string
         }
         Insert: {
@@ -36,7 +38,9 @@ export type Database = {
           name: string
           presentation_price: number
           presentation_quantity: number
+          purchase_date?: string | null
           purchase_unit: string
+          quantity_purchased?: number
           user_id: string
         }
         Update: {
@@ -48,7 +52,9 @@ export type Database = {
           name?: string
           presentation_price?: number
           presentation_quantity?: number
+          purchase_date?: string | null
           purchase_unit?: string
+          quantity_purchased?: number
           user_id?: string
         }
         Relationships: []
@@ -61,6 +67,7 @@ export type Database = {
           created_at: string
           id: string
           last_updated: string
+          payment_date: string | null
           purchase_cost: number | null
           useful_life_months: number | null
           user_id: string
@@ -72,6 +79,7 @@ export type Database = {
           created_at?: string
           id?: string
           last_updated?: string
+          payment_date?: string | null
           purchase_cost?: number | null
           useful_life_months?: number | null
           user_id: string
@@ -83,6 +91,7 @@ export type Database = {
           created_at?: string
           id?: string
           last_updated?: string
+          payment_date?: string | null
           purchase_cost?: number | null
           useful_life_months?: number | null
           user_id?: string
@@ -91,10 +100,12 @@ export type Database = {
       }
       orders: {
         Row: {
+          advances: Json
           client_name: string
           created_at: string
           delivery_date: string
           id: string
+          payment_date: string | null
           quantity: number
           recipe_id: string | null
           recipe_name: string
@@ -104,10 +115,12 @@ export type Database = {
           user_id: string
         }
         Insert: {
+          advances?: Json
           client_name: string
           created_at?: string
           delivery_date: string
           id?: string
+          payment_date?: string | null
           quantity?: number
           recipe_id?: string | null
           recipe_name: string
@@ -117,10 +130,12 @@ export type Database = {
           user_id: string
         }
         Update: {
+          advances?: Json
           client_name?: string
           created_at?: string
           delivery_date?: string
           id?: string
+          payment_date?: string | null
           quantity?: number
           recipe_id?: string | null
           recipe_name?: string
@@ -138,6 +153,39 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      other_income: {
+        Row: {
+          amount: number
+          concept: string
+          created_at: string
+          date: string
+          id: string
+          note: string | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          amount: number
+          concept: string
+          created_at?: string
+          date?: string
+          id?: string
+          note?: string | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          amount?: number
+          concept?: string
+          created_at?: string
+          date?: string
+          id?: string
+          note?: string | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
       }
       pdf_settings: {
         Row: {
@@ -348,6 +396,8 @@ export type Database = {
           date: string
           description: string
           id: string
+          source_id: string | null
+          source_type: string | null
           type: string
           user_id: string
         }
@@ -358,6 +408,8 @@ export type Database = {
           date?: string
           description: string
           id?: string
+          source_id?: string | null
+          source_type?: string | null
           type: string
           user_id: string
         }
@@ -368,6 +420,8 @@ export type Database = {
           date?: string
           description?: string
           id?: string
+          source_id?: string | null
+          source_type?: string | null
           type?: string
           user_id?: string
         }
@@ -418,6 +472,7 @@ export type Database = {
           monthly_hours: number
           monthly_salary: number
           name: string
+          payment_date: string | null
           user_id: string
         }
         Insert: {
@@ -431,6 +486,7 @@ export type Database = {
           monthly_hours: number
           monthly_salary: number
           name: string
+          payment_date?: string | null
           user_id: string
         }
         Update: {
@@ -444,6 +500,7 @@ export type Database = {
           monthly_hours?: number
           monthly_salary?: number
           name?: string
+          payment_date?: string | null
           user_id?: string
         }
         Relationships: []
