@@ -203,6 +203,21 @@ export function QuotationForm({ quotation, trigger, onClose, onSave }: Quotation
     setItems(items.filter(item => item.id !== id));
   };
 
+  // Extras handlers
+  const addExtra = () => {
+    setExtras([...extras, { id: crypto.randomUUID(), name: '', quantity: 1, unitCost: 0 }]);
+  };
+
+  const updateExtra = (id: string, field: keyof QuotationExtra, value: any) => {
+    setExtras(extras.map(e => e.id === id ? { ...e, [field]: value } : e));
+  };
+
+  const removeExtra = (id: string) => {
+    setExtras(extras.filter(e => e.id !== id));
+  };
+
+  const extrasTotal = extras.reduce((sum, e) => sum + (e.quantity * e.unitCost), 0);
+
   const { subtotal, total } = calculateTotals(items, discount, discountType, extras);
 
   const handleSubmit = async (e: React.FormEvent) => {
