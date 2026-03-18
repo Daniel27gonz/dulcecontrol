@@ -133,9 +133,9 @@ export function QuotationForm({ quotation, trigger, onClose, onSave }: Quotation
     const totalProductHours = Math.max(0, totalElaborationTimeMinutes / 60);
 
     // 3. Obtener costos globales por hora
-    const laborCostPerHour = getLaborCostPerHour();
-    const totalMonthlyHours = getTotalMonthlyHours();
-    const totalIndirectCosts = getTotalIndirectCosts();
+    const laborCostPerHour = getLastMonthLaborCostPerHour();
+    const totalMonthlyHours = getLastMonthTotalHours();
+    const totalIndirectCosts = getTotalIndirectCostsLastMonth();
     const indirectCostPerHour = totalMonthlyHours > 0 ? totalIndirectCosts / totalMonthlyHours : 0;
 
     // 4. Mano de obra final (horas reales × costo por hora)
