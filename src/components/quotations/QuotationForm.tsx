@@ -33,7 +33,7 @@ import { useApp } from '@/context/AppContext';
 import { useQuotations } from '@/hooks/useQuotations';
 import { useIndirectCosts } from '@/context/IndirectCostsContext';
 import { useLabor } from '@/context/LaborContext';
-import { useBaseIngredients } from '@/context/BaseIngredientsContext';
+import { QuotationItem, QuotationExtra, Quotation } from '@/types/quotation';
 import { QuotationItem, QuotationExtra, Quotation } from '@/types/quotation';
 import { toast } from '@/hooks/use-toast';
 
