@@ -1,5 +1,5 @@
 import React, { createContext, useContext, useState, useEffect, useCallback, ReactNode } from 'react';
-import { Quotation, QuotationItem } from '@/types/quotation';
+import { Quotation, QuotationItem, QuotationExtra } from '@/types/quotation';
 import { supabase } from '@/integrations/supabase/client';
 import { useApp } from './AppContext';
 
