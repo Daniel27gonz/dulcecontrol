@@ -72,6 +72,7 @@ export function QuotationForm({ quotation, trigger, onClose, onSave }: Quotation
       setClientName(quotation.clientName);
       setClientPhone(quotation.clientPhone || '');
       setItems(quotation.items);
+      setExtras(quotation.extras || []);
       setDiscount(quotation.discount);
       setDiscountType(quotation.discountType);
       setNotes(quotation.notes || '');
