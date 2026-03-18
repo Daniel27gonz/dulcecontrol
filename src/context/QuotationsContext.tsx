@@ -44,25 +44,38 @@ export function QuotationsProvider({ children }: { children: ReactNode }) {
     }
 
     if (data) {
-      setQuotations(data.map(q => ({
-        id: q.id,
-        number: q.number,
-        clientName: q.client_name,
-        clientPhone: q.client_phone || undefined,
-        clientEmail: q.client_email || undefined,
-        notes: q.notes || undefined,
-        items: (q.items as unknown) as QuotationItem[],
-        discount: Number(q.discount),
-        discountType: q.discount_type as 'percentage' | 'fixed',
-        subtotal: Number(q.subtotal),
-        total: Number(q.total),
-        status: q.status as 'draft' | 'sent' | 'accepted' | 'rejected' | 'converted',
-        validUntil: q.valid_until || undefined,
-        deliveryDate: q.delivery_date || undefined,
-        referenceImage: q.reference_image || undefined,
-        convertedToOrderId: q.converted_to_order_id || undefined,
-        createdAt: q.created_at,
-      })));
+      setQuotations(data.map(q => {
+        const rawItems = (q.items as unknown) as any;
+        // Support extras stored inside the items JSON payload
+        let items: QuotationItem[] = [];
+        let extras: QuotationExtra[] | undefined;
+        if (rawItems && typeof rawItems === 'object' && !Array.isArray(rawItems) && rawItems._items) {
+          items = rawItems._items as QuotationItem[];
+          extras = rawItems._extras as QuotationExtra[] | undefined;
+        } else {
+          items = rawItems as QuotationItem[];
+        }
+        return {
+          id: q.id,
+          number: q.number,
+          clientName: q.client_name,
+          clientPhone: q.client_phone || undefined,
+          clientEmail: q.client_email || undefined,
+          notes: q.notes || undefined,
+          items,
+          extras,
+          discount: Number(q.discount),
+          discountType: q.discount_type as 'percentage' | 'fixed',
+          subtotal: Number(q.subtotal),
+          total: Number(q.total),
+          status: q.status as 'draft' | 'sent' | 'accepted' | 'rejected' | 'converted',
+          validUntil: q.valid_until || undefined,
+          deliveryDate: q.delivery_date || undefined,
+          referenceImage: q.reference_image || undefined,
+          convertedToOrderId: q.converted_to_order_id || undefined,
+          createdAt: q.created_at,
+        };
+      }));
     }
     setIsLoading(false);
   }, [session?.user]);
