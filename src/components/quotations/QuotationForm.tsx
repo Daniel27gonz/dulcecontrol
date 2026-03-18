@@ -57,6 +57,7 @@ export function QuotationForm({ quotation, trigger, onClose, onSave }: Quotation
   const [clientName, setClientName] = useState('');
   const [clientPhone, setClientPhone] = useState('');
   const [items, setItems] = useState<QuotationItem[]>([]);
+  const [extras, setExtras] = useState<QuotationExtra[]>([]);
   const [discount, setDiscount] = useState(0);
   const [discountType, setDiscountType] = useState<'percentage' | 'fixed'>('percentage');
   const [notes, setNotes] = useState('');
