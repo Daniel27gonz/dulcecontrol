@@ -34,7 +34,6 @@ import { useQuotations } from '@/hooks/useQuotations';
 import { useIndirectCosts } from '@/context/IndirectCostsContext';
 import { useLabor } from '@/context/LaborContext';
 import { QuotationItem, QuotationExtra, Quotation } from '@/types/quotation';
-import { QuotationItem, QuotationExtra, Quotation } from '@/types/quotation';
 import { toast } from '@/hooks/use-toast';
 
 
@@ -50,7 +49,6 @@ export function QuotationForm({ quotation, trigger, onClose, onSave }: Quotation
   const { addQuotation, updateQuotation, calculateTotals } = useQuotations();
   const { getTotalIndirectCosts } = useIndirectCosts();
   const { getTotalMonthlyHours, getLaborCostPerHour } = useLabor();
-  const {} = useBaseIngredients();
   const [open, setOpen] = useState(false);
   
   // Form state
