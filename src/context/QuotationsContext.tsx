@@ -111,7 +111,11 @@ export function QuotationsProvider({ children }: { children: ReactNode }) {
         client_phone: quotation.clientPhone,
         client_email: quotation.clientEmail,
         notes: quotation.notes,
-        items: JSON.parse(JSON.stringify(quotation.items)),
+        items: JSON.parse(JSON.stringify(
+          quotation.extras && quotation.extras.length > 0
+            ? { _items: quotation.items, _extras: quotation.extras }
+            : quotation.items
+        )),
         discount: quotation.discount,
         discount_type: quotation.discountType,
         subtotal: quotation.subtotal,
