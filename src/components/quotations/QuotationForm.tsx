@@ -203,7 +203,7 @@ export function QuotationForm({ quotation, trigger, onClose, onSave }: Quotation
     setItems(items.filter(item => item.id !== id));
   };
 
-  const { subtotal, total } = calculateTotals(items, discount, discountType);
+  const { subtotal, total } = calculateTotals(items, discount, discountType, extras);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
