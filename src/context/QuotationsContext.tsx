@@ -238,6 +238,7 @@ export function QuotationsProvider({ children }: { children: ReactNode }) {
       clientEmail: original.clientEmail,
       notes: original.notes,
       items: original.items,
+      extras: original.extras,
       discount: original.discount,
       discountType: original.discountType,
       subtotal: original.subtotal,
