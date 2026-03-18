@@ -256,10 +256,13 @@ export function QuotationsProvider({ children }: { children: ReactNode }) {
   const calculateTotals = useCallback((
     items: QuotationItem[], 
     discount: number, 
-    discountType: 'percentage' | 'fixed'
+    discountType: 'percentage' | 'fixed',
+    extras?: QuotationExtra[]
   ) => {
     // Redondear subtotal a 2 decimales para consistencia con WhatsApp y PDF
-    const subtotal = Math.round(items.reduce((sum, item) => sum + item.total, 0) * 100) / 100;
+    const itemsTotal = items.reduce((sum, item) => sum + item.total, 0);
+    const extrasTotal = (extras || []).reduce((sum, e) => sum + (e.quantity * e.unitCost), 0);
+    const subtotal = Math.round((itemsTotal + extrasTotal) * 100) / 100;
     const discountAmount = discountType === 'percentage' 
       ? subtotal * (discount / 100) 
       : discount;
