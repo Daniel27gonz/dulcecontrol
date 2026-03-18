@@ -134,6 +134,16 @@ export function QuotationsProvider({ children }: { children: ReactNode }) {
       return null;
     }
 
+    const rawReturnItems = (data.items as unknown) as any;
+    let returnItems: QuotationItem[] = [];
+    let returnExtras: QuotationExtra[] | undefined;
+    if (rawReturnItems && typeof rawReturnItems === 'object' && !Array.isArray(rawReturnItems) && rawReturnItems._items) {
+      returnItems = rawReturnItems._items as QuotationItem[];
+      returnExtras = rawReturnItems._extras as QuotationExtra[] | undefined;
+    } else {
+      returnItems = rawReturnItems as QuotationItem[];
+    }
+
     const newQuotation: Quotation = {
       id: data.id,
       number: data.number,
@@ -141,7 +151,8 @@ export function QuotationsProvider({ children }: { children: ReactNode }) {
       clientPhone: data.client_phone || undefined,
       clientEmail: data.client_email || undefined,
       notes: data.notes || undefined,
-      items: (data.items as unknown) as QuotationItem[],
+      items: returnItems,
+      extras: returnExtras,
       discount: Number(data.discount),
       discountType: data.discount_type as 'percentage' | 'fixed',
       subtotal: Number(data.subtotal),
