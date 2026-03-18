@@ -230,6 +230,7 @@ export function QuotationForm({ quotation, trigger, onClose, onSave }: Quotation
       clientName: clientName.trim(),
       clientPhone: clientPhone.trim() || undefined,
       items,
+      extras: extras.filter(e => e.name.trim() !== ''),
       subtotal,
       discount,
       discountType,
