@@ -86,6 +86,7 @@ export function QuotationForm({ quotation, trigger, onClose, onSave }: Quotation
     setClientName('');
     setClientPhone('');
     setItems([]);
+    setExtras([]);
     setDiscount(0);
     setDiscountType('percentage');
     setNotes('');
