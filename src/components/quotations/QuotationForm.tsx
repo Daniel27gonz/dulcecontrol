@@ -47,8 +47,8 @@ interface QuotationFormProps {
 export function QuotationForm({ quotation, trigger, onClose, onSave }: QuotationFormProps) {
   const { recipes, settings } = useApp();
   const { addQuotation, updateQuotation, calculateTotals } = useQuotations();
-  const { getTotalIndirectCosts } = useIndirectCosts();
-  const { getTotalMonthlyHours, getLaborCostPerHour } = useLabor();
+  const { getTotalIndirectCostsLastMonth } = useIndirectCosts();
+  const { getLastMonthTotalHours, getLastMonthLaborCostPerHour } = useLabor();
   const [open, setOpen] = useState(false);
   
   // Form state
