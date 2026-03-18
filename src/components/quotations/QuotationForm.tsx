@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Plus, Trash2, X, Package } from 'lucide-react';
+import { Plus, Trash2, X, Package, Gift } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -34,7 +34,7 @@ import { useQuotations } from '@/hooks/useQuotations';
 import { useIndirectCosts } from '@/context/IndirectCostsContext';
 import { useLabor } from '@/context/LaborContext';
 import { useBaseIngredients } from '@/context/BaseIngredientsContext';
-import { QuotationItem, Quotation } from '@/types/quotation';
+import { QuotationItem, QuotationExtra, Quotation } from '@/types/quotation';
 import { toast } from '@/hooks/use-toast';
 
 
@@ -57,6 +57,7 @@ export function QuotationForm({ quotation, trigger, onClose, onSave }: Quotation
   const [clientName, setClientName] = useState('');
   const [clientPhone, setClientPhone] = useState('');
   const [items, setItems] = useState<QuotationItem[]>([]);
+  const [extras, setExtras] = useState<QuotationExtra[]>([]);
   const [discount, setDiscount] = useState(0);
   const [discountType, setDiscountType] = useState<'percentage' | 'fixed'>('percentage');
   const [notes, setNotes] = useState('');
@@ -71,6 +72,7 @@ export function QuotationForm({ quotation, trigger, onClose, onSave }: Quotation
       setClientName(quotation.clientName);
       setClientPhone(quotation.clientPhone || '');
       setItems(quotation.items);
+      setExtras(quotation.extras || []);
       setDiscount(quotation.discount);
       setDiscountType(quotation.discountType);
       setNotes(quotation.notes || '');
@@ -84,6 +86,7 @@ export function QuotationForm({ quotation, trigger, onClose, onSave }: Quotation
     setClientName('');
     setClientPhone('');
     setItems([]);
+    setExtras([]);
     setDiscount(0);
     setDiscountType('percentage');
     setNotes('');
@@ -200,7 +203,22 @@ export function QuotationForm({ quotation, trigger, onClose, onSave }: Quotation
     setItems(items.filter(item => item.id !== id));
   };
 
-  const { subtotal, total } = calculateTotals(items, discount, discountType);
+  // Extras handlers
+  const addExtra = () => {
+    setExtras([...extras, { id: crypto.randomUUID(), name: '', quantity: 1, unitCost: 0 }]);
+  };
+
+  const updateExtra = (id: string, field: keyof QuotationExtra, value: any) => {
+    setExtras(extras.map(e => e.id === id ? { ...e, [field]: value } : e));
+  };
+
+  const removeExtra = (id: string) => {
+    setExtras(extras.filter(e => e.id !== id));
+  };
+
+  const extrasTotal = extras.reduce((sum, e) => sum + (e.quantity * e.unitCost), 0);
+
+  const { subtotal, total } = calculateTotals(items, discount, discountType, extras);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -227,6 +245,7 @@ export function QuotationForm({ quotation, trigger, onClose, onSave }: Quotation
       clientName: clientName.trim(),
       clientPhone: clientPhone.trim() || undefined,
       items,
+      extras: extras.filter(e => e.name.trim() !== ''),
       subtotal,
       discount,
       discountType,
@@ -396,6 +415,90 @@ export function QuotationForm({ quotation, trigger, onClose, onSave }: Quotation
             <p className="text-xs text-muted-foreground text-center">
               Aquí decides cuánto quieres ganar por este pedido.
             </p>
+          </div>
+
+          {/* Extras del producto */}
+          <div className="space-y-3">
+            <div className="flex items-center justify-between">
+              <Label className="flex items-center gap-1.5">
+                <Gift className="w-4 h-4 text-primary" />
+                Extras del producto
+              </Label>
+              <Button type="button" variant="outline" size="sm" onClick={addExtra}>
+                <Plus className="w-4 h-4" />
+              </Button>
+            </div>
+
+            {extras.length === 0 && (
+              <p className="text-xs text-muted-foreground text-center py-2">
+                Agrega toppers, cajas, bases, listón, flores, placas, etc.
+              </p>
+            )}
+
+            <AnimatePresence>
+              {extras.map((extra, index) => {
+                const extraSubtotal = extra.quantity * extra.unitCost;
+                return (
+                  <motion.div
+                    key={extra.id}
+                    initial={{ opacity: 0, height: 0 }}
+                    animate={{ opacity: 1, height: 'auto' }}
+                    exit={{ opacity: 0, height: 0 }}
+                    className="p-3 bg-muted/50 rounded-xl space-y-2"
+                  >
+                    <div className="flex items-center justify-between">
+                      <span className="text-xs text-muted-foreground">Extra {index + 1}</span>
+                      <button
+                        type="button"
+                        onClick={() => removeExtra(extra.id)}
+                        className="p-1 hover:bg-destructive/10 rounded text-destructive"
+                      >
+                        <X className="w-4 h-4" />
+                      </button>
+                    </div>
+                    <Input
+                      placeholder="Nombre del extra (ej. Topper, Caja)"
+                      value={extra.name}
+                      onChange={(e) => updateExtra(extra.id, 'name', e.target.value)}
+                    />
+                    <div className="grid grid-cols-3 gap-2">
+                      <div>
+                        <Label className="text-xs">Cant.</Label>
+                        <Input
+                          type="number"
+                          min={1}
+                          value={extra.quantity}
+                          onChange={(e) => updateExtra(extra.id, 'quantity', Math.max(1, parseInt(e.target.value) || 1))}
+                        />
+                      </div>
+                      <div>
+                        <Label className="text-xs">Costo unit.</Label>
+                        <Input
+                          type="number"
+                          step="0.01"
+                          min={0}
+                          value={extra.unitCost}
+                          onChange={(e) => updateExtra(extra.id, 'unitCost', Math.max(0, parseFloat(e.target.value) || 0))}
+                        />
+                      </div>
+                      <div>
+                        <Label className="text-xs">Subtotal</Label>
+                        <div className="h-9 flex items-center px-3 bg-background rounded-md border text-sm font-medium">
+                          {settings.currencySymbol}{extraSubtotal.toFixed(2)}
+                        </div>
+                      </div>
+                    </div>
+                  </motion.div>
+                );
+              })}
+            </AnimatePresence>
+
+            {extras.length > 0 && extrasTotal > 0 && (
+              <div className="flex justify-between items-center text-sm px-1">
+                <span className="text-muted-foreground">Total extras:</span>
+                <span className="font-semibold text-primary">{settings.currencySymbol}{extrasTotal.toFixed(2)}</span>
+              </div>
+            )}
           </div>
 
           {/* Dates */}

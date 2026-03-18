@@ -8,6 +8,13 @@ export interface QuotationItem {
   baseCost?: number; // Original cost from recipe, used for margin calculation
 }
 
+export interface QuotationExtra {
+  id: string;
+  name: string;
+  quantity: number;
+  unitCost: number;
+}
+
 export interface Quotation {
   id: string;
   number: string;
@@ -15,6 +22,7 @@ export interface Quotation {
   clientPhone?: string;
   clientEmail?: string;
   items: QuotationItem[];
+  extras?: QuotationExtra[];
   subtotal: number;
   discount: number;
   discountType: 'percentage' | 'fixed';

@@ -1,5 +1,5 @@
 import React, { createContext, useContext, useState, useEffect, useCallback, ReactNode } from 'react';
-import { Quotation, QuotationItem } from '@/types/quotation';
+import { Quotation, QuotationItem, QuotationExtra } from '@/types/quotation';
 import { supabase } from '@/integrations/supabase/client';
 import { useApp } from './AppContext';
 
@@ -11,7 +11,7 @@ interface QuotationsContextType {
   deleteQuotation: (id: string) => Promise<void>;
   duplicateQuotation: (id: string) => Promise<Quotation | null>;
   getQuotation: (id: string) => Quotation | undefined;
-  calculateTotals: (items: QuotationItem[], discount: number, discountType: 'percentage' | 'fixed') => { subtotal: number; total: number };
+  calculateTotals: (items: QuotationItem[], discount: number, discountType: 'percentage' | 'fixed', extras?: QuotationExtra[]) => { subtotal: number; total: number };
   generateQuotationNumber: () => string;
   refreshQuotations: () => Promise<void>;
 }
@@ -44,25 +44,38 @@ export function QuotationsProvider({ children }: { children: ReactNode }) {
     }
 
     if (data) {
-      setQuotations(data.map(q => ({
-        id: q.id,
-        number: q.number,
-        clientName: q.client_name,
-        clientPhone: q.client_phone || undefined,
-        clientEmail: q.client_email || undefined,
-        notes: q.notes || undefined,
-        items: (q.items as unknown) as QuotationItem[],
-        discount: Number(q.discount),
-        discountType: q.discount_type as 'percentage' | 'fixed',
-        subtotal: Number(q.subtotal),
-        total: Number(q.total),
-        status: q.status as 'draft' | 'sent' | 'accepted' | 'rejected' | 'converted',
-        validUntil: q.valid_until || undefined,
-        deliveryDate: q.delivery_date || undefined,
-        referenceImage: q.reference_image || undefined,
-        convertedToOrderId: q.converted_to_order_id || undefined,
-        createdAt: q.created_at,
-      })));
+      setQuotations(data.map(q => {
+        const rawItems = (q.items as unknown) as any;
+        // Support extras stored inside the items JSON payload
+        let items: QuotationItem[] = [];
+        let extras: QuotationExtra[] | undefined;
+        if (rawItems && typeof rawItems === 'object' && !Array.isArray(rawItems) && rawItems._items) {
+          items = rawItems._items as QuotationItem[];
+          extras = rawItems._extras as QuotationExtra[] | undefined;
+        } else {
+          items = rawItems as QuotationItem[];
+        }
+        return {
+          id: q.id,
+          number: q.number,
+          clientName: q.client_name,
+          clientPhone: q.client_phone || undefined,
+          clientEmail: q.client_email || undefined,
+          notes: q.notes || undefined,
+          items,
+          extras,
+          discount: Number(q.discount),
+          discountType: q.discount_type as 'percentage' | 'fixed',
+          subtotal: Number(q.subtotal),
+          total: Number(q.total),
+          status: q.status as 'draft' | 'sent' | 'accepted' | 'rejected' | 'converted',
+          validUntil: q.valid_until || undefined,
+          deliveryDate: q.delivery_date || undefined,
+          referenceImage: q.reference_image || undefined,
+          convertedToOrderId: q.converted_to_order_id || undefined,
+          createdAt: q.created_at,
+        };
+      }));
     }
     setIsLoading(false);
   }, [session?.user]);
@@ -98,7 +111,11 @@ export function QuotationsProvider({ children }: { children: ReactNode }) {
         client_phone: quotation.clientPhone,
         client_email: quotation.clientEmail,
         notes: quotation.notes,
-        items: JSON.parse(JSON.stringify(quotation.items)),
+        items: JSON.parse(JSON.stringify(
+          quotation.extras && quotation.extras.length > 0
+            ? { _items: quotation.items, _extras: quotation.extras }
+            : quotation.items
+        )),
         discount: quotation.discount,
         discount_type: quotation.discountType,
         subtotal: quotation.subtotal,
@@ -117,6 +134,16 @@ export function QuotationsProvider({ children }: { children: ReactNode }) {
       return null;
     }
 
+    const rawReturnItems = (data.items as unknown) as any;
+    let returnItems: QuotationItem[] = [];
+    let returnExtras: QuotationExtra[] | undefined;
+    if (rawReturnItems && typeof rawReturnItems === 'object' && !Array.isArray(rawReturnItems) && rawReturnItems._items) {
+      returnItems = rawReturnItems._items as QuotationItem[];
+      returnExtras = rawReturnItems._extras as QuotationExtra[] | undefined;
+    } else {
+      returnItems = rawReturnItems as QuotationItem[];
+    }
+
     const newQuotation: Quotation = {
       id: data.id,
       number: data.number,
@@ -124,7 +151,8 @@ export function QuotationsProvider({ children }: { children: ReactNode }) {
       clientPhone: data.client_phone || undefined,
       clientEmail: data.client_email || undefined,
       notes: data.notes || undefined,
-      items: (data.items as unknown) as QuotationItem[],
+      items: returnItems,
+      extras: returnExtras,
       discount: Number(data.discount),
       discountType: data.discount_type as 'percentage' | 'fixed',
       subtotal: Number(data.subtotal),
@@ -149,7 +177,16 @@ export function QuotationsProvider({ children }: { children: ReactNode }) {
     if (updates.clientPhone !== undefined) updateData.client_phone = updates.clientPhone;
     if (updates.clientEmail !== undefined) updateData.client_email = updates.clientEmail;
     if (updates.notes !== undefined) updateData.notes = updates.notes;
-    if (updates.items !== undefined) updateData.items = JSON.parse(JSON.stringify(updates.items));
+    if (updates.items !== undefined || updates.extras !== undefined) {
+      const currentQ = quotations.find(q => q.id === id);
+      const finalItems = updates.items ?? currentQ?.items ?? [];
+      const finalExtras = updates.extras ?? currentQ?.extras ?? [];
+      updateData.items = JSON.parse(JSON.stringify(
+        finalExtras.length > 0
+          ? { _items: finalItems, _extras: finalExtras }
+          : finalItems
+      ));
+    }
     if (updates.discount !== undefined) updateData.discount = updates.discount;
     if (updates.discountType !== undefined) updateData.discount_type = updates.discountType;
     if (updates.subtotal !== undefined) updateData.subtotal = updates.subtotal;
@@ -201,6 +238,7 @@ export function QuotationsProvider({ children }: { children: ReactNode }) {
       clientEmail: original.clientEmail,
       notes: original.notes,
       items: original.items,
+      extras: original.extras,
       discount: original.discount,
       discountType: original.discountType,
       subtotal: original.subtotal,
@@ -219,10 +257,13 @@ export function QuotationsProvider({ children }: { children: ReactNode }) {
   const calculateTotals = useCallback((
     items: QuotationItem[], 
     discount: number, 
-    discountType: 'percentage' | 'fixed'
+    discountType: 'percentage' | 'fixed',
+    extras?: QuotationExtra[]
   ) => {
     // Redondear subtotal a 2 decimales para consistencia con WhatsApp y PDF
-    const subtotal = Math.round(items.reduce((sum, item) => sum + item.total, 0) * 100) / 100;
+    const itemsTotal = items.reduce((sum, item) => sum + item.total, 0);
+    const extrasTotal = (extras || []).reduce((sum, e) => sum + (e.quantity * e.unitCost), 0);
+    const subtotal = Math.round((itemsTotal + extrasTotal) * 100) / 100;
     const discountAmount = discountType === 'percentage' 
       ? subtotal * (discount / 100) 
       : discount;
