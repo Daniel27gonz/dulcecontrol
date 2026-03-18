@@ -417,6 +417,90 @@ export function QuotationForm({ quotation, trigger, onClose, onSave }: Quotation
             </p>
           </div>
 
+          {/* Extras del producto */}
+          <div className="space-y-3">
+            <div className="flex items-center justify-between">
+              <Label className="flex items-center gap-1.5">
+                <Gift className="w-4 h-4 text-primary" />
+                Extras del producto
+              </Label>
+              <Button type="button" variant="outline" size="sm" onClick={addExtra}>
+                <Plus className="w-4 h-4" />
+              </Button>
+            </div>
+
+            {extras.length === 0 && (
+              <p className="text-xs text-muted-foreground text-center py-2">
+                Agrega toppers, cajas, bases, listón, flores, placas, etc.
+              </p>
+            )}
+
+            <AnimatePresence>
+              {extras.map((extra, index) => {
+                const extraSubtotal = extra.quantity * extra.unitCost;
+                return (
+                  <motion.div
+                    key={extra.id}
+                    initial={{ opacity: 0, height: 0 }}
+                    animate={{ opacity: 1, height: 'auto' }}
+                    exit={{ opacity: 0, height: 0 }}
+                    className="p-3 bg-muted/50 rounded-xl space-y-2"
+                  >
+                    <div className="flex items-center justify-between">
+                      <span className="text-xs text-muted-foreground">Extra {index + 1}</span>
+                      <button
+                        type="button"
+                        onClick={() => removeExtra(extra.id)}
+                        className="p-1 hover:bg-destructive/10 rounded text-destructive"
+                      >
+                        <X className="w-4 h-4" />
+                      </button>
+                    </div>
+                    <Input
+                      placeholder="Nombre del extra (ej. Topper, Caja)"
+                      value={extra.name}
+                      onChange={(e) => updateExtra(extra.id, 'name', e.target.value)}
+                    />
+                    <div className="grid grid-cols-3 gap-2">
+                      <div>
+                        <Label className="text-xs">Cant.</Label>
+                        <Input
+                          type="number"
+                          min={1}
+                          value={extra.quantity}
+                          onChange={(e) => updateExtra(extra.id, 'quantity', Math.max(1, parseInt(e.target.value) || 1))}
+                        />
+                      </div>
+                      <div>
+                        <Label className="text-xs">Costo unit.</Label>
+                        <Input
+                          type="number"
+                          step="0.01"
+                          min={0}
+                          value={extra.unitCost}
+                          onChange={(e) => updateExtra(extra.id, 'unitCost', Math.max(0, parseFloat(e.target.value) || 0))}
+                        />
+                      </div>
+                      <div>
+                        <Label className="text-xs">Subtotal</Label>
+                        <div className="h-9 flex items-center px-3 bg-background rounded-md border text-sm font-medium">
+                          {settings.currencySymbol}{extraSubtotal.toFixed(2)}
+                        </div>
+                      </div>
+                    </div>
+                  </motion.div>
+                );
+              })}
+            </AnimatePresence>
+
+            {extras.length > 0 && extrasTotal > 0 && (
+              <div className="flex justify-between items-center text-sm px-1">
+                <span className="text-muted-foreground">Total extras:</span>
+                <span className="font-semibold text-primary">{settings.currencySymbol}{extrasTotal.toFixed(2)}</span>
+              </div>
+            )}
+          </div>
+
           {/* Dates */}
           <div className="grid grid-cols-2 gap-3">
             <div className="space-y-2">
