@@ -158,12 +158,18 @@ export function QuotationCard({ quotation, onUpdate }: QuotationCardProps) {
       .map(item => `• ${item.name} x${item.quantity} - ${formatCurrency(item.total)}`)
       .join('\n');
 
+    const extrasList = (quotation.extras && quotation.extras.length > 0)
+      ? '\n\n*Extras:*\n' + quotation.extras
+          .map(extra => `• ${extra.name} x${extra.quantity} - ${formatCurrency(extra.quantity * extra.unitCost)}`)
+          .join('\n')
+      : '';
+
     const message = `🧁 *Cotización #${quotation.number}*
 
 Hola ${quotation.clientName}, te comparto los detalles de tu cotización:
 
 *Productos:*
-${itemsList}
+${itemsList}${extrasList}
 
 💰 *Total: ${formatCurrency(quotation.total)}*
 

@@ -350,7 +350,8 @@ export async function generateStyledQuotationPDF(
 
   // Empty rows to fill space (minimum 4 rows total)
   const minRows = 4;
-  const emptyRows = Math.max(0, minRows - quotation.items.length);
+  const totalItemRows = quotation.items.length + (quotation.extras?.length || 0);
+  const emptyRows = Math.max(0, minRows - totalItemRows);
   for (let i = 0; i < emptyRows; i++) {
     if (y + rowHeight > pageHeight - bottomMargin) {
       doc.setDrawColor(...primaryColor);
@@ -375,6 +376,75 @@ export async function generateStyledQuotationPDF(
     doc.setLineDashPattern([3, 2], 0);
     doc.line(margin + 1, y, margin + contentWidth - 1, y);
     doc.setLineDashPattern([], 0);
+  }
+
+  // === EXTRAS ROWS (if any) ===
+  const extras: QuotationExtra[] = quotation.extras || [];
+  if (extras.length > 0) {
+    // Extras sub-header
+    if (y + rowHeight > pageHeight - bottomMargin) {
+      doc.setDrawColor(...primaryColor);
+      doc.setLineWidth(0.5);
+      doc.setLineDashPattern([], 0);
+      doc.rect(margin, currentTableStartY, contentWidth, y - currentTableStartY);
+      doc.line(col1End, currentTableStartY, col1End, y);
+      doc.line(col2End, currentTableStartY, col2End, y);
+      doc.addPage();
+      paintPageBackground();
+      y = margin;
+      drawTableHeader();
+      currentTableStartY = y;
+    }
+
+    // Sub-header for extras
+    doc.setFillColor(...lightenColor(primaryColor, 0.75));
+    doc.rect(margin, y, contentWidth, rowHeight, 'F');
+    doc.setTextColor(...primaryColor);
+    doc.setFontSize(8);
+    doc.setFont('helvetica', 'bold');
+    doc.text('EXTRAS DEL PRODUCTO', col1X, y + 8);
+    y += rowHeight;
+    doc.setDrawColor(...lightenColor(primaryColor, 0.4));
+    doc.setLineDashPattern([3, 2], 0);
+    doc.line(margin + 1, y, margin + contentWidth - 1, y);
+    doc.setLineDashPattern([], 0);
+
+    extras.forEach((extra) => {
+      if (y + rowHeight > pageHeight - bottomMargin) {
+        doc.setDrawColor(...primaryColor);
+        doc.setLineWidth(0.5);
+        doc.setLineDashPattern([], 0);
+        doc.rect(margin, currentTableStartY, contentWidth, y - currentTableStartY);
+        doc.line(col1End, currentTableStartY, col1End, y);
+        doc.line(col2End, currentTableStartY, col2End, y);
+        doc.addPage();
+        paintPageBackground();
+        y = margin;
+        drawTableHeader();
+        currentTableStartY = y;
+      }
+
+      doc.setFillColor(255, 255, 255);
+      doc.rect(margin, y, contentWidth, rowHeight, 'F');
+
+      doc.setTextColor(...textColor);
+      doc.setFontSize(9);
+      doc.setFont('helvetica', 'normal');
+
+      const extraName = extra.name.length > 45 ? extra.name.substring(0, 45) + '...' : extra.name;
+      doc.text(extraName, col1X, y + 8);
+      doc.text(extra.quantity.toString(), col2X, y + 8, { align: 'center' });
+      doc.setFont('helvetica', 'bold');
+      const extraTotal = extra.quantity * extra.unitCost;
+      doc.text(`${currencySymbol}${extraTotal.toFixed(2)}`, col3X, y + 8, { align: 'center' });
+
+      y += rowHeight;
+
+      doc.setDrawColor(...lightenColor(primaryColor, 0.4));
+      doc.setLineDashPattern([3, 2], 0);
+      doc.line(margin + 1, y, margin + contentWidth - 1, y);
+      doc.setLineDashPattern([], 0);
+    });
   }
 
   // Table outer border for last section
