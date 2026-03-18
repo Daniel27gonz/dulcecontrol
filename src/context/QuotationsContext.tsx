@@ -11,7 +11,7 @@ interface QuotationsContextType {
   deleteQuotation: (id: string) => Promise<void>;
   duplicateQuotation: (id: string) => Promise<Quotation | null>;
   getQuotation: (id: string) => Quotation | undefined;
-  calculateTotals: (items: QuotationItem[], discount: number, discountType: 'percentage' | 'fixed') => { subtotal: number; total: number };
+  calculateTotals: (items: QuotationItem[], discount: number, discountType: 'percentage' | 'fixed', extras?: QuotationExtra[]) => { subtotal: number; total: number };
   generateQuotationNumber: () => string;
   refreshQuotations: () => Promise<void>;
 }
