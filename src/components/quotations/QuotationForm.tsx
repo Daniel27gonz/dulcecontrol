@@ -50,7 +50,7 @@ export function QuotationForm({ quotation, trigger, onClose, onSave }: Quotation
   const { addQuotation, updateQuotation, calculateTotals } = useQuotations();
   const { getTotalIndirectCosts } = useIndirectCosts();
   const { getTotalMonthlyHours, getLaborCostPerHour } = useLabor();
-  const { getCurrentIngredientCost } = useBaseIngredients();
+  const {} = useBaseIngredients();
   const [open, setOpen] = useState(false);
   
   // Form state
