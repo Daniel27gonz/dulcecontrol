@@ -1,5 +1,5 @@
 import jsPDF from 'jspdf';
-import { Quotation } from '@/types/quotation';
+import { Quotation, QuotationExtra } from '@/types/quotation';
 import { PDFSettings, PDFStyle } from '@/types/pdfSettings';
 import { format, parseISO } from 'date-fns';
 import { es } from 'date-fns/locale';
