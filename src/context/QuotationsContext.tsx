@@ -166,7 +166,16 @@ export function QuotationsProvider({ children }: { children: ReactNode }) {
     if (updates.clientPhone !== undefined) updateData.client_phone = updates.clientPhone;
     if (updates.clientEmail !== undefined) updateData.client_email = updates.clientEmail;
     if (updates.notes !== undefined) updateData.notes = updates.notes;
-    if (updates.items !== undefined) updateData.items = JSON.parse(JSON.stringify(updates.items));
+    if (updates.items !== undefined || updates.extras !== undefined) {
+      const currentQ = quotations.find(q => q.id === id);
+      const finalItems = updates.items ?? currentQ?.items ?? [];
+      const finalExtras = updates.extras ?? currentQ?.extras ?? [];
+      updateData.items = JSON.parse(JSON.stringify(
+        finalExtras.length > 0
+          ? { _items: finalItems, _extras: finalExtras }
+          : finalItems
+      ));
+    }
     if (updates.discount !== undefined) updateData.discount = updates.discount;
     if (updates.discountType !== undefined) updateData.discount_type = updates.discountType;
     if (updates.subtotal !== undefined) updateData.subtotal = updates.subtotal;
