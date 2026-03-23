@@ -77,16 +77,16 @@ const LoginPage = () => {
             initial={{ opacity: 0, scale: 0.95 }}
             animate={{ opacity: 1, scale: 1 }}
             transition={{ delay: 0.2 }}
-            className="mb-6 rounded-2xl bg-accent/20 border-2 border-accent p-4 text-center"
+            className="mb-6 rounded-2xl bg-accent/20 border-2 border-accent p-4 flex flex-col items-center text-center"
           >
             <p className="text-lg font-bold text-foreground mb-2">
-              🔐 ¿Es tu primer acceso?
+              🔐 ¿Primer acceso?
             </p>
             <p className="text-sm font-semibold text-foreground leading-relaxed">
-              Ingresa con el correo electrónico que utilizaste en la compra y usa la <span className="text-primary font-extrabold">contraseña temporal</span> que recibiste por correo.
+              Usa el correo de tu compra y la contraseña temporal: <span className="text-primary font-extrabold">123Postres</span>
             </p>
             <p className="text-sm text-muted-foreground mt-2">
-              Luego podrás cambiar tu contraseña fácilmente desde la configuración ⚙️
+              Puedes cambiar tu contraseña después de iniciar sesión en Configuración.
             </p>
           </motion.div>
 
