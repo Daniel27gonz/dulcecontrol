@@ -11,6 +11,7 @@ import {
   Eye,
   MoreVertical,
   Pencil,
+  Copy,
   Package,
   Zap,
   Clock,
@@ -58,7 +59,7 @@ import { toast } from '@/hooks/use-toast';
 
 export default function RecipesPage() {
   const navigate = useNavigate();
-  const { recipes, settings, deleteRecipe } = useApp();
+  const { recipes, settings, deleteRecipe, addRecipe } = useApp();
   const { getLastMonthLaborCostPerHour, getLastMonthTotalHours } = useLabor();
   const { getTotalIndirectCostsLastMonth } = useIndirectCosts();
   const [searchQuery, setSearchQuery] = useState('');
@@ -156,6 +157,18 @@ export default function RecipesPage() {
       setRecipeToDelete(null);
       setSelectedRecipe(null);
     }
+  };
+
+  const handleDuplicate = async (recipe: Recipe) => {
+    const { id, createdAt, ...recipeData } = recipe;
+    await addRecipe({
+      ...recipeData,
+      name: `${recipe.name} (copia)`,
+    });
+    toast({
+      title: 'Receta duplicada',
+      description: `Se creó una copia de "${recipe.name}"`,
+    });
   };
 
   const getCategoryEmoji = (category: string) => {
@@ -302,6 +315,13 @@ export default function RecipesPage() {
                                   }}>
                                     <Pencil className="w-4 h-4 mr-2" />
                                     Editar receta
+                                  </DropdownMenuItem>
+                                  <DropdownMenuItem onClick={(e) => {
+                                    e.stopPropagation();
+                                    handleDuplicate(recipe);
+                                  }}>
+                                    <Copy className="w-4 h-4 mr-2" />
+                                    Duplicar receta
                                   </DropdownMenuItem>
                                   <DropdownMenuSeparator />
                                   <DropdownMenuItem 
