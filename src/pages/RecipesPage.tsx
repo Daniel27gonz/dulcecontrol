@@ -323,6 +323,7 @@ export default function RecipesPage() {
                                     <Copy className="w-4 h-4 mr-2" />
                                     Duplicar receta
                                   </DropdownMenuItem>
+                                  <DropdownMenuSeparator />
                                   <DropdownMenuItem 
                                     onClick={(e) => {
                                       e.stopPropagation();
