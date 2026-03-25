@@ -159,6 +159,18 @@ export default function RecipesPage() {
     }
   };
 
+  const handleDuplicate = async (recipe: Recipe) => {
+    const { id, createdAt, ...recipeData } = recipe;
+    await addRecipe({
+      ...recipeData,
+      name: `${recipe.name} (copia)`,
+    });
+    toast({
+      title: 'Receta duplicada',
+      description: `Se creó una copia de "${recipe.name}"`,
+    });
+  };
+
   const getCategoryEmoji = (category: string) => {
     const categoryMap: Record<string, string> = {
       'pasteles': '🎂',
