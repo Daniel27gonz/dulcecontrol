@@ -11,6 +11,7 @@ import {
   Eye,
   MoreVertical,
   Pencil,
+  Copy,
   Package,
   Zap,
   Clock,
