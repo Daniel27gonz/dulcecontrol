@@ -59,7 +59,7 @@ import { toast } from '@/hooks/use-toast';
 
 export default function RecipesPage() {
   const navigate = useNavigate();
-  const { recipes, settings, deleteRecipe } = useApp();
+  const { recipes, settings, deleteRecipe, addRecipe } = useApp();
   const { getLastMonthLaborCostPerHour, getLastMonthTotalHours } = useLabor();
   const { getTotalIndirectCostsLastMonth } = useIndirectCosts();
   const [searchQuery, setSearchQuery] = useState('');
