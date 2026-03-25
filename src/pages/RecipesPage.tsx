@@ -316,7 +316,13 @@ export default function RecipesPage() {
                                     <Pencil className="w-4 h-4 mr-2" />
                                     Editar receta
                                   </DropdownMenuItem>
-                                  <DropdownMenuSeparator />
+                                  <DropdownMenuItem onClick={(e) => {
+                                    e.stopPropagation();
+                                    handleDuplicate(recipe);
+                                  }}>
+                                    <Copy className="w-4 h-4 mr-2" />
+                                    Duplicar receta
+                                  </DropdownMenuItem>
                                   <DropdownMenuItem 
                                     onClick={(e) => {
                                       e.stopPropagation();
