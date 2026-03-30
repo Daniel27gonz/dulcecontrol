@@ -532,7 +532,7 @@ export default function IndirectCostsPage() {
                   id="concept"
                   value={expenseFormData.concept}
                   onChange={(e) => setExpenseFormData({ ...expenseFormData, concept: e.target.value })}
-                  placeholder="Ej: Renta del local"
+                  placeholder={modalType === 'variable' ? "Ej: Electricidad, Gas, Agua" : "Ej: Renta del local"}
                   className="mt-1"
                 />
               </div>
