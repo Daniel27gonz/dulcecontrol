@@ -177,7 +177,7 @@ export function OrderForm({ order, trigger, onClose }: OrderFormProps) {
         quantity,
         totalPrice: finalPrice,
         status,
-        deliveryDate: deliveryDate.toISOString(),
+        deliveryDate: new Date(deliveryDate.getFullYear(), deliveryDate.getMonth(), deliveryDate.getDate(), 12, 0, 0).toISOString(),
       });
       toast({
         title: '¡Pedido actualizado!',
