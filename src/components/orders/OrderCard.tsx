@@ -101,7 +101,7 @@ export function OrderCard({ order }: OrderCardProps) {
 
     updateOrder(order.id, {
       status: 'paid',
-      paymentDate: new Date(paymentDate).toISOString(),
+      paymentDate: new Date(paymentDate + 'T12:00:00').toISOString(),
     });
     setShowPaymentDialog(false);
     toast({
