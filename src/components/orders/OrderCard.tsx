@@ -74,7 +74,7 @@ export function OrderCard({ order }: OrderCardProps) {
   const remainingBalance = Math.max(0, order.totalPrice - totalAdvances);
   const isPaid = order.status === 'paid';
 
-  const handleStatusChange = (newStatus: string) => {
+  const handleStatusChange = async (newStatus: string) => {
     if (newStatus === 'paid') {
       setPaymentDate(new Date().toISOString().split('T')[0]);
       setPaymentAmount(remainingBalance);
@@ -82,14 +82,18 @@ export function OrderCard({ order }: OrderCardProps) {
       return;
     }
 
-    updateOrder(order.id, { status: newStatus as Order['status'] });
-    toast({
-      title: 'Estado actualizado',
-      description: `El pedido ahora está ${ORDER_STATUSES.find(s => s.value === newStatus)?.label}`,
-    });
+    try {
+      await updateOrder(order.id, { status: newStatus as Order['status'] });
+      toast({
+        title: 'Estado actualizado',
+        description: `El pedido ahora está ${ORDER_STATUSES.find(s => s.value === newStatus)?.label}`,
+      });
+    } catch {
+      toast({ title: 'Error', description: 'No se pudo actualizar el estado', variant: 'destructive' });
+    }
   };
 
-  const handleConfirmPayment = () => {
+  const handleConfirmPayment = async () => {
     if (!paymentDate) {
       toast({ title: 'Error', description: 'La fecha de pago es obligatoria', variant: 'destructive' });
       return;
@@ -99,30 +103,38 @@ export function OrderCard({ order }: OrderCardProps) {
       return;
     }
 
-    updateOrder(order.id, {
-      status: 'paid',
-      paymentDate: new Date(paymentDate + 'T12:00:00').toISOString(),
-    });
-    setShowPaymentDialog(false);
-    toast({
-      title: '✅ Pedido marcado como Pagado',
-      description: `${settings.currencySymbol}${paymentAmount.toFixed(2)} registrado en Finanzas`,
-    });
+    try {
+      await updateOrder(order.id, {
+        status: 'paid',
+        paymentDate: new Date(paymentDate + 'T12:00:00').toISOString(),
+      });
+      setShowPaymentDialog(false);
+      toast({
+        title: '✅ Pedido marcado como Pagado',
+        description: `${settings.currencySymbol}${paymentAmount.toFixed(2)} registrado en Finanzas`,
+      });
+    } catch {
+      toast({ title: 'Error', description: 'No se pudo registrar el pago', variant: 'destructive' });
+    }
   };
 
-  const handleDeletePayment = () => {
-    updateOrder(order.id, {
-      status: 'completed',
-      paymentDate: null,
-    });
-    setShowDeletePaymentDialog(false);
-    toast({
-      title: 'Pago eliminado',
-      description: 'El pedido volvió a estado Completado y el ingreso fue eliminado de Finanzas',
-    });
+  const handleDeletePayment = async () => {
+    try {
+      await updateOrder(order.id, {
+        status: 'completed',
+        paymentDate: null,
+      });
+      setShowDeletePaymentDialog(false);
+      toast({
+        title: 'Pago eliminado',
+        description: 'El pedido volvió a estado Completado y el ingreso fue eliminado de Finanzas',
+      });
+    } catch {
+      toast({ title: 'Error', description: 'No se pudo eliminar el pago', variant: 'destructive' });
+    }
   };
 
-  const handleAddAdvance = () => {
+  const handleAddAdvance = async () => {
     if (advanceAmount <= 0) {
       toast({ title: 'Error', description: 'El monto del anticipo debe ser mayor a 0', variant: 'destructive' });
       return;
@@ -139,20 +151,28 @@ export function OrderCard({ order }: OrderCardProps) {
     };
 
     const updatedAdvances = [...(order.advances || []), newAdvance];
-    updateOrder(order.id, { advances: updatedAdvances });
-    setShowAdvanceDialog(false);
-    setAdvanceAmount(0);
-    setAdvanceDate(new Date().toISOString().split('T')[0]);
-    toast({
-      title: '✅ Anticipo registrado',
-      description: `${settings.currencySymbol}${advanceAmount.toFixed(2)} registrado en Finanzas`,
-    });
+    try {
+      await updateOrder(order.id, { advances: updatedAdvances });
+      setShowAdvanceDialog(false);
+      setAdvanceAmount(0);
+      setAdvanceDate(new Date().toISOString().split('T')[0]);
+      toast({
+        title: '✅ Anticipo registrado',
+        description: `${settings.currencySymbol}${advanceAmount.toFixed(2)} registrado en Finanzas`,
+      });
+    } catch {
+      toast({ title: 'Error', description: 'No se pudo registrar el anticipo', variant: 'destructive' });
+    }
   };
 
-  const handleDeleteAdvance = (advanceId: string) => {
+  const handleDeleteAdvance = async (advanceId: string) => {
     const updatedAdvances = (order.advances || []).filter(a => a.id !== advanceId);
-    updateOrder(order.id, { advances: updatedAdvances });
-    toast({ title: 'Anticipo eliminado' });
+    try {
+      await updateOrder(order.id, { advances: updatedAdvances });
+      toast({ title: 'Anticipo eliminado' });
+    } catch {
+      toast({ title: 'Error', description: 'No se pudo eliminar el anticipo', variant: 'destructive' });
+    }
   };
 
   const handleDelete = () => {
