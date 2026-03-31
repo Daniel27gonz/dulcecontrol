@@ -135,7 +135,7 @@ export function OrderCard({ order }: OrderCardProps) {
     const newAdvance: OrderAdvance = {
       id: crypto.randomUUID(),
       amount: advanceAmount,
-      date: new Date(advanceDate).toISOString(),
+      date: new Date(advanceDate + 'T12:00:00').toISOString(),
     };
 
     const updatedAdvances = [...(order.advances || []), newAdvance];
