@@ -615,11 +615,16 @@ export function AppProvider({ children }: { children: ReactNode }) {
     if (updates.paymentDate !== undefined) updateData.payment_date = updates.paymentDate;
     if (updates.advances !== undefined) updateData.advances = updates.advances;
 
-    await supabase
+    const { error: updateError } = await supabase
       .from('orders')
       .update(updateData)
       .eq('id', id)
       .eq('user_id', session.user.id);
+
+    if (updateError) {
+      console.error('Error updating order:', updateError);
+      throw new Error('No se pudo actualizar el pedido');
+    }
 
     const updatedOrder = { ...existingOrder!, ...updates };
 
